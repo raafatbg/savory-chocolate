@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Custom Cakes · Savory Chocolate</title>
+  <meta name="description" content="Design your own cake: choose the size, flavor, filling and frosting, add a message and pick it up when it suits you.">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/"><img src="/img/favicon.svg" alt=""><span data-setting="shop_name">Savory Chocolate</span></a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/">Home</a>
+        <a href="/cakes" aria-current="page">Custom Cakes</a>
+        <a href="/menu">Menu</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" id="page">
+    <div class="page-head">
+      <span class="eyebrow">Custom cakes</span>
+      <h1>Design your cake</h1>
+      <p>Choose each layer of your cake below. You'll see the price update as you go, and you pay when you pick it up.</p>
+    </div>
+
+    <div id="closed-notice" class="alert alert-info" hidden>We're not taking online orders right now. Please give us a call instead.</div>
+
+    <div class="order-layout">
+      <form id="cake-form" class="builder" autocomplete="on">
+        <fieldset>
+          <legend><span class="num">1</span> Size</legend>
+          <div class="choices" data-group="size"><p class="loading">Loading…</p></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="num">2</span> Cake flavor</legend>
+          <div class="choices" data-group="flavor"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="num">3</span> Filling</legend>
+          <div class="choices" data-group="filling"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="num">4</span> Frosting</legend>
+          <div class="choices" data-group="frosting"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="num">5</span> Personal touch</legend>
+          <div class="field">
+            <label for="message">Message on the cake <span class="muted">(optional)</span></label>
+            <input type="text" id="message" name="message" maxlength="60" placeholder="Happy Birthday, Sam!">
+            <span class="char-count" id="message-count">0 / 60</span>
+          </div>
+          <div class="field">
+            <label for="notes">Design notes <span class="muted">(optional)</span></label>
+            <textarea id="notes" name="notes" maxlength="1000" placeholder="Colors, theme, allergies, or anything else we should know."></textarea>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="num">6</span> Pickup</legend>
+          <div class="field-row">
+            <div class="field">
+              <label for="pickup_date">Pickup date</label>
+              <input type="date" id="pickup_date" name="pickup_date" required>
+              <span class="hint" id="date-hint"></span>
+            </div>
+            <div class="field">
+              <label for="pickup_time">Pickup time</label>
+              <input type="time" id="pickup_time" name="pickup_time" step="900" required>
+              <span class="hint">During opening hours.</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend><span class="num">7</span> Your details</legend>
+          <div class="field">
+            <label for="customer_name">Name</label>
+            <input type="text" id="customer_name" name="customer_name" autocomplete="name" maxlength="100" required>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="customer_phone">Phone</label>
+              <input type="tel" id="customer_phone" name="customer_phone" autocomplete="tel" maxlength="40" required>
+            </div>
+            <div class="field">
+              <label for="customer_email">Email <span class="muted">(optional)</span></label>
+              <input type="email" id="customer_email" name="customer_email" autocomplete="email" maxlength="200">
+            </div>
+          </div>
+        </fieldset>
+      </form>
+
+      <aside class="sticky-panel">
+        <div class="card panel">
+          <h2>Your cake</h2>
+          <ul class="summary-list" id="summary"></ul>
+          <div class="total-row"><span>Total</span><span id="total">—</span></div>
+          <div id="form-error" class="alert alert-error" role="alert" hidden></div>
+          <button type="submit" form="cake-form" class="btn btn-primary btn-block" id="submit-btn">Place cake order</button>
+          <p class="pay-note">Pay when you pick it up.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script type="module" src="/js/cakes.js"></script>
+</body>
+</html>

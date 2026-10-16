@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Admin · Savory Chocolate</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin">
+
+  <!-- Log in / first-time setup -->
+  <main id="auth-view" class="auth-wrap" hidden>
+    <div class="card auth-card">
+      <a class="brand" href="/"><img src="/img/favicon.svg" alt=""><span>Savory Chocolate</span></a>
+      <h1 id="auth-title">Admin login</h1>
+      <p id="auth-intro" class="muted"></p>
+      <form id="auth-form">
+        <div class="field">
+          <label for="auth-username">Username</label>
+          <input type="text" id="auth-username" name="username" autocomplete="username" maxlength="40" required>
+        </div>
+        <div class="field">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" name="password" autocomplete="current-password" required>
+        </div>
+        <div class="field" id="auth-confirm-field" hidden>
+          <label for="auth-confirm">Confirm password</label>
+          <input type="password" id="auth-confirm" name="confirm" autocomplete="new-password">
+        </div>
+        <div id="auth-error" class="alert alert-error" role="alert" hidden></div>
+        <button type="submit" class="btn btn-primary btn-block" id="auth-submit">Log in</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Dashboard -->
+  <div id="dash-view" hidden>
+    <header class="admin-header">
+      <div class="container">
+        <a class="brand" href="/admin"><img src="/img/favicon.svg" alt=""><span data-setting="shop_name">Savory Chocolate</span><span class="admin-pill">Admin</span></a>
+        <div class="admin-actions">
+          <a class="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener">View site ↗</a>
+          <button type="button" class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
+        </div>
+      </div>
+      <nav class="container tabs" role="tablist" aria-label="Admin sections">
+        <button type="button" role="tab" data-tab="orders">Orders <span class="badge" id="new-badge" hidden></span></button>
+        <button type="button" role="tab" data-tab="menu">Menu items</button>
+        <button type="button" role="tab" data-tab="cakes">Cake options</button>
+        <button type="button" role="tab" data-tab="settings">Settings</button>
+      </nav>
+    </header>
+
+    <main class="container admin-main">
+
+      <!-- Orders -->
+      <section data-panel="orders" hidden>
+        <div class="panel-head">
+          <div>
+            <h1>Orders</h1>
+            <p class="muted small" id="orders-updated"></p>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="orders-refresh">Refresh</button>
+        </div>
+        <div class="filters" id="order-filters"></div>
+        <div id="orders-list"></div>
+      </section>
+
+      <!-- Menu items -->
+      <section data-panel="menu" hidden>
+        <div class="panel-head">
+          <div>
+            <h1>Menu items</h1>
+            <p class="muted small">What customers can order on the Menu page. Hidden items stay here but don't show on the site.</p>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="add-item-btn">+ Add item</button>
+        </div>
+        <div id="items-list"></div>
+      </section>
+
+      <!-- Cake options -->
+      <section data-panel="cakes" hidden>
+        <div class="panel-head">
+          <div>
+            <h1>Cake options</h1>
+            <p class="muted small">The choices in the cake builder. A cake's price is the size price plus any extra charges for flavor, filling and frosting.</p>
+          </div>
+        </div>
+        <div id="options-list"></div>
+      </section>
+
+      <!-- Settings -->
+      <section data-panel="settings" hidden>
+        <div class="panel-head"><h1>Settings</h1></div>
+        <div class="settings-grid">
+          <form id="settings-form" class="card form-card">
+            <h2>Shop details</h2>
+            <p class="muted small">Shown on the home page and in the footer of every page.</p>
+            <div class="field"><label for="s-shop_name">Shop name</label><input type="text" id="s-shop_name" name="shop_name" maxlength="80" required></div>
+            <div class="field"><label for="s-tagline">Tagline</label><input type="text" id="s-tagline" name="tagline" maxlength="200"></div>
+            <div class="field"><label for="s-about">About us</label><textarea id="s-about" name="about" maxlength="2000" rows="4"></textarea></div>
+            <div class="field-row">
+              <div class="field"><label for="s-phone">Phone</label><input type="tel" id="s-phone" name="phone" maxlength="40"></div>
+              <div class="field"><label for="s-email">Email</label><input type="email" id="s-email" name="email" maxlength="200"></div>
+            </div>
+            <div class="field"><label for="s-address">Address</label><textarea id="s-address" name="address" maxlength="300" rows="2"></textarea></div>
+            <div class="field"><label for="s-hours">Opening hours</label><textarea id="s-hours" name="hours" maxlength="500" rows="3"></textarea><span class="hint">One line per day or group of days.</span></div>
+
+            <h2 style="margin-top: 12px;">Ordering</h2>
+            <div class="field">
+              <label class="checkbox"><input type="checkbox" name="orders_open" id="s-orders_open"> Accept online orders</label>
+              <span class="hint">Turn this off to pause ordering, for example during holidays.</span>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="s-cake_lead_days">Days of notice for cakes</label>
+                <input type="number" id="s-cake_lead_days" name="cake_lead_days" min="0" max="60" required>
+                <span class="hint">Earliest a custom cake can be picked up.</span>
+              </div>
+              <div class="field">
+                <label for="s-currency">Currency</label>
+                <input type="text" id="s-currency" name="currency" maxlength="3" required pattern="[A-Za-z]{3}">
+                <span class="hint">3-letter code, e.g. USD, EUR, GBP.</span>
+              </div>
+            </div>
+            <div class="form-error alert alert-error" role="alert" hidden></div>
+            <button type="submit" class="btn btn-primary">Save settings</button>
+          </form>
+
+          <form id="password-form" class="card form-card">
+            <h2>Change password</h2>
+            <p class="muted small">Logged in as <strong id="admin-name"></strong>.</p>
+            <div class="field"><label for="p-current">Current password</label><input type="password" id="p-current" name="current_password" autocomplete="current-password" required></div>
+            <div class="field"><label for="p-new">New password</label><input type="password" id="p-new" name="new_password" autocomplete="new-password" minlength="8" required><span class="hint">At least 8 characters.</span></div>
+            <div class="field"><label for="p-confirm">Confirm new password</label><input type="password" id="p-confirm" name="confirm" autocomplete="new-password" required></div>
+            <div class="form-error alert alert-error" role="alert" hidden></div>
+            <button type="submit" class="btn btn-outline">Update password</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Menu item editor -->
+  <dialog id="item-dialog" class="card">
+    <form id="item-form">
+      <h2 id="item-dialog-title">Add menu item</h2>
+      <div class="field"><label for="i-name">Name</label><input type="text" id="i-name" name="name" maxlength="100" required></div>
+      <div class="field-row">
+        <div class="field">
+          <label for="i-category">Category</label>
+          <input type="text" id="i-category" name="category" maxlength="60" list="category-list" placeholder="e.g. Bakes">
+          <datalist id="category-list"></datalist>
+        </div>
+        <div class="field"><label for="i-price">Price</label><input type="text" id="i-price" name="price" inputmode="decimal" placeholder="4.50" required pattern="\$?\d{1,6}(\.\d{1,2})?"></div>
+      </div>
+      <div class="field"><label for="i-description">Description</label><textarea id="i-description" name="description" maxlength="500" rows="2"></textarea></div>
+      <div class="field">
+        <label for="i-image">Photo <span class="muted">(optional, max 5 MB)</span></label>
+        <div class="image-row">
+          <div class="image-preview" id="i-preview"></div>
+          <div style="flex: 1;">
+            <input type="file" id="i-image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+            <label class="checkbox small" id="i-remove-wrap" hidden style="margin-top: 8px;"><input type="checkbox" name="remove_image" id="i-remove"> Remove current photo</label>
+          </div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="i-sort">Sort order</label><input type="number" id="i-sort" name="sort_order" min="0" max="9999" value="0"><span class="hint">Lower numbers show first.</span></div>
+        <div class="field" style="justify-content: center;"><label class="checkbox"><input type="checkbox" name="available" id="i-available" checked> Show on the menu</label></div>
+      </div>
+      <div class="form-error alert alert-error" role="alert" hidden></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save item</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Cake option editor -->
+  <dialog id="option-dialog" class="card">
+    <form id="option-form">
+      <h2 id="option-dialog-title">Add option</h2>
+      <input type="hidden" name="type" id="o-type">
+      <div class="field"><label for="o-name">Name</label><input type="text" id="o-name" name="name" maxlength="80" required></div>
+      <div class="field"><label for="o-description">Description <span class="muted">(optional)</span></label><input type="text" id="o-description" name="description" maxlength="200" placeholder="e.g. Serves 12–16"></div>
+      <div class="field-row">
+        <div class="field"><label for="o-price" id="o-price-label">Price</label><input type="text" id="o-price" name="price" inputmode="decimal" required pattern="\$?\d{1,6}(\.\d{1,2})?"><span class="hint" id="o-price-hint"></span></div>
+        <div class="field"><label for="o-sort">Sort order</label><input type="number" id="o-sort" name="sort_order" min="0" max="9999" value="0"></div>
+      </div>
+      <div class="field"><label class="checkbox"><input type="checkbox" name="available" id="o-available" checked> Available in the cake builder</label></div>
+      <div class="form-error alert alert-error" role="alert" hidden></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save option</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>
