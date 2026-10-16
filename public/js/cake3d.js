@@ -36,53 +36,24 @@ export function webglAvailable() {
 
 // ---------------------------------------------------------------- stage
 
-export function createCakeStage(container, { autoRotate = true, interactive = finePointer, sparkles = false, float = false } = {}) {
+export function createCakeStage(container, {
+  autoRotate = true, interactive = finePointer, sparkles = false, float = false, scrollSpin = false,
+} = {}) {
   if (!webglAvailable()) return null;
 
   let renderer;
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer = createRenderer({ alpha: true });
   } catch {
     return null;
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.92;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.setAttribute('role', 'img');
   renderer.domElement.setAttribute('aria-label', 'A 3D preview of the cake');
   container.appendChild(renderer.domElement);
 
-  const scene = new THREE.Scene();
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.55;
-  pmrem.dispose();
-
+  const scene = setupScene(renderer);
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
-
-  scene.add(new THREE.HemisphereLight(0xfff1e0, 0x2a160c, 0.4));
-  const key = new THREE.DirectionalLight(0xfff0dc, 2.3);
-  key.position.set(4, 9, 6);
-  key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
-  Object.assign(key.shadow.camera, { left: -4.5, right: 4.5, top: 4.5, bottom: -4.5, near: 2, far: 25 });
-  key.shadow.bias = -0.0004;
-  key.shadow.normalBias = 0.02;
-  key.shadow.radius = 5;
-  scene.add(key);
-  const rim = new THREE.DirectionalLight(0xffc27a, 2.2);
-  rim.position.set(-6, 5, -6);
-  scene.add(rim);
-  const fill = new THREE.DirectionalLight(0xffe4c8, 0.6);
-  fill.position.set(-5, 2, 6);
-  scene.add(fill);
-
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(9, 64), new THREE.ShadowMaterial({ opacity: 0.4 }));
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
 
   const turntable = new THREE.Group();
   scene.add(turntable);
@@ -106,6 +77,16 @@ export function createCakeStage(container, { autoRotate = true, interactive = fi
   const dust = sparkles ? createSparkles() : null;
   if (dust) scene.add(dust.points);
 
+  // Scrolling the page gives the cake an extra spin that eases off.
+  let spin = 0;
+  let lastScroll = window.scrollY;
+  const onScroll = () => {
+    spin += (window.scrollY - lastScroll) * 0.0025;
+    lastScroll = window.scrollY;
+    requestRender();
+  };
+  if (scrollSpin && !reduceMotion) window.addEventListener('scroll', onScroll, { passive: true });
+
   // Camera framing eases toward these whenever the cake changes size.
   const view = { target: new THREE.Vector3(0, 1.5, 0), distance: 10, polar: 1.2 };
   const targetView = { ...view, target: view.target.clone() };
@@ -113,8 +94,9 @@ export function createCakeStage(container, { autoRotate = true, interactive = fi
 
   let current = null;
   let pop = 1;
+  let intro = -1;
 
-  function setCake(config) {
+  function setCake(config, { intro: withIntro = false } = {}) {
     const next = buildCake({ ...DEFAULT_CAKE, ...config });
     const first = !current;
     if (current) {
@@ -124,12 +106,13 @@ export function createCakeStage(container, { autoRotate = true, interactive = fi
     current = next;
     turntable.add(next.group);
     pop = reduceMotion ? 1 : 0;
+    intro = withIntro && !reduceMotion ? 0 : -1;
+    if (intro === 0) {
+      pop = 1;
+      playIntro(next, 0);
+    }
 
-    const fov = THREE.MathUtils.degToRad(camera.fov);
-    const fitHeight = (next.height * 0.74) / Math.tan(fov / 2);
-    const fitWidth = (next.width * 0.74) / (Math.tan(fov / 2) * Math.max(camera.aspect, 0.5));
-    targetView.distance = Math.max(fitHeight, fitWidth, 7);
-    targetView.target.set(0, next.height * 0.5, 0);
+    Object.assign(targetView, framing(next, camera));
     if (first) {
       view.distance = targetView.distance;
       view.target.copy(targetView.target);
@@ -164,19 +147,21 @@ export function createCakeStage(container, { autoRotate = true, interactive = fi
 
     view.distance += (targetView.distance - view.distance) * 0.08;
     view.target.lerp(targetView.target, 0.08);
-    if (controls) {
-      placeCamera(view);
-      controls.update(dt);
-    } else {
-      if (autoRotate && !reduceMotion) turntable.rotation.y += dt * 0.35;
-      placeCamera(view);
+    if (!controls && autoRotate && !reduceMotion) turntable.rotation.y += dt * 0.35;
+    if (Math.abs(spin) > 0.0001) {
+      turntable.rotation.y += spin;
+      spin *= 0.9;
     }
+    placeCamera(view);
+    controls?.update(dt);
 
     if (current) {
-      if (pop < 1) {
+      if (intro >= 0) {
+        intro += dt;
+        if (!playIntro(current, intro)) intro = -1;
+      } else if (pop < 1) {
         pop = Math.min(1, pop + dt * 2.2);
-        const s = 0.9 + 0.1 * easeOutBack(pop);
-        current.group.scale.setScalar(s);
+        current.group.scale.setScalar(0.9 + 0.1 * easeOutBack(pop));
       }
       if (float && !reduceMotion) current.group.position.y = Math.sin(t * 1.1) * 0.05;
       current.animate?.(t, dt);
@@ -206,14 +191,7 @@ export function createCakeStage(container, { autoRotate = true, interactive = fi
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    if (current) {
-      const fov = THREE.MathUtils.degToRad(camera.fov);
-      targetView.distance = Math.max(
-        (current.height * 0.74) / Math.tan(fov / 2),
-        (current.width * 0.74) / (Math.tan(fov / 2) * Math.max(camera.aspect, 0.5)),
-        7,
-      );
-    }
+    if (current) Object.assign(targetView, framing(current, camera));
     requestRender();
   }
 
@@ -237,12 +215,118 @@ export function createCakeStage(container, { autoRotate = true, interactive = fi
       resizeObserver.disconnect();
       visibility.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('scroll', onScroll);
       controls?.dispose();
       disposeTree(scene);
       renderer.dispose();
       renderer.domElement.remove();
     },
   };
+}
+
+// Renders a cake to a still image (PNG data URL) with a shared offscreen renderer.
+let snapshotRig = null;
+export async function renderCakeSnapshot(config, { width = 720, height = 720 } = {}) {
+  if (!webglAvailable()) return null;
+  if (document.fonts) await document.fonts.load('80px "Great Vibes"').catch(() => {});
+  if (!snapshotRig) {
+    const renderer = createRenderer({ alpha: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(1);
+    snapshotRig = { renderer, scene: setupScene(renderer), camera: new THREE.PerspectiveCamera(30, 1, 0.1, 100) };
+  }
+  const { renderer, scene, camera } = snapshotRig;
+  renderer.setSize(width, height, false);
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+
+  const cake = buildCake({ ...DEFAULT_CAKE, ...config });
+  scene.add(cake.group);
+  const { distance, target } = framing(cake, camera, 0.68);
+  camera.position.setFromSphericalCoords(distance, 1.2, 0.5).add(target);
+  camera.lookAt(target);
+  renderer.render(scene, camera);
+  const url = renderer.domElement.toDataURL('image/png');
+  scene.remove(cake.group);
+  disposeTree(cake.group);
+  return url;
+}
+
+function createRenderer(options) {
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', ...options });
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.92;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  return renderer;
+}
+
+// Lighting, reflections, a soft shadow and a warm pool of light on the floor.
+function setupScene(renderer) {
+  const scene = new THREE.Scene();
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.55;
+  pmrem.dispose();
+
+  scene.add(new THREE.HemisphereLight(0xfff1e0, 0x2a160c, 0.4));
+  const key = new THREE.DirectionalLight(0xfff0dc, 2.3);
+  key.position.set(4, 9, 6);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  Object.assign(key.shadow.camera, { left: -4.5, right: 4.5, top: 4.5, bottom: -4.5, near: 2, far: 25 });
+  key.shadow.bias = -0.0004;
+  key.shadow.normalBias = 0.02;
+  key.shadow.radius = 5;
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffc27a, 2.2);
+  rim.position.set(-6, 5, -6);
+  scene.add(rim);
+  const fill = new THREE.DirectionalLight(0xffe4c8, 0.6);
+  fill.position.set(-5, 2, 6);
+  scene.add(fill);
+
+  const pool = new THREE.Mesh(
+    new THREE.CircleGeometry(3.1, 64),
+    // Kept smaller than the visible floor so the canvas edges never clip the glow.
+    new THREE.MeshBasicMaterial({ map: poolTexture(), transparent: true, depthWrite: false, toneMapped: false }),
+  );
+  pool.rotation.x = -Math.PI / 2;
+  pool.position.y = 0.002;
+  scene.add(pool);
+
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(9, 64), new THREE.ShadowMaterial({ opacity: 0.45 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = 0.004;
+  ground.receiveShadow = true;
+  scene.add(ground);
+  return scene;
+}
+
+// Camera distance and look-at point that fit the whole cake in view.
+function framing(cake, camera, margin = 0.74) {
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const fitHeight = (cake.height * margin) / Math.tan(fov / 2);
+  const fitWidth = (cake.width * margin) / (Math.tan(fov / 2) * Math.max(camera.aspect, 0.5));
+  return {
+    distance: Math.max(fitHeight, fitWidth, 7),
+    target: new THREE.Vector3(0, cake.height * 0.5, 0),
+  };
+}
+
+function poolTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grad.addColorStop(0, 'rgba(255, 214, 150, 0.38)');
+  grad.addColorStop(0.45, 'rgba(214, 160, 90, 0.13)');
+  grad.addColorStop(0.85, 'rgba(214, 160, 90, 0.02)');
+  grad.addColorStop(1, 'rgba(214, 160, 90, 0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 256, 256);
+  const texture = new THREE.CanvasTexture(c);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
 }
 
 // ---------------------------------------------------------------- cake model
@@ -285,15 +369,29 @@ function buildCake(c) {
 
   let y = STAND_HEIGHT;
   let top = null;
-  radii.forEach((r, i) => {
+  const tiers = radii.map((r, i) => {
     const h = heights[i];
     const color = c.tierColors?.[i] || c.color;
     const tier = buildTier(c.shape, r, h, color, c.drip ? { color: c.drip, metallic: c.dripMetallic, seed: i } : null);
     tier.position.y = y;
+    tier.userData.baseY = y;
     group.add(tier);
     top = { y: y + h, r, h, edge: edgeSampler(c.shape, r) };
     y += h;
+    return tier;
   });
+
+  // A drip leaves a glaze layer on top; decorations sit on that, not under it.
+  if (c.drip) top.y += 0.035;
+
+  // Toppings and extras live in their own group, pivoting on the top of the cake,
+  // so the intro animation can pop them in after the tiers have landed.
+  const decor = new THREE.Group();
+  decor.position.y = top.y;
+  const onTop = new THREE.Group();
+  onTop.position.y = -top.y;
+  decor.add(onTop);
+  group.add(decor);
 
   const rng = random(7);
   let extraHeight = 0.2;
@@ -301,26 +399,26 @@ function buildCake(c) {
   const extras = new Set(c.extras || []);
   const hasMessage = Boolean(c.message && c.message.trim());
 
-  if (toppings.has('sprinkles')) group.add(sprinkles(top, rng));
-  if (toppings.has('goldleaf')) group.add(goldLeaf(top, radii, heights, rng));
-  if (toppings.has('berries')) group.add(berries(top, rng));
-  if (toppings.has('macarons')) group.add(macarons(top, hasMessage));
-  if (toppings.has('cherries')) group.add(cherries(top, hasMessage));
-  if (toppings.has('flowers')) group.add(flowers(top));
-  if (toppings.has('shards')) { group.add(shards(top, rng)); extraHeight = Math.max(extraHeight, 0.6); }
+  if (toppings.has('sprinkles')) onTop.add(sprinkles(top, rng));
+  if (toppings.has('goldleaf')) onTop.add(goldLeaf(top, radii, heights, rng));
+  if (toppings.has('berries')) onTop.add(berries(top, rng));
+  if (toppings.has('macarons')) onTop.add(macarons(top, hasMessage));
+  if (toppings.has('cherries')) onTop.add(cherries(top, hasMessage));
+  if (toppings.has('flowers')) onTop.add(flowers(top));
+  if (toppings.has('shards')) { onTop.add(shards(top, rng)); extraHeight = Math.max(extraHeight, 0.6); }
 
-  if (hasMessage) group.add(plaque(top, c.message.trim(), c.shape));
+  if (hasMessage) onTop.add(plaque(top, c.message.trim(), c.shape));
 
   if (extras.has('candles')) {
     const candleSet = candles(top);
-    group.add(candleSet.group);
+    onTop.add(candleSet.group);
     animations.push(candleSet.animate);
     extraHeight = Math.max(extraHeight, 0.85);
   }
-  if (extras.has('topper')) { group.add(topper(top)); extraHeight = Math.max(extraHeight, 1.35); }
+  if (extras.has('topper')) { onTop.add(topper(top)); extraHeight = Math.max(extraHeight, 1.35); }
   if (extras.has('sparklers')) {
     const set = sparklers(top);
-    group.add(set.group);
+    onTop.add(set.group);
     animations.push(set.animate);
     extraHeight = Math.max(extraHeight, 1.1);
   }
@@ -334,10 +432,41 @@ function buildCake(c) {
 
   return {
     group,
+    stand,
+    tiers,
+    decor,
     height: top.y + extraHeight,
     width: radii[0] * 2.7,
     animate: animations.length ? (t, dt) => animations.forEach((fn) => fn(t, dt)) : null,
   };
+}
+
+// Intro: the stand appears, each tier drops onto the one below, then the decorations pop on.
+// Returns false once finished.
+function playIntro(cake, time) {
+  const ease = (x) => 1 - (1 - x) ** 3;
+  const clamp01 = (x) => Math.min(1, Math.max(0, x));
+  const standT = clamp01(time / 0.45);
+  cake.stand.scale.setScalar(0.85 + 0.15 * ease(standT));
+
+  let end = 0;
+  cake.tiers.forEach((tier, i) => {
+    const start = 0.3 + i * 0.32;
+    const t = clamp01((time - start) / 0.55);
+    tier.visible = time >= start;
+    tier.position.y = tier.userData.baseY + (1 - settle(t)) * 2.4;
+    end = start + 0.55;
+  });
+
+  const decorT = clamp01((time - end - 0.05) / 0.5);
+  cake.decor.visible = decorT > 0;
+  cake.decor.scale.setScalar(Math.max(0.001, easeOutBack(decorT)));
+  return decorT < 1;
+}
+
+function settle(x) {
+  const c1 = 0.9;
+  return 1 + (c1 + 1) * (x - 1) ** 3 + c1 * (x - 1) ** 2;
 }
 
 // 2D outline of a tier, roughly `r` from the center. Shape y becomes world -z.

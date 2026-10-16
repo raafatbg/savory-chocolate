@@ -137,6 +137,32 @@ if (toggle) {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
 }
 
+// Cards with .spotlight glow where the cursor is.
+let spotFrame = 0;
+document.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse' || spotFrame) return;
+  spotFrame = requestAnimationFrame(() => {
+    spotFrame = 0;
+    const card = e.target.closest?.('.spotlight');
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    card.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+    card.style.setProperty('--my', `${e.clientY - rect.top}px`);
+  });
+}, { passive: true });
+
+// Splits a heading into words that rise in one after another. The last `accent` words turn gold.
+export function splitHeadline(el, { accent = 1 } = {}) {
+  if (!el) return;
+  const words = el.textContent.trim().split(/\s+/);
+  el.setAttribute('aria-label', el.textContent.trim());
+  el.classList.add('split');
+  el.innerHTML = words.map((word, i) => {
+    const gold = i >= words.length - accent ? ' class="gold-text accent"' : '';
+    return `<span class="w" aria-hidden="true"><span${gold} style="--i:${i}">${esc(word)}</span></span>`;
+  }).join(' ');
+}
+
 // Fades sections in as they scroll into view. Call again after adding new [data-reveal] elements.
 const revealer = 'IntersectionObserver' in window
   ? new IntersectionObserver((entries) => {

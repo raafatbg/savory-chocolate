@@ -351,3 +351,8 @@ body.admin a { color: var(--gold-light); }
 
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 .toast.error { background: var(--error); color: #fff; }
+
+body.admin { scrollbar-color: #d6c3ad var(--bg); }
+body.admin ::-webkit-scrollbar-thumb { background: #d6c3ad; border-color: var(--bg); }
+
+.thumb-sm svg { width: 74%; color: #a57936; }

@@ -1,4 +1,5 @@
 import { $, $$, esc, money, adminApi, toast, formError, busy, cents, errorBlock, emptyCard } from './core.js';
+import { illustrationFor } from '/js/illustrations.js';
 
 let items = [];
 
@@ -28,7 +29,7 @@ function render() {
       <div class="list-head"><h2>${esc(category)}</h2><span class="hint">${list.length} item${list.length === 1 ? '' : 's'}</span></div>
       ${list.map((item) => `
         <div class="row ${item.available ? '' : 'is-hidden'}">
-          <div class="thumb-sm">${item.image ? `<img src="/uploads/${esc(item.image)}" alt="">` : esc(item.name.charAt(0))}</div>
+          <div class="thumb-sm">${item.image ? `<img src="/uploads/${esc(item.image)}" alt="">` : illustrationFor(item)}</div>
           <div class="row-main">
             <div class="name">${esc(item.name)}
               ${item.available ? '' : '<span class="pill">Hidden</span>'}

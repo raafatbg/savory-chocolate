@@ -1,6 +1,8 @@
 import {
   api, esc, money, storage, isoDate, friendlyDate, friendlyTime, loadSettings, setupFulfillment, deliveryFee, reveal,
 } from '/js/common.js';
+import { illustrationFor } from '/js/illustrations.js';
+import { confetti } from '/js/confetti.js';
 
 const CART_KEY = 'sc_cart_v2';
 
@@ -68,7 +70,35 @@ function saveCart() {
   storage.set(CART_KEY, cart.map(({ id, quantity, picks }) => ({ id, quantity, picks })));
 }
 
-function addToCart(id, picks, quantity) {
+// A little gold dot arcs from the button to the order panel (or the bottom bar on phones).
+function flyToCart(from) {
+  if (!from || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const bar = document.getElementById('cart-bar');
+  const target = bar.classList.contains('show') && getComputedStyle(bar).display !== 'none'
+    ? bar : document.querySelector('#cart .panel');
+  const a = from.getBoundingClientRect();
+  const b = target.getBoundingClientRect();
+  const x0 = a.left + a.width / 2;
+  const y0 = a.top + a.height / 2;
+  const x1 = b.left + Math.min(b.width / 2, 120);
+  const y1 = b.top + Math.min(b.height / 2, 40);
+  const dot = document.createElement('div');
+  dot.className = 'fly-dot';
+  document.body.append(dot);
+  dot.animate([
+    { transform: `translate(${x0}px, ${y0}px) scale(1)` },
+    { transform: `translate(${(x0 + x1) / 2}px, ${Math.min(y0, y1) - 140}px) scale(1.25)`, offset: 0.45 },
+    { transform: `translate(${x1}px, ${y1}px) scale(0.35)`, opacity: 0.3 },
+  ], { duration: 750, easing: 'cubic-bezier(0.45, 0, 0.25, 1)' }).onfinish = () => {
+    dot.remove();
+    target.classList.remove('bump');
+    void target.offsetWidth;
+    target.classList.add('bump');
+  };
+  setTimeout(() => dot.remove(), 1500);
+}
+
+function addToCart(id, picks, quantity, from = null) {
   const key = lineKey(id, picks);
   const line = cart.find((l) => l.key === key);
   if (line) line.quantity = Math.min(99, line.quantity + quantity);
@@ -76,6 +106,7 @@ function addToCart(id, picks, quantity) {
   saveCart();
   renderControls();
   renderCart();
+  flyToCart(from);
 }
 
 function changeLine(key, delta) {
@@ -117,10 +148,10 @@ function renderMenu() {
         ${categories.get(name).map((item, k) => {
           const from = item.options.length && fromPrice(item) !== item.price_cents;
           return `
-          <article class="card menu-card" data-reveal style="--delay: ${(k % 3) * 0.06}s">
-            <div class="thumb">${item.image
+          <article class="card spotlight menu-card" data-reveal style="--delay: ${(k % 3) * 0.06}s">
+            <div class="thumb ${item.image ? '' : 'illus'}">${item.image
               ? `<img src="/uploads/${esc(item.image)}" alt="${esc(item.name)}" loading="lazy">`
-              : `<span class="initial" aria-hidden="true">${esc(item.name.charAt(0))}</span>`}</div>
+              : illustrationFor(item)}</div>
             <div class="body">
               <h3>${esc(item.name)}</h3>
               <p class="desc">${esc(item.description)}</p>
@@ -223,8 +254,11 @@ const dialogForm = document.getElementById('item-form');
 let dialogItem = null;
 let dialogQty = 1;
 
-function openOptions(item) {
+let dialogSource = null;
+
+function openOptions(item, source = null) {
   dialogItem = item;
+  dialogSource = source;
   dialogQty = 1;
   document.getElementById('d-name').textContent = item.name;
   document.getElementById('d-desc').textContent = item.description;
@@ -277,8 +311,8 @@ dialogForm.addEventListener('submit', (event) => {
     box.hidden = false;
     return;
   }
-  addToCart(dialogItem.id, picks, dialogQty);
   dialog.close();
+  addToCart(dialogItem.id, picks, dialogQty, dialogSource);
 });
 
 // ---------- clicks ----------
@@ -288,8 +322,8 @@ document.addEventListener('click', (event) => {
   const choose = event.target.closest('[data-choose]');
   const inc = event.target.closest('[data-inc]');
   const dec = event.target.closest('[data-dec]');
-  if (add && ordersOpen) addToCart(Number(add.dataset.add), [], 1);
-  if (choose && ordersOpen) openOptions(itemsById.get(Number(choose.dataset.choose)));
+  if (add && ordersOpen) addToCart(Number(add.dataset.add), [], 1, add);
+  if (choose && ordersOpen) openOptions(itemsById.get(Number(choose.dataset.choose)), choose);
   if (inc) changeLine(inc.dataset.inc, 1);
   if (dec) changeLine(dec.dataset.dec, -1);
 });
@@ -324,6 +358,7 @@ function showConfirmation(order, name) {
   const firstName = name.trim().split(/\s+/)[0];
   const delivery = order.fulfillment === 'delivery';
   document.getElementById('cart-bar').remove();
+  confetti();
   document.getElementById('page').innerHTML = `
     <div class="card confirm">
       <span class="script" style="font-size: 2.4rem;">Thank you</span>

@@ -1,7 +1,9 @@
 import {
   api, esc, money, isoDate, friendlyDate, friendlyTime, loadSettings, setupFulfillment, deliveryFee,
 } from '/js/common.js';
-import { createCakeStage } from '/js/cake3d.js';
+import { createCakeStage, renderCakeSnapshot } from '/js/cake3d.js';
+import { SIGNATURE_DESIGNS } from '/js/designs.js';
+import { confetti } from '/js/confetti.js';
 
 const SHAPE_ICONS = {
   round: '<svg class="icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="20" cy="13" rx="14" ry="5"/><path d="M6 13v14c0 2.8 6.3 5 14 5s14-2.2 14-5V13"/></svg>',
@@ -116,8 +118,8 @@ function cakeConfig() {
 
 let fulfillment = () => 'pickup';
 
-function update({ redraw = true } = {}) {
-  if (redraw) stage?.setCake(cakeConfig());
+function update({ redraw = true, intro = false } = {}) {
+  if (redraw) stage?.setCake(cakeConfig(), { intro });
   document.getElementById('message-count').textContent = `${messageInput.value.length} / 60 · shown on a chocolate plaque`;
 
   let subtotal = 0;
@@ -147,6 +149,33 @@ function update({ redraw = true } = {}) {
     .filter(Boolean).join(' · ') || 'Custom cake';
 }
 
+// ---------- signature designs (/cakes?design=classic) ----------
+
+// Matches a design's picks to the admin's options by 3D look or color, so renamed options still match.
+function applyDesign(design) {
+  const matches = (o, want) => o.visual === want || Boolean(o.color && want.startsWith('#') && o.color.toLowerCase() === want.toLowerCase());
+  for (const [key, want] of Object.entries(design.picks)) {
+    const group = byKey[key];
+    if (!group) continue;
+    const input = (o) => form.querySelector(`input[name="${key}"][value="${o.id}"]`);
+    if (group.mode === 'single') {
+      const option = group.options.find((o) => matches(o, want));
+      if (option) input(option).checked = true;
+    } else {
+      for (const o of group.options) input(o).checked = want.some((w) => matches(o, w));
+    }
+  }
+}
+
+const preset = SIGNATURE_DESIGNS.find((d) => d.id === new URLSearchParams(location.search).get('design'));
+if (preset && groups.length) {
+  applyDesign(preset);
+  const note = document.createElement('div');
+  note.className = 'alert alert-info';
+  note.innerHTML = `You're customizing <strong>${esc(preset.name)}</strong>. Change anything you like.`;
+  document.getElementById('stepper').before(note);
+}
+
 fulfillment = setupFulfillment(form, settings, () => update({ redraw: false }));
 
 let messageTimer = 0;
@@ -159,7 +188,120 @@ messageInput.addEventListener('input', () => {
   clearTimeout(messageTimer);
   messageTimer = setTimeout(() => stage?.setCake(cakeConfig()), 350);
 });
-update();
+update({ intro: true });
+
+// ---------- progress stepper ----------
+
+const stepper = document.getElementById('stepper');
+const sections = [...form.querySelectorAll('.builder-step')];
+stepper.innerHTML = sections.map((s, i) => `<a href="#${s.id}" data-for="${s.id}"><span class="dot">${i + 1}</span>${esc(s.dataset.step)}</a>`).join('');
+
+function stepDone(section) {
+  const groupsHere = [...section.querySelectorAll('[data-chosen]')].map((el) => byKey[el.dataset.chosen]).filter(Boolean);
+  if (groupsHere.length) return groupsHere.every((g) => g.mode === 'multi' || selected(g.key).length > 0);
+  if (section.id === 'summary-step') return false;
+  const fields = [...section.querySelectorAll('input, textarea')].filter((el) => el.type !== 'radio' && el.offsetParent !== null);
+  const required = fields.filter((el) => el.required);
+  if (required.length) return required.every((el) => el.value && el.checkValidity());
+  return fields.some((el) => el.value.trim());
+}
+
+function refreshStepper() {
+  sections.forEach((s, i) => {
+    const link = stepper.querySelector(`[data-for="${s.id}"]`);
+    const done = stepDone(s);
+    link.classList.toggle('done', done);
+    link.querySelector('.dot').textContent = done ? '✓' : i + 1;
+  });
+}
+
+// Highlight the step in the middle of the screen, keeping it visible in the (scrollable) stepper.
+const spy = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (!entry.isIntersecting) continue;
+    const link = stepper.querySelector(`[data-for="${entry.target.id}"]`);
+    stepper.querySelectorAll('a').forEach((a) => a.classList.toggle('current', a === link));
+    stepper.scrollTo({ left: link.offsetLeft - stepper.clientWidth / 2 + link.clientWidth / 2, behavior: 'smooth' });
+  }
+}, { rootMargin: '-40% 0px -55% 0px' });
+sections.forEach((s) => spy.observe(s));
+
+form.addEventListener('input', refreshStepper);
+form.addEventListener('change', refreshStepper);
+refreshStepper();
+
+// ---------- surprise me & save image ----------
+
+document.getElementById('surprise-btn').addEventListener('click', () => {
+  const inputsOf = (key) => [...form.querySelectorAll(`input[name="${key}"]`)];
+  const random = (list) => list[Math.floor(Math.random() * list.length)];
+  for (const key of ['shape', 'tiers', 'flavor', 'filling', 'frosting', 'color', 'drip']) {
+    const inputs = inputsOf(key);
+    if (inputs.length) random(inputs).checked = true;
+  }
+  for (const [key, min, max] of [['toppings', 1, 2], ['extras', 0, 1]]) {
+    const inputs = inputsOf(key).sort(() => Math.random() - 0.5);
+    const count = min + Math.floor(Math.random() * (max - min + 1));
+    inputs.forEach((input, i) => { input.checked = i < count; });
+  }
+  update();
+  refreshStepper();
+});
+
+document.getElementById('save-btn').addEventListener('click', async (e) => {
+  const button = e.currentTarget;
+  button.disabled = true;
+  try {
+    const url = await cakeCard();
+    if (!url) return;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${(settings.shop_name || 'cake').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-my-cake.png`;
+    link.click();
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// A portrait image of the cake on a branded background, ready to share.
+async function cakeCard() {
+  const render = await renderCakeSnapshot(cakeConfig(), { width: 1000, height: 1000 });
+  if (!render) return null;
+  const img = await new Promise((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = reject;
+    i.src = render;
+  });
+  await Promise.all(['600 72px "Cormorant Garamond"', '500 30px Manrope', '60px "Great Vibes"'].map((f) => document.fonts.load(f).catch(() => {})));
+
+  const c = document.createElement('canvas');
+  c.width = 1080;
+  c.height = 1350;
+  const ctx = c.getContext('2d');
+  const bg = ctx.createRadialGradient(540, 820, 60, 540, 700, 900);
+  bg.addColorStop(0, '#3a2516');
+  bg.addColorStop(0.55, '#1a0f09');
+  bg.addColorStop(1, '#0e0704');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, 40, 190, 1000, 1000);
+
+  const gold = ctx.createLinearGradient(300, 0, 780, 0);
+  gold.addColorStop(0, '#b0843f');
+  gold.addColorStop(0.5, '#f6e1a8');
+  gold.addColorStop(1, '#b0843f');
+  ctx.textAlign = 'center';
+  ctx.fillStyle = gold;
+  ctx.font = '600 72px "Cormorant Garamond", serif';
+  ctx.fillText(settings.shop_name || 'Savory Chocolate', 540, 130);
+  ctx.font = '60px "Great Vibes", cursive';
+  ctx.fillText('Designed by you', 540, 1250);
+  ctx.fillStyle = '#bba48f';
+  ctx.font = '500 30px Manrope, sans-serif';
+  ctx.fillText(document.getElementById('preview-title').textContent, 540, 1300);
+  return c.toDataURL('image/png');
+}
 
 const bar = document.getElementById('bottom-bar');
 const summaryStep = document.getElementById('summary-step');
@@ -197,6 +339,7 @@ function showConfirmation(order, name) {
   const firstName = name.trim().split(/\s+/)[0];
   const delivery = order.fulfillment === 'delivery';
   bar.remove();
+  confetti();
   document.getElementById('builder-col').innerHTML = `
     <div class="card confirm" style="margin: 0;">
       <span class="script" style="font-size: 2.4rem;">Thank you</span>

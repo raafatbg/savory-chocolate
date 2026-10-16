@@ -13,10 +13,10 @@
       <div class="container">
         <div class="hero-copy" data-reveal>
           <span class="script">Artisan patisserie</span>
-          <h1>{{hero_title}}</h1>
+          <h1 id="hero-title">{{hero_title}}</h1>
           <p class="lead">{{tagline}}</p>
           <div class="hero-actions">
-            <a class="btn btn-gold btn-lg" href="/cakes">Design your cake <span class="arrow" aria-hidden="true">→</span></a>
+            <a class="btn btn-gold btn-lg btn-shine" href="/cakes">Design your cake <span class="arrow" aria-hidden="true">→</span></a>
             <a class="btn btn-outline btn-lg" href="/menu">Order from the menu</a>
           </div>
           <div class="trust">
@@ -30,6 +30,7 @@
           <span class="stage-hint"><span class="drag">Drag to spin &middot; </span>Rendered live in 3D</span>
         </div>
       </div>
+      <a class="scroll-cue" href="#ways">Scroll</a>
     </section>
 
     <div class="marquee" aria-hidden="true">
@@ -39,14 +40,14 @@
       </div>
     </div>
 
-    <section class="section">
+    <section class="section" id="ways">
       <div class="container">
         <div class="section-head" data-reveal>
           <span class="eyebrow">Two ways to order</span>
           <h2>Something sweet for every <em class="gold-text">occasion</em></h2>
         </div>
         <div class="paths">
-          <a class="card path-card" href="/cakes" data-reveal>
+          <a class="card spotlight path-card" href="/cakes" data-reveal>
             <span class="num">01 &mdash; Bespoke</span>
             <h3>Custom cakes</h3>
             <p>Choose the shape, tiers, flavors, frosting, drip and toppings, and watch your cake come to life in 3D as you design it. <span id="lead-note"></span></p>
@@ -56,7 +57,7 @@
               <path d="M18 78c8 0 8 8 14 8s6-8 14-8 8 10 14 10 6-10 14-10 8 8 14 8 6-8 14-8"/><path d="M60 8v10"/><path d="M60 2c3 3 3 5 0 7-3-2-3-4 0-7z"/>
             </svg>
           </a>
-          <a class="card path-card" href="/menu" data-reveal style="--delay: 0.12s">
+          <a class="card spotlight path-card" href="/menu" data-reveal style="--delay: 0.12s">
             <span class="num">02 &mdash; Everyday</span>
             <h3>Today's menu</h3>
             <p>Slices, bakes and drinks from our counter. Order ahead for pickup, or have it delivered to your door.</p>
@@ -67,6 +68,17 @@
             </svg>
           </a>
         </div>
+      </div>
+    </section>
+
+    <section class="section" id="signature" style="padding-top: 0;">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <span class="eyebrow">Signature designs</span>
+          <h2>Start from a <em class="gold-text">masterpiece</em></h2>
+          <p>Our favorite creations, rendered live by the same 3D engine as the cake builder. Open one and make it yours.</p>
+        </div>
+        <div class="designs" id="designs"></div>
       </div>
     </section>
 
@@ -106,17 +118,17 @@
           <h2>Ordering is a piece of cake</h2>
         </div>
         <div class="steps">
-          <div class="card step" data-reveal>
+          <div class="card spotlight step" data-reveal>
             <span class="n gold-text">01</span>
             <h3>Choose</h3>
             <p>Design a custom cake in 3D, or pick your favorites from the menu.</p>
           </div>
-          <div class="card step" data-reveal style="--delay: 0.1s">
+          <div class="card spotlight step" data-reveal style="--delay: 0.1s">
             <span class="n gold-text">02</span>
             <h3>Pick a time</h3>
             <p>Tell us when you'd like it, and whether you'll collect it or want it delivered.</p>
           </div>
-          <div class="card step" data-reveal style="--delay: 0.2s">
+          <div class="card spotlight step" data-reveal style="--delay: 0.2s">
             <span class="n gold-text">03</span>
             <h3>Enjoy</h3>
             <p>We bake it fresh for you. Pay when you collect it or when it arrives.</p>
