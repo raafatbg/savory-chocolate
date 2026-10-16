@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Design your cake · {{shop_name}}</title>
+  <meta name="description" content="Design a custom cake in 3D: shape, tiers, flavors, frosting, drip, toppings and a personal message.">
+  {{> head}}
+</head>
+<body>
+  {{> header}}
+
+  <main id="main">
+    <section class="page-hero" style="padding-bottom: 36px;">
+      <div class="container" data-reveal>
+        <span class="eyebrow">Custom cakes</span>
+        <h1>Design your <em class="gold-text">dream cake</em></h1>
+        <p>Every choice updates the live 3D preview. Drag the cake to look around it.</p>
+      </div>
+    </section>
+
+    <div class="container">
+      <div id="closed-notice" class="alert alert-info" hidden>We're not taking online orders right now. Please give us a call instead.</div>
+
+      <div class="builder-layout">
+        <div class="preview-col">
+          <div class="card preview-card">
+            <div class="stage" id="cake-stage">
+              <img class="fallback" src="/img/cake.svg" alt="Cake illustration">
+              <span class="stage-hint"><span class="drag">Drag to turn &middot; </span>Live preview</span>
+            </div>
+            <div class="preview-meta">
+              <div>
+                <div class="muted small">Your cake</div>
+                <div class="title" id="preview-title">Custom cake</div>
+              </div>
+              <div class="amount gold-text" id="preview-total">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="builder-col">
+          <form id="cake-form" autocomplete="on">
+            <section class="card builder-step">
+              <div class="step-head"><span class="n">01</span><h2>Shape &amp; size</h2></div>
+              <div data-groups="shape,size,tiers"><p class="loading">Loading options…</p></div>
+            </section>
+
+            <section class="card builder-step">
+              <div class="step-head"><span class="n">02</span><h2>Flavor</h2></div>
+              <div data-groups="flavor,filling"></div>
+            </section>
+
+            <section class="card builder-step">
+              <div class="step-head"><span class="n">03</span><h2>Frosting &amp; finish</h2></div>
+              <div data-groups="frosting,color,drip"></div>
+            </section>
+
+            <section class="card builder-step">
+              <div class="step-head"><span class="n">04</span><h2>Toppings &amp; extras</h2></div>
+              <p class="step-intro">Optional. Pick as many as you like.</p>
+              <div data-groups="toppings,extras,dietary"></div>
+            </section>
+
+            <section class="card builder-step">
+              <div class="step-head"><span class="n">05</span><h2>Personal touch</h2></div>
+              <div class="field" style="margin-top: 14px;">
+                <label for="message">Message on the cake <span class="optional">(optional)</span></label>
+                <input type="text" id="message" name="message" maxlength="60" placeholder="Happy Birthday, Sam!">
+                <span class="char-count" id="message-count">0 / 60 · shown on a chocolate plaque</span>
+              </div>
+              <div class="field">
+                <label for="notes">Design notes <span class="optional">(optional)</span></label>
+                <textarea id="notes" name="notes" maxlength="1000" placeholder="Theme, colors, allergies, or anything else we should know."></textarea>
+              </div>
+            </section>
+
+            <section class="card builder-step">
+              <div class="step-head"><span class="n">06</span><h2>Pickup or delivery</h2></div>
+              <div style="margin-top: 16px;">{{> fulfillment}}</div>
+            </section>
+
+            <section class="card builder-step">
+              <div class="step-head"><span class="n">07</span><h2>Your details</h2></div>
+              <div style="margin-top: 16px;">{{> customer}}</div>
+            </section>
+
+            <section class="card builder-step" id="summary-step">
+              <div class="step-head"><span class="n">08</span><h2>Review &amp; order</h2></div>
+              <ul class="summary-list" id="summary" style="margin-top: 16px;"></ul>
+              <div class="sum-rows" id="fee-rows"></div>
+              <div class="total-row"><span>Total</span><span class="amount" id="total">—</span></div>
+              <div id="form-error" class="alert alert-error" role="alert" hidden></div>
+              <button type="submit" class="btn btn-gold btn-lg btn-block" id="submit-btn">Place cake order</button>
+              <p class="pay-note">Nothing to pay now. Pay on pickup or delivery.</p>
+            </section>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <a class="btn btn-gold bottom-bar" href="#summary-step" id="bottom-bar"><span>Review &amp; order</span><span id="bar-total"></span></a>
+
+  {{> footer}}
+  <script type="module" src="/js/cakes.js"></script>
+</body>
+</html>

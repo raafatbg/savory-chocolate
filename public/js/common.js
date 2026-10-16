@@ -1,4 +1,5 @@
-// Helpers shared by every public page.
+// Helpers shared by every public page. Importing this module also wires up the
+// header (scroll state + mobile menu) and the scroll-reveal animations.
 
 export async function api(path, { method = 'GET', body, form } = {}) {
   const options = { method, headers: {} };
@@ -47,7 +48,7 @@ export const storage = {
   set(key, value) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch { /* private mode or storage blocked: the cart just won't persist */ }
+    } catch { /* private mode or storage blocked: it just won't persist */ }
   },
 };
 
@@ -69,49 +70,90 @@ export function friendlyTime(hhmm) {
   return new Date(2000, 0, 1, h, m).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
-// Loads shop settings, fills any [data-setting] element and renders the footer.
 export async function loadSettings() {
-  let settings = {};
   try {
-    settings = await api('/api/settings');
-  } catch {
+    const settings = await api('/api/settings');
+    currency = settings.currency || 'USD';
     return settings;
+  } catch {
+    return {};
   }
-  currency = settings.currency || 'USD';
+}
 
-  document.querySelectorAll('[data-setting]').forEach((el) => {
-    const value = settings[el.dataset.setting];
-    if (value) el.textContent = value;
+// Wires a Pickup / Delivery toggle inside `root`: shows the address fields and swaps labels.
+// Returns a function that reports the current choice.
+export function setupFulfillment(root, settings, onChange = () => {}) {
+  const toggle = root.querySelector('[data-fulfillment]');
+  const address = root.querySelector('[data-delivery-fields]');
+  const addressInput = address?.querySelector('textarea');
+  if (settings.delivery_enabled !== '1') {
+    toggle.hidden = true;
+    address.hidden = true;
+    return () => 'pickup';
+  }
+  root.querySelector('[data-delivery-area]').textContent = [
+    settings.delivery_area,
+    Number(settings.delivery_fee) ? `Delivery fee: ${money(Number(settings.delivery_fee))}.` : 'Free delivery.',
+    Number(settings.delivery_min) ? `Minimum order ${money(Number(settings.delivery_min))}.` : '',
+  ].filter(Boolean).join(' ');
+
+  const current = () => toggle.querySelector('input:checked')?.value || 'pickup';
+  const apply = () => {
+    const delivery = current() === 'delivery';
+    address.hidden = !delivery;
+    addressInput.required = delivery;
+    root.querySelectorAll('[data-when-label]').forEach((el) => {
+      el.textContent = `${delivery ? 'Delivery' : 'Pickup'} ${el.dataset.whenLabel}`;
+    });
+    onChange(current());
+  };
+  toggle.addEventListener('change', apply);
+  apply();
+  return current;
+}
+
+export function deliveryFee(settings, fulfillment) {
+  return fulfillment === 'delivery' ? Number(settings.delivery_fee) || 0 : 0;
+}
+
+// ---------- Page chrome ----------
+
+const header = document.getElementById('site-header');
+if (header) {
+  const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 12);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+}
+
+const toggle = document.getElementById('nav-toggle');
+if (toggle) {
+  const setOpen = (open) => {
+    document.body.classList.toggle('nav-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  };
+  toggle.addEventListener('click', () => setOpen(!document.body.classList.contains('nav-open')));
+  document.getElementById('site-nav')?.addEventListener('click', (e) => { if (e.target.closest('a')) setOpen(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+}
+
+// Fades sections in as they scroll into view. Call again after adding new [data-reveal] elements.
+const revealer = 'IntersectionObserver' in window
+  ? new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        revealer.unobserve(entry.target);
+      }
+    }
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 })
+  : null;
+
+export function reveal(root = document) {
+  root.querySelectorAll('[data-reveal]:not(.is-visible)').forEach((el) => {
+    if (revealer) revealer.observe(el);
+    else el.classList.add('is-visible');
   });
-
-  renderFooter(settings);
-  return settings;
 }
 
-function renderFooter(s) {
-  const footer = document.getElementById('site-footer');
-  if (!footer) return;
-  const phone = s.phone ? `<p><a href="tel:${esc(s.phone.replace(/[^\d+]/g, ''))}">${esc(s.phone)}</a></p>` : '';
-  const email = s.email ? `<p><a href="mailto:${esc(s.email)}">${esc(s.email)}</a></p>` : '';
-  const address = s.address ? `<p class="pre-line">${esc(s.address)}</p>` : '';
-  const contact = phone + email + address;
-
-  footer.innerHTML = `
-    <div class="container">
-      <div class="cols">
-        <div>
-          <h3>${esc(s.shop_name)}</h3>
-          <p>${esc(s.tagline)}</p>
-        </div>
-        <div>
-          <h3>Hours</h3>
-          <p class="pre-line">${esc(s.hours)}</p>
-        </div>
-        <div>
-          <h3>${contact ? 'Find us' : 'Order'}</h3>
-          ${contact || '<p><a href="/cakes">Custom cakes</a></p><p><a href="/menu">Order from the menu</a></p>'}
-        </div>
-      </div>
-      <p class="fine">&copy; ${new Date().getFullYear()} ${esc(s.shop_name)}. Orders are paid at pickup.</p>
-    </div>`;
-}
+reveal();

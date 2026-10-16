@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>FAQ · {{shop_name}}</title>
+  <meta name="description" content="Answers to common questions about ordering, delivery, payment and dietary needs.">
+  {{> head}}
+</head>
+<body>
+  {{> header}}
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container" data-reveal>
+        <span class="eyebrow">Good to know</span>
+        <h1>Frequently asked <em class="gold-text">questions</em></h1>
+        <p>Can't find what you're looking for? <a href="/contact">Send us a message</a>{{#phone}} or call <a href="{{phone_href}}">{{phone}}</a>{{/phone}}.</p>
+      </div>
+    </section>
+
+    <div class="container" style="padding-bottom: 96px;">
+      <div class="faq-list" id="faqs"><p class="loading">Loading…</p></div>
+    </div>
+  </main>
+
+  {{> footer}}
+  <script type="module">
+    import { api, esc, reveal } from '/js/common.js';
+
+    const list = document.getElementById('faqs');
+    try {
+      const faqs = await api('/api/faqs');
+      list.innerHTML = faqs.length
+        ? faqs.map((f, i) => `
+          <details data-reveal style="--delay: ${Math.min(i, 6) * 0.05}s" ${i === 0 ? 'open' : ''}>
+            <summary>${esc(f.question)}</summary>
+            <div class="answer">${esc(f.answer)}</div>
+          </details>`).join('')
+        : '<p class="muted" style="text-align: center;">No questions here yet. <a href="/contact">Ask us anything!</a></p>';
+      reveal(list);
+    } catch (err) {
+      list.innerHTML = `<p class="alert alert-error">${esc(err.message)}</p>`;
+    }
+  </script>
+</body>
+</html>

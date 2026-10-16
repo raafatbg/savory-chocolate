@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Admin · {{shop_name}}</title>
+  <meta name="robots" content="noindex">
+  {{> head}}
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin">
+
+  <!-- Log in / first-time setup -->
+  <main id="auth-view" class="auth-wrap" hidden>
+    <div class="card auth-card">
+      <a class="brand" href="/"><img src="/img/logo.svg" alt="" width="40" height="40"><span class="brand-name">{{shop_name}}</span></a>
+      <h1 id="auth-title">Admin login</h1>
+      <p id="auth-intro" class="muted"></p>
+      <form id="auth-form">
+        <div class="field">
+          <label for="auth-username">Username</label>
+          <input type="text" id="auth-username" name="username" autocomplete="username" maxlength="40" required>
+        </div>
+        <div class="field">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" name="password" autocomplete="current-password" required>
+        </div>
+        <div class="field" id="auth-confirm-field" hidden>
+          <label for="auth-confirm">Confirm password</label>
+          <input type="password" id="auth-confirm" name="confirm" autocomplete="new-password">
+        </div>
+        <div id="auth-error" class="alert alert-error" role="alert" hidden></div>
+        <button type="submit" class="btn btn-gold btn-block" id="auth-submit">Log in</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Dashboard -->
+  <div id="dash-view" hidden>
+    <header class="admin-header">
+      <div class="container admin-bar">
+        <a class="brand" href="/admin"><img src="/img/logo.svg" alt="" width="36" height="36"><span class="brand-name">{{shop_name}}</span><span class="admin-pill">Admin</span></a>
+        <div class="admin-actions">
+          <a class="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener">View site ↗</a>
+          <button type="button" class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
+        </div>
+      </div>
+      <nav class="container tabs" role="tablist" aria-label="Admin sections">
+        <button type="button" role="tab" data-tab="orders">Orders <span class="badge" id="badge-orders" hidden></span></button>
+        <button type="button" role="tab" data-tab="messages">Messages <span class="badge" id="badge-messages" hidden></span></button>
+        <button type="button" role="tab" data-tab="menu">Menu</button>
+        <button type="button" role="tab" data-tab="cakes">Cake builder</button>
+        <button type="button" role="tab" data-tab="gallery">Gallery</button>
+        <button type="button" role="tab" data-tab="reviews">Reviews</button>
+        <button type="button" role="tab" data-tab="faq">FAQ</button>
+        <button type="button" role="tab" data-tab="settings">Settings</button>
+      </nav>
+    </header>
+
+    <main class="container admin-main">
+
+      <section data-panel="orders" hidden>
+        <div class="panel-head">
+          <div>
+            <h1>Orders</h1>
+            <p class="muted small" id="orders-updated"></p>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="orders-refresh">Refresh</button>
+        </div>
+        <div class="filters" id="order-filters"></div>
+        <div id="orders-list"></div>
+      </section>
+
+      <section data-panel="messages" hidden>
+        <div class="panel-head">
+          <div>
+            <h1>Messages</h1>
+            <p class="muted small">Sent from the Contact page.</p>
+          </div>
+        </div>
+        <div id="messages-list"></div>
+      </section>
+
+      <section data-panel="menu" hidden>
+        <div class="panel-head">
+          <div>
+            <h1>Menu items</h1>
+            <p class="muted small">What customers can order on the Menu page. Add choices like sizes or extras to any item. Hidden items stay here but don't show on the site.</p>
+          </div>
+          <button type="button" class="btn btn-gold btn-sm" id="add-item-btn">+ Add item</button>
+        </div>
+        <div id="items-list"></div>
+      </section>
+
+      <section data-panel="cakes" hidden>
+        <div class="panel-head">
+          <div>
+            <h1>Cake builder</h1>
+            <p class="muted small">Every choice in the custom cake builder. A cake's price is the size price plus the extra charges of everything else the customer picks. "3D look" controls how a choice appears in the live preview.</p>
+          </div>
+        </div>
+        <div id="options-list"></div>
+      </section>
+
+      <section data-panel="gallery" hidden>
+        <div class="panel-head">
+          <div>
+            <h1>Gallery</h1>
+            <p class="muted small">Photos for the Gallery page. The latest six also appear on the home page.</p>
+          </div>
+        </div>
+        <form class="card form-card upload-card" id="gallery-upload">
+          <div class="field" style="margin: 0; flex: 1;">
+            <label for="g-files">Add photos <span class="optional">(JPG, PNG, WebP or GIF, up to 8 MB each)</span></label>
+            <input type="file" id="g-files" name="image" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
+          </div>
+          <div class="field" style="margin: 0; flex: 1;">
+            <label for="g-caption">Caption <span class="optional">(optional)</span></label>
+            <input type="text" id="g-caption" name="caption" maxlength="200" placeholder="e.g. Three-tier wedding cake">
+          </div>
+          <button type="submit" class="btn btn-gold">Upload</button>
+        </form>
+        <div class="form-error alert alert-error" id="gallery-error" role="alert" hidden></div>
+        <div id="gallery-list"></div>
+      </section>
+
+      <section data-panel="reviews" hidden>
+        <div class="panel-head">
+          <div>
+            <h1>Reviews</h1>
+            <p class="muted small">Customer reviews shown on the home page. Please only add real reviews, with the customer's permission.</p>
+          </div>
+          <button type="button" class="btn btn-gold btn-sm" id="add-review-btn">+ Add review</button>
+        </div>
+        <div id="reviews-list"></div>
+      </section>
+
+      <section data-panel="faq" hidden>
+        <div class="panel-head">
+          <div>
+            <h1>FAQ</h1>
+            <p class="muted small">Questions and answers on the FAQ page.</p>
+          </div>
+          <button type="button" class="btn btn-gold btn-sm" id="add-faq-btn">+ Add question</button>
+        </div>
+        <div id="faq-list"></div>
+      </section>
+
+      <section data-panel="settings" hidden>
+        <div class="panel-head"><h1>Settings</h1></div>
+        <div class="settings-grid">
+          <form id="settings-form" class="card form-card">
+            <h2>Shop details</h2>
+            <p class="muted small">Shown in the footer and on the Home, About and Contact pages.</p>
+            <div class="field"><label for="s-shop_name">Shop name</label><input type="text" id="s-shop_name" name="shop_name" maxlength="80" required></div>
+            <div class="field-row">
+              <div class="field"><label for="s-phone">Phone</label><input type="tel" id="s-phone" name="phone" maxlength="40"></div>
+              <div class="field"><label for="s-email">Email</label><input type="email" id="s-email" name="email" maxlength="200"></div>
+            </div>
+            <div class="field"><label for="s-address">Address</label><textarea id="s-address" name="address" maxlength="300" rows="2"></textarea></div>
+            <div class="field"><label for="s-hours">Opening hours</label><textarea id="s-hours" name="hours" maxlength="500" rows="3"></textarea><span class="hint">One line per day or group of days.</span></div>
+
+            <h2>Home &amp; About pages</h2>
+            <div class="field"><label for="s-hero_title">Home page headline</label><input type="text" id="s-hero_title" name="hero_title" maxlength="120"></div>
+            <div class="field"><label for="s-tagline">Tagline</label><input type="text" id="s-tagline" name="tagline" maxlength="200"></div>
+            <div class="field"><label for="s-about">Short introduction</label><textarea id="s-about" name="about" maxlength="2000" rows="3"></textarea><span class="hint">Shown on the home page.</span></div>
+            <div class="field"><label for="s-about_story">Our story</label><textarea id="s-about_story" name="about_story" maxlength="5000" rows="7"></textarea><span class="hint">The About page. Leave a blank line between paragraphs.</span></div>
+            <div class="field-row">
+              <div class="field"><label for="s-instagram">Instagram link</label><input type="url" id="s-instagram" name="instagram" maxlength="300" placeholder="https://instagram.com/…"></div>
+              <div class="field"><label for="s-facebook">Facebook link</label><input type="url" id="s-facebook" name="facebook" maxlength="300" placeholder="https://facebook.com/…"></div>
+            </div>
+
+            <h2>Ordering</h2>
+            <div class="field">
+              <label class="checkbox"><input type="checkbox" name="orders_open" id="s-orders_open"> Accept online orders</label>
+              <span class="hint">Turn this off to pause ordering, for example during holidays.</span>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="s-cake_lead_days">Days of notice for cakes</label>
+                <input type="number" id="s-cake_lead_days" name="cake_lead_days" min="0" max="60" required>
+                <span class="hint">Earliest a custom cake can be ready.</span>
+              </div>
+              <div class="field">
+                <label for="s-currency">Currency</label>
+                <input type="text" id="s-currency" name="currency" maxlength="3" required pattern="[A-Za-z]{3}">
+                <span class="hint">3-letter code, e.g. USD, EUR, GBP.</span>
+              </div>
+            </div>
+
+            <h2>Delivery</h2>
+            <div class="field"><label class="checkbox"><input type="checkbox" name="delivery_enabled" id="s-delivery_enabled"> Offer delivery</label></div>
+            <div class="field-row">
+              <div class="field"><label for="s-delivery_fee">Delivery fee</label><input type="text" id="s-delivery_fee" name="delivery_fee" inputmode="decimal" placeholder="5.00"></div>
+              <div class="field"><label for="s-delivery_min">Minimum order for delivery</label><input type="text" id="s-delivery_min" name="delivery_min" inputmode="decimal" placeholder="0.00"><span class="hint">0 for no minimum.</span></div>
+            </div>
+            <div class="field"><label for="s-delivery_area">Delivery area</label><input type="text" id="s-delivery_area" name="delivery_area" maxlength="300"><span class="hint">Shown to customers when they choose delivery.</span></div>
+
+            <div class="form-error alert alert-error" role="alert" hidden></div>
+            <button type="submit" class="btn btn-gold">Save settings</button>
+          </form>
+
+          <form id="password-form" class="card form-card">
+            <h2>Change password</h2>
+            <p class="muted small">Logged in as <strong id="admin-name"></strong>.</p>
+            <div class="field"><label for="p-current">Current password</label><input type="password" id="p-current" name="current_password" autocomplete="current-password" required></div>
+            <div class="field"><label for="p-new">New password</label><input type="password" id="p-new" name="new_password" autocomplete="new-password" minlength="8" required><span class="hint">At least 8 characters.</span></div>
+            <div class="field"><label for="p-confirm">Confirm new password</label><input type="password" id="p-confirm" name="confirm" autocomplete="new-password" required></div>
+            <div class="form-error alert alert-error" role="alert" hidden></div>
+            <button type="submit" class="btn btn-outline">Update password</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Menu item editor -->
+  <dialog id="item-dialog" class="admin-dialog">
+    <form id="item-form" class="dialog-body">
+      <h2 id="item-dialog-title">Add menu item</h2>
+      <div class="field"><label for="i-name">Name</label><input type="text" id="i-name" name="name" maxlength="100" required></div>
+      <div class="field-row">
+        <div class="field">
+          <label for="i-category">Category</label>
+          <input type="text" id="i-category" name="category" maxlength="60" list="category-list" placeholder="e.g. Bakes">
+          <datalist id="category-list"></datalist>
+        </div>
+        <div class="field"><label for="i-price">Price</label><input type="text" id="i-price" name="price" inputmode="decimal" placeholder="4.50" required pattern="\$?\d{1,6}(\.\d{1,2})?"></div>
+      </div>
+      <div class="field"><label for="i-description">Description</label><textarea id="i-description" name="description" maxlength="500" rows="2"></textarea></div>
+      <div class="field">
+        <label for="i-image">Photo <span class="optional">(optional, max 8 MB)</span></label>
+        <div class="image-row">
+          <div class="image-preview" id="i-preview"></div>
+          <div style="flex: 1;">
+            <input type="file" id="i-image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+            <label class="checkbox small" id="i-remove-wrap" hidden style="margin-top: 8px;"><input type="checkbox" name="remove_image" id="i-remove"> Remove current photo</label>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <span class="label">Choices &amp; add-ons <span class="optional">(optional)</span></span>
+        <span class="hint">Let customers pick a size, add extras, and so on. Prices are added to the item price.</span>
+        <div id="opt-editor"></div>
+        <button type="button" class="btn btn-outline btn-sm" id="add-opt-group" style="align-self: flex-start;">+ Add option group</button>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="i-sort">Sort order</label><input type="number" id="i-sort" name="sort_order" min="0" max="9999" value="0"><span class="hint">Lower numbers show first.</span></div>
+        <div class="field" style="justify-content: center;"><label class="checkbox"><input type="checkbox" name="available" id="i-available" checked> Show on the menu</label></div>
+      </div>
+      <div class="form-error alert alert-error" role="alert" hidden></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-gold">Save item</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Cake option editor -->
+  <dialog id="option-dialog" class="admin-dialog">
+    <form id="option-form" class="dialog-body">
+      <h2 id="option-dialog-title">Add option</h2>
+      <p class="muted small" id="o-hint"></p>
+      <input type="hidden" name="type" id="o-type">
+      <div class="field"><label for="o-name">Name</label><input type="text" id="o-name" name="name" maxlength="80" required></div>
+      <div class="field"><label for="o-description">Description <span class="optional">(optional)</span></label><input type="text" id="o-description" name="description" maxlength="200"></div>
+      <div class="field-row">
+        <div class="field"><label for="o-price" id="o-price-label">Price</label><input type="text" id="o-price" name="price" inputmode="decimal" required pattern="\$?\d{1,6}(\.\d{1,2})?"><span class="hint" id="o-price-hint"></span></div>
+        <div class="field"><label for="o-sort">Sort order</label><input type="number" id="o-sort" name="sort_order" min="0" max="9999" value="0"></div>
+      </div>
+      <div class="field-row">
+        <div class="field" id="o-color-field">
+          <label for="o-color">Color</label>
+          <div class="color-row">
+            <input type="color" id="o-color" value="#f3e6d3">
+            <label class="checkbox small"><input type="checkbox" id="o-no-color"> No color</label>
+          </div>
+        </div>
+        <div class="field" id="o-visual-field">
+          <label for="o-visual">3D look</label>
+          <select id="o-visual" name="visual"></select>
+        </div>
+      </div>
+      <div class="field"><label class="checkbox"><input type="checkbox" name="available" id="o-available" checked> Available in the cake builder</label></div>
+      <div class="form-error alert alert-error" role="alert" hidden></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-gold">Save option</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Review editor -->
+  <dialog id="review-dialog" class="admin-dialog">
+    <form id="review-form" class="dialog-body">
+      <h2 id="review-dialog-title">Add review</h2>
+      <div class="field-row">
+        <div class="field"><label for="r-name">Customer name</label><input type="text" id="r-name" name="name" maxlength="80" required placeholder="e.g. Sarah K."></div>
+        <div class="field">
+          <label for="r-rating">Rating</label>
+          <select id="r-rating" name="rating"><option value="5">★★★★★ (5)</option><option value="4">★★★★☆ (4)</option><option value="3">★★★☆☆ (3)</option><option value="2">★★☆☆☆ (2)</option><option value="1">★☆☆☆☆ (1)</option></select>
+        </div>
+      </div>
+      <div class="field"><label for="r-text">Review</label><textarea id="r-text" name="text" maxlength="600" rows="4" required></textarea></div>
+      <div class="field-row">
+        <div class="field"><label for="r-sort">Sort order</label><input type="number" id="r-sort" name="sort_order" min="0" max="9999" value="0"></div>
+        <div class="field" style="justify-content: center;"><label class="checkbox"><input type="checkbox" name="available" id="r-available" checked> Show on the site</label></div>
+      </div>
+      <div class="form-error alert alert-error" role="alert" hidden></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-gold">Save review</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- FAQ editor -->
+  <dialog id="faq-dialog" class="admin-dialog">
+    <form id="faq-form" class="dialog-body">
+      <h2 id="faq-dialog-title">Add question</h2>
+      <div class="field"><label for="f-question">Question</label><input type="text" id="f-question" name="question" maxlength="200" required></div>
+      <div class="field"><label for="f-answer">Answer</label><textarea id="f-answer" name="answer" maxlength="2000" rows="5" required></textarea></div>
+      <div class="field-row">
+        <div class="field"><label for="f-sort">Sort order</label><input type="number" id="f-sort" name="sort_order" min="0" max="9999" value="0"></div>
+        <div class="field" style="justify-content: center;"><label class="checkbox"><input type="checkbox" name="available" id="f-available" checked> Show on the FAQ page</label></div>
+      </div>
+      <div class="form-error alert alert-error" role="alert" hidden></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-gold">Save question</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="/js/admin/main.js"></script>
+</body>
+</html>

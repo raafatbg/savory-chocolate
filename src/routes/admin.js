@@ -8,7 +8,9 @@ import {
   hashPassword, verifyPassword, adminCount, createSession, destroySession, currentAdmin, requireAdmin,
   loginBlocked, recordLoginFailure, clearLoginFailures,
 } from '../auth.js';
-import { HttpError, bad, text, int, money, bool } from '../validate.js';
+import { CAKE_GROUPS } from '../cake-groups.js';
+import { normalizeOptions, parseOptions } from '../menu-options.js';
+import { HttpError, bad, text, int, money, bool, hexColor, url, email } from '../validate.js';
 
 export const router = Router();
 
@@ -69,6 +71,14 @@ function credentials(body) {
   return { username, password };
 }
 
+// Badge counts for the dashboard tabs.
+router.get('/counts', (req, res) => {
+  res.json({
+    newOrders: db.prepare("SELECT COUNT(*) AS n FROM orders WHERE status = 'new'").get().n,
+    unreadMessages: db.prepare('SELECT COUNT(*) AS n FROM messages WHERE is_read = 0').get().n,
+  });
+});
+
 // ---------- Orders ----------
 
 const STATUSES = ['new', 'confirmed', 'ready', 'completed', 'cancelled'];
@@ -103,7 +113,7 @@ router.patch('/orders/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-// ---------- Menu items ----------
+// ---------- Image uploads (menu items and gallery) ----------
 
 const IMAGE_TYPES = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
 
@@ -112,7 +122,7 @@ const upload = multer({
     destination: UPLOAD_DIR,
     filename: (req, file, cb) => cb(null, crypto.randomBytes(12).toString('hex') + IMAGE_TYPES[file.mimetype]),
   }),
-  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  limits: { fileSize: 8 * 1024 * 1024, files: 1 },
   fileFilter: (req, file, cb) => {
     if (IMAGE_TYPES[file.mimetype]) cb(null, true);
     else cb(bad('Image must be a JPG, PNG, WebP or GIF.'));
@@ -139,6 +149,10 @@ const withImage = (handler) => [
   },
 ];
 
+const sortOrder = (value) => (value === undefined || value === '' ? 0 : int(value, 'Sort order', { max: 9999 }));
+
+// ---------- Menu items ----------
+
 function menuItemFields(body) {
   return {
     name: text(body.name, 'Name', { required: true, max: 100 }),
@@ -146,22 +160,25 @@ function menuItemFields(body) {
     category: text(body.category, 'Category', { max: 60 }) || 'Other',
     price_cents: money(body.price, 'Price'),
     available: bool(body.available) ? 1 : 0,
-    sort_order: body.sort_order === undefined || body.sort_order === '' ? 0 : int(body.sort_order, 'Sort order', { max: 9999 }),
+    sort_order: sortOrder(body.sort_order),
+    options: JSON.stringify(normalizeOptions(body.options ?? '[]')),
   };
 }
 
+const withParsedOptions = (item) => item && { ...item, options: parseOptions(item.options) };
+
 router.get('/menu-items', (req, res) => {
   // Same order as the public menu, so categories appear in the order customers see them.
-  res.json(db.prepare('SELECT * FROM menu_items ORDER BY sort_order, name').all());
+  res.json(db.prepare('SELECT * FROM menu_items ORDER BY sort_order, name').all().map(withParsedOptions));
 });
 
 router.post('/menu-items', ...withImage((req, res) => {
   const f = menuItemFields(req.body ?? {});
   const { lastInsertRowid } = db.prepare(`
-    INSERT INTO menu_items (name, description, category, price_cents, available, sort_order, image)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(f.name, f.description, f.category, f.price_cents, f.available, f.sort_order, req.file?.filename ?? null);
-  res.status(201).json(db.prepare('SELECT * FROM menu_items WHERE id = ?').get(lastInsertRowid));
+    INSERT INTO menu_items (name, description, category, price_cents, available, sort_order, options, image)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(f.name, f.description, f.category, f.price_cents, f.available, f.sort_order, f.options, req.file?.filename ?? null);
+  res.status(201).json(withParsedOptions(db.prepare('SELECT * FROM menu_items WHERE id = ?').get(lastInsertRowid)));
 }));
 
 router.put('/menu-items/:id', ...withImage((req, res) => {
@@ -177,10 +194,11 @@ router.put('/menu-items/:id', ...withImage((req, res) => {
   }
 
   db.prepare(`
-    UPDATE menu_items SET name = ?, description = ?, category = ?, price_cents = ?, available = ?, sort_order = ?, image = ?
+    UPDATE menu_items SET name = ?, description = ?, category = ?, price_cents = ?, available = ?, sort_order = ?,
+                          options = ?, image = ?
     WHERE id = ?
-  `).run(f.name, f.description, f.category, f.price_cents, f.available, f.sort_order, image, id);
-  res.json(db.prepare('SELECT * FROM menu_items WHERE id = ?').get(id));
+  `).run(f.name, f.description, f.category, f.price_cents, f.available, f.sort_order, f.options, image, id);
+  res.json(withParsedOptions(db.prepare('SELECT * FROM menu_items WHERE id = ?').get(id)));
 }));
 
 router.delete('/menu-items/:id', (req, res) => {
@@ -194,30 +212,36 @@ router.delete('/menu-items/:id', (req, res) => {
 
 // ---------- Cake options ----------
 
-const CAKE_TYPES = ['size', 'flavor', 'filling', 'frosting'];
-
 function cakeOptionFields(body) {
-  const type = String(body.type);
-  if (!CAKE_TYPES.includes(type)) throw bad('Unknown option type.');
+  const group = CAKE_GROUPS.find((g) => g.key === String(body.type));
+  if (!group) throw bad('Unknown option type.');
+  const visual = text(body.visual, 'Look in 3D', { max: 20 });
+  if (visual && !(group.visuals || []).includes(visual)) throw bad('That 3D look isn\'t available for this group.');
   return {
-    type,
+    type: group.key,
     name: text(body.name, 'Name', { required: true, max: 80 }),
     description: text(body.description, 'Description', { max: 200 }),
-    price_cents: money(body.price, type === 'size' ? 'Price' : 'Extra charge'),
+    price_cents: money(body.price, group.key === 'size' ? 'Price' : 'Extra charge'),
+    color: group.color ? hexColor(body.color, 'Color') : '',
+    visual,
     available: bool(body.available) ? 1 : 0,
-    sort_order: body.sort_order === undefined || body.sort_order === '' ? 0 : int(body.sort_order, 'Sort order', { max: 9999 }),
+    sort_order: sortOrder(body.sort_order),
   };
 }
 
 router.get('/cake-options', (req, res) => {
-  res.json(db.prepare('SELECT * FROM cake_options ORDER BY type, sort_order, id').all());
+  res.json({
+    groups: CAKE_GROUPS,
+    options: db.prepare('SELECT * FROM cake_options ORDER BY sort_order, id').all(),
+  });
 });
 
 router.post('/cake-options', (req, res) => {
   const f = cakeOptionFields(req.body ?? {});
   const { lastInsertRowid } = db.prepare(`
-    INSERT INTO cake_options (type, name, description, price_cents, available, sort_order) VALUES (?, ?, ?, ?, ?, ?)
-  `).run(f.type, f.name, f.description, f.price_cents, f.available, f.sort_order);
+    INSERT INTO cake_options (type, name, description, price_cents, color, visual, available, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(f.type, f.name, f.description, f.price_cents, f.color, f.visual, f.available, f.sort_order);
   res.status(201).json(db.prepare('SELECT * FROM cake_options WHERE id = ?').get(lastInsertRowid));
 });
 
@@ -225,8 +249,10 @@ router.put('/cake-options/:id', (req, res) => {
   const id = int(req.params.id, 'Option');
   const f = cakeOptionFields(req.body ?? {});
   const { changes } = db.prepare(`
-    UPDATE cake_options SET type = ?, name = ?, description = ?, price_cents = ?, available = ?, sort_order = ? WHERE id = ?
-  `).run(f.type, f.name, f.description, f.price_cents, f.available, f.sort_order, id);
+    UPDATE cake_options SET type = ?, name = ?, description = ?, price_cents = ?, color = ?, visual = ?, available = ?,
+                            sort_order = ?
+    WHERE id = ?
+  `).run(f.type, f.name, f.description, f.price_cents, f.color, f.visual, f.available, f.sort_order, id);
   if (!changes) throw new HttpError(404, 'Option not found.');
   res.json(db.prepare('SELECT * FROM cake_options WHERE id = ?').get(id));
 });
@@ -237,16 +263,151 @@ router.delete('/cake-options/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ---------- Gallery ----------
+
+router.get('/gallery', (req, res) => {
+  res.json(db.prepare('SELECT * FROM gallery_images ORDER BY sort_order, id DESC').all());
+});
+
+router.post('/gallery', ...withImage((req, res) => {
+  if (!req.file) throw bad('Please choose a photo to upload.');
+  const caption = text(req.body?.caption, 'Caption', { max: 200 });
+  const { lastInsertRowid } = db.prepare('INSERT INTO gallery_images (image, caption, sort_order) VALUES (?, ?, ?)')
+    .run(req.file.filename, caption, sortOrder(req.body?.sort_order));
+  res.status(201).json(db.prepare('SELECT * FROM gallery_images WHERE id = ?').get(lastInsertRowid));
+}));
+
+router.put('/gallery/:id', (req, res) => {
+  const id = int(req.params.id, 'Photo');
+  const caption = text(req.body?.caption, 'Caption', { max: 200 });
+  const { changes } = db.prepare('UPDATE gallery_images SET caption = ?, sort_order = ? WHERE id = ?')
+    .run(caption, sortOrder(req.body?.sort_order), id);
+  if (!changes) throw new HttpError(404, 'Photo not found.');
+  res.json(db.prepare('SELECT * FROM gallery_images WHERE id = ?').get(id));
+});
+
+router.delete('/gallery/:id', (req, res) => {
+  const id = int(req.params.id, 'Photo');
+  const existing = db.prepare('SELECT image FROM gallery_images WHERE id = ?').get(id);
+  if (!existing) throw new HttpError(404, 'Photo not found.');
+  db.prepare('DELETE FROM gallery_images WHERE id = ?').run(id);
+  removeImage(existing.image);
+  res.json({ ok: true });
+});
+
+// ---------- Reviews ----------
+
+function reviewFields(body) {
+  return {
+    name: text(body.name, 'Name', { required: true, max: 80 }),
+    text: text(body.text, 'Review', { required: true, max: 600 }),
+    rating: int(body.rating ?? 5, 'Rating', { min: 1, max: 5 }),
+    available: bool(body.available) ? 1 : 0,
+    sort_order: sortOrder(body.sort_order),
+  };
+}
+
+router.get('/reviews', (req, res) => {
+  res.json(db.prepare('SELECT * FROM reviews ORDER BY sort_order, id DESC').all());
+});
+
+router.post('/reviews', (req, res) => {
+  const f = reviewFields(req.body ?? {});
+  const { lastInsertRowid } = db.prepare('INSERT INTO reviews (name, text, rating, available, sort_order) VALUES (?, ?, ?, ?, ?)')
+    .run(f.name, f.text, f.rating, f.available, f.sort_order);
+  res.status(201).json(db.prepare('SELECT * FROM reviews WHERE id = ?').get(lastInsertRowid));
+});
+
+router.put('/reviews/:id', (req, res) => {
+  const id = int(req.params.id, 'Review');
+  const f = reviewFields(req.body ?? {});
+  const { changes } = db.prepare('UPDATE reviews SET name = ?, text = ?, rating = ?, available = ?, sort_order = ? WHERE id = ?')
+    .run(f.name, f.text, f.rating, f.available, f.sort_order, id);
+  if (!changes) throw new HttpError(404, 'Review not found.');
+  res.json(db.prepare('SELECT * FROM reviews WHERE id = ?').get(id));
+});
+
+router.delete('/reviews/:id', (req, res) => {
+  const { changes } = db.prepare('DELETE FROM reviews WHERE id = ?').run(int(req.params.id, 'Review'));
+  if (!changes) throw new HttpError(404, 'Review not found.');
+  res.json({ ok: true });
+});
+
+// ---------- FAQ ----------
+
+function faqFields(body) {
+  return {
+    question: text(body.question, 'Question', { required: true, max: 200 }),
+    answer: text(body.answer, 'Answer', { required: true, max: 2000 }),
+    available: bool(body.available) ? 1 : 0,
+    sort_order: sortOrder(body.sort_order),
+  };
+}
+
+router.get('/faqs', (req, res) => {
+  res.json(db.prepare('SELECT * FROM faqs ORDER BY sort_order, id').all());
+});
+
+router.post('/faqs', (req, res) => {
+  const f = faqFields(req.body ?? {});
+  const { lastInsertRowid } = db.prepare('INSERT INTO faqs (question, answer, available, sort_order) VALUES (?, ?, ?, ?)')
+    .run(f.question, f.answer, f.available, f.sort_order);
+  res.status(201).json(db.prepare('SELECT * FROM faqs WHERE id = ?').get(lastInsertRowid));
+});
+
+router.put('/faqs/:id', (req, res) => {
+  const id = int(req.params.id, 'Question');
+  const f = faqFields(req.body ?? {});
+  const { changes } = db.prepare('UPDATE faqs SET question = ?, answer = ?, available = ?, sort_order = ? WHERE id = ?')
+    .run(f.question, f.answer, f.available, f.sort_order, id);
+  if (!changes) throw new HttpError(404, 'Question not found.');
+  res.json(db.prepare('SELECT * FROM faqs WHERE id = ?').get(id));
+});
+
+router.delete('/faqs/:id', (req, res) => {
+  const { changes } = db.prepare('DELETE FROM faqs WHERE id = ?').run(int(req.params.id, 'Question'));
+  if (!changes) throw new HttpError(404, 'Question not found.');
+  res.json({ ok: true });
+});
+
+// ---------- Contact messages ----------
+
+router.get('/messages', (req, res) => {
+  res.json(db.prepare('SELECT * FROM messages ORDER BY created_at DESC, id DESC LIMIT 300').all());
+});
+
+router.patch('/messages/:id', (req, res) => {
+  const { changes } = db.prepare('UPDATE messages SET is_read = ? WHERE id = ?')
+    .run(bool(req.body?.is_read) ? 1 : 0, int(req.params.id, 'Message'));
+  if (!changes) throw new HttpError(404, 'Message not found.');
+  res.json({ ok: true });
+});
+
+router.delete('/messages/:id', (req, res) => {
+  const { changes } = db.prepare('DELETE FROM messages WHERE id = ?').run(int(req.params.id, 'Message'));
+  if (!changes) throw new HttpError(404, 'Message not found.');
+  res.json({ ok: true });
+});
+
 // ---------- Settings ----------
 
 router.put('/settings', (req, res) => {
   const body = req.body ?? {};
-  const limits = { shop_name: 80, tagline: 200, about: 2000, phone: 40, email: 200, address: 300, hours: 500 };
+  const limits = {
+    shop_name: 80, hero_title: 120, tagline: 200, about: 2000, about_story: 5000,
+    phone: 40, address: 300, hours: 500, delivery_area: 300,
+  };
+  const labels = {
+    shop_name: 'Shop name', hero_title: 'Headline', about_story: 'Our story', delivery_area: 'Delivery area',
+  };
   const updates = {};
 
   for (const [key, max] of Object.entries(limits)) {
-    if (key in body) updates[key] = text(body[key], key.replace('_', ' '), { max, required: key === 'shop_name' });
+    if (key in body) updates[key] = text(body[key], labels[key] || key.replace('_', ' '), { max, required: key === 'shop_name' });
   }
+  if ('email' in body) updates.email = email(body.email);
+  if ('instagram' in body) updates.instagram = url(body.instagram, 'Instagram link');
+  if ('facebook' in body) updates.facebook = url(body.facebook, 'Facebook link');
   if ('currency' in body) {
     const currency = text(body.currency, 'Currency', { required: true, max: 3 }).toUpperCase();
     try {
@@ -258,6 +419,9 @@ router.put('/settings', (req, res) => {
   }
   if ('cake_lead_days' in body) updates.cake_lead_days = String(int(body.cake_lead_days, 'Days of notice', { max: 60 }));
   if ('orders_open' in body) updates.orders_open = bool(body.orders_open) ? '1' : '0';
+  if ('delivery_enabled' in body) updates.delivery_enabled = bool(body.delivery_enabled) ? '1' : '0';
+  if ('delivery_fee' in body) updates.delivery_fee = String(money(body.delivery_fee, 'Delivery fee'));
+  if ('delivery_min' in body) updates.delivery_min = String(money(body.delivery_min === '' ? '0' : body.delivery_min, 'Minimum order for delivery'));
 
   const save = db.prepare('UPDATE settings SET value = ? WHERE key = ?');
   for (const [key, value] of Object.entries(updates)) {

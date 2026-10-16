@@ -1,16 +1,20 @@
 import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
+import { CAKE_SEEDS } from './cake-groups.js';
 
 export const DATA_DIR = path.resolve(process.env.DATA_DIR || 'data');
 export const UPLOAD_DIR = path.join(DATA_DIR, 'uploads');
+const DB_FILE = path.join(DATA_DIR, 'app.db');
 
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-const isNew = !fs.existsSync(path.join(DATA_DIR, 'app.db'));
+const isNew = !fs.existsSync(DB_FILE);
 
-export const db = new DatabaseSync(path.join(DATA_DIR, 'app.db'));
+export const db = new DatabaseSync(DB_FILE);
 db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+
+// ---------- Version 1: the original schema ----------
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS admins (
@@ -43,8 +47,6 @@ db.exec(`
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
-  -- Choices for the cake builder. For sizes the price is the base price;
-  -- for flavors, fillings and frostings it is an add-on (often 0).
   CREATE TABLE IF NOT EXISTS cake_options (
     id          INTEGER PRIMARY KEY,
     type        TEXT NOT NULL CHECK (type IN ('size', 'flavor', 'filling', 'frosting')),
@@ -85,27 +87,130 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status, created_at);
 `);
 
-export const DEFAULT_SETTINGS = {
-  shop_name: 'Savory Chocolate',
-  tagline: 'Handmade cakes and chocolate treats, baked to order.',
-  about: 'We are a small bakery making everything from scratch with real butter, good chocolate and a lot of care. Order a custom cake for your next celebration, or pick something from today\'s menu.',
-  phone: '',
-  email: '',
-  address: '',
-  hours: 'Tue–Sat 9am–6pm\nSun 10am–3pm\nClosed Mondays',
-  currency: 'USD',
-  cake_lead_days: '2',
-  orders_open: '1',
-};
+if (isNew) seedVersion1();
 
-for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
-  db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').run(key, value);
+// ---------- Later versions ----------
+
+const MIGRATIONS = [
+  null, // version 1 is the schema above
+  migrateToVersion2,
+];
+const LATEST = MIGRATIONS.length;
+
+let version = db.prepare('PRAGMA user_version').get().user_version || 1;
+if (version < LATEST && !isNew) backup(version);
+while (version < LATEST) {
+  transaction(() => {
+    MIGRATIONS[version]();
+    version += 1;
+    db.exec(`PRAGMA user_version = ${version}`);
+  });
 }
 
-if (isNew) seedSamples();
+// Copies the database before an upgrade, e.g. data/app.backup-v1-2026-10-16.db
+function backup(fromVersion) {
+  const target = path.join(DATA_DIR, `app.backup-v${fromVersion}-${new Date().toISOString().slice(0, 10)}.db`);
+  if (!fs.existsSync(target)) {
+    db.exec(`VACUUM INTO '${target.replace(/'/g, "''")}'`);
+    console.log(`Backed up the database to ${target} before upgrading it.`);
+  }
+}
 
-// Starter content so the site isn't empty on first run. The admin can edit or delete all of it.
-function seedSamples() {
+// Version 2: richer cake builder, menu add-ons, delivery, gallery, reviews, FAQ, contact messages.
+function migrateToVersion2() {
+  // cake_options: drop the fixed type list (validated in code now) and add color + visual.
+  db.exec(`
+    CREATE TABLE cake_options_v2 (
+      id          INTEGER PRIMARY KEY,
+      type        TEXT NOT NULL,
+      name        TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      price_cents INTEGER NOT NULL DEFAULT 0,
+      color       TEXT NOT NULL DEFAULT '',
+      visual      TEXT NOT NULL DEFAULT '',
+      available   INTEGER NOT NULL DEFAULT 1,
+      sort_order  INTEGER NOT NULL DEFAULT 0
+    );
+    INSERT INTO cake_options_v2 (id, type, name, description, price_cents, available, sort_order)
+      SELECT id, type, name, description, price_cents, available, sort_order FROM cake_options;
+    DROP TABLE cake_options;
+    ALTER TABLE cake_options_v2 RENAME TO cake_options;
+
+    -- Per-item choices, e.g. [{"name":"Size","type":"single","required":true,"choices":[{"name":"Large","price_cents":100}]}]
+    ALTER TABLE menu_items ADD COLUMN options TEXT NOT NULL DEFAULT '[]';
+
+    ALTER TABLE orders ADD COLUMN fulfillment TEXT NOT NULL DEFAULT 'pickup';
+    ALTER TABLE orders ADD COLUMN delivery_address TEXT NOT NULL DEFAULT '';
+    ALTER TABLE orders ADD COLUMN delivery_fee_cents INTEGER NOT NULL DEFAULT 0;
+
+    CREATE TABLE gallery_images (
+      id         INTEGER PRIMARY KEY,
+      image      TEXT NOT NULL,
+      caption    TEXT NOT NULL DEFAULT '',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE reviews (
+      id         INTEGER PRIMARY KEY,
+      name       TEXT NOT NULL,
+      text       TEXT NOT NULL,
+      rating     INTEGER NOT NULL DEFAULT 5,
+      available  INTEGER NOT NULL DEFAULT 1,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE faqs (
+      id         INTEGER PRIMARY KEY,
+      question   TEXT NOT NULL,
+      answer     TEXT NOT NULL,
+      available  INTEGER NOT NULL DEFAULT 1,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE messages (
+      id         INTEGER PRIMARY KEY,
+      name       TEXT NOT NULL,
+      email      TEXT NOT NULL DEFAULT '',
+      phone      TEXT NOT NULL DEFAULT '',
+      message    TEXT NOT NULL,
+      is_read    INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+
+  const insertOption = db.prepare(`
+    INSERT INTO cake_options (type, name, description, price_cents, color, visual, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  const groupCount = db.prepare('SELECT COUNT(*) AS n FROM cake_options WHERE type = ?');
+  for (const [type, rows] of Object.entries(CAKE_SEEDS)) {
+    if (groupCount.get(type).n > 0) continue;
+    rows.forEach(([name, desc, price, color, visual], i) => insertOption.run(type, name, desc, price, color, visual, i));
+  }
+
+  // Example add-ons on the sample items, if they're still there.
+  const addOptions = db.prepare("UPDATE menu_items SET options = ? WHERE name = ? AND options = '[]'");
+  addOptions.run(JSON.stringify([
+    { name: 'Size', type: 'single', required: true, choices: [{ name: 'Regular', price_cents: 0 }, { name: 'Large', price_cents: 100 }] },
+    { name: 'Extras', type: 'multi', required: false, choices: [{ name: 'Whipped cream', price_cents: 50 }, { name: 'Marshmallows', price_cents: 50 }] },
+  ]), 'Hot chocolate');
+  addOptions.run(JSON.stringify([
+    { name: 'Serve it with', type: 'single', required: false, choices: [{ name: 'Vanilla ice cream', price_cents: 200 }, { name: 'Whipped cream', price_cents: 100 }] },
+  ]), 'Chocolate fudge slice');
+
+  const faq = db.prepare('INSERT INTO faqs (question, answer, sort_order) VALUES (?, ?, ?)');
+  [
+    ['How far ahead should I order a custom cake?', 'Custom cakes need a few days\' notice. The cake builder shows the earliest date you can choose. For large or tiered cakes, earlier is always better.'],
+    ['How do I pay?', 'You pay when you collect your order, or when it\'s delivered. There\'s nothing to pay online.'],
+    ['Do you deliver?', 'Yes, within our delivery area. Choose "Delivery" at checkout to see the fee.'],
+    ['Can you cater for allergies or dietary needs?', 'We offer vegan, gluten-free, nut-free and eggless options in the cake builder. Our kitchen handles nuts, gluten, dairy and eggs, so we can\'t guarantee a cake is completely allergen-free. Please tell us about any allergies in the notes.'],
+    ['Can I change or cancel my order?', 'Please call us as soon as possible with your order number and we\'ll do our best to help.'],
+    ['Can you recreate a design from a photo?', 'Often, yes! Describe it in the design notes when you order, or send us a message through the Contact page.'],
+  ].forEach(([q, a], i) => faq.run(q, a, i));
+}
+
+function seedVersion1() {
   const opt = db.prepare('INSERT INTO cake_options (type, name, description, price_cents, sort_order) VALUES (?, ?, ?, ?, ?)');
   const options = [
     ['size', '6" round', 'Serves 8–10', 4500],
@@ -133,6 +238,33 @@ function seedSamples() {
     ['Hot chocolate', 'Made with melted dark chocolate and steamed milk.', 'Drinks', 450],
   ];
   items.forEach(([name, desc, cat, price], i) => item.run(name, desc, cat, price, i));
+}
+
+// ---------- Settings ----------
+
+export const DEFAULT_SETTINGS = {
+  shop_name: 'Savory Chocolate',
+  hero_title: 'Cakes as beautiful as your moments',
+  tagline: 'Handmade cakes and chocolate treats, baked to order.',
+  about: 'We are a small bakery making everything from scratch with real butter, good chocolate and a lot of care. Order a custom cake for your next celebration, or pick something from today\'s menu.',
+  about_story: 'Savory Chocolate started with a simple idea: celebrations deserve cakes that taste as good as they look.\n\nEvery cake is baked to order in small batches, with real butter, fresh cream and good chocolate. No shortcuts, no premixes.\n\nWhether it\'s a birthday, a wedding or just a Tuesday that needs something sweet, we\'d love to bake for you.',
+  phone: '',
+  email: '',
+  address: '',
+  hours: 'Tue–Sat 9am–6pm\nSun 10am–3pm\nClosed Mondays',
+  instagram: '',
+  facebook: '',
+  currency: 'USD',
+  cake_lead_days: '2',
+  orders_open: '1',
+  delivery_enabled: '1',
+  delivery_fee: '500',
+  delivery_min: '0',
+  delivery_area: 'We deliver within 10 km of the shop.',
+};
+
+for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
+  db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').run(key, value);
 }
 
 export function getSettings() {

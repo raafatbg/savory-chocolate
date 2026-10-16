@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Contact · {{shop_name}}</title>
+  <meta name="description" content="Get in touch with {{shop_name}}.">
+  {{> head}}
+</head>
+<body>
+  {{> header}}
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container" data-reveal>
+        <span class="eyebrow">Contact</span>
+        <h1>Let's <em class="gold-text">talk cake</em></h1>
+        <p>Questions, ideas, big celebrations: we'd love to hear from you.</p>
+      </div>
+    </section>
+
+    <div class="container contact-layout">
+      <div class="card" data-reveal>
+        <span class="eyebrow left">Find us</span>
+        <dl class="info-list">
+          <div><dt>Opening hours</dt><dd>{{hours}}</dd></div>
+          {{#address}}<div><dt>Address</dt><dd>{{address}}</dd>{{#maps_url}}<dd style="margin-top: 6px;"><a href="{{maps_url}}" target="_blank" rel="noopener">Get directions →</a></dd>{{/maps_url}}</div>{{/address}}
+          {{#phone}}<div><dt>Call</dt><dd><a href="{{phone_href}}">{{phone}}</a></dd></div>{{/phone}}
+          {{#email}}<div><dt>Email</dt><dd><a href="mailto:{{email}}">{{email}}</a></dd></div>{{/email}}
+        </dl>
+      </div>
+
+      <div class="card" data-reveal style="--delay: 0.1s">
+        <form id="contact-form" autocomplete="on">
+          <h2 style="font-size: 2rem;">Send us a message</h2>
+          <div class="field-row">
+            <div class="field">
+              <label for="c-name">Name</label>
+              <input type="text" id="c-name" name="name" autocomplete="name" maxlength="100" required>
+            </div>
+            <div class="field">
+              <label for="c-email">Email</label>
+              <input type="email" id="c-email" name="email" autocomplete="email" maxlength="200" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="c-phone">Phone <span class="optional">(optional)</span></label>
+            <input type="tel" id="c-phone" name="phone" autocomplete="tel" maxlength="40">
+          </div>
+          <div class="field">
+            <label for="c-message">Message</label>
+            <textarea id="c-message" name="message" rows="6" maxlength="3000" required placeholder="Tell us about your event, your dream cake, or anything else."></textarea>
+          </div>
+          <!-- Left empty by people; bots tend to fill it in. -->
+          <div class="visually-hidden" aria-hidden="true">
+            <label for="c-website">Website</label>
+            <input type="text" id="c-website" name="website" tabindex="-1" autocomplete="off">
+          </div>
+          <div id="contact-error" class="alert alert-error" role="alert" hidden></div>
+          <button type="submit" class="btn btn-gold btn-lg" id="contact-submit">Send message</button>
+        </form>
+        <div id="contact-sent" class="empty-state" hidden>
+          <span class="script" style="font-size: 2.4rem;">Thank you</span>
+          <h2>Your message is on its way</h2>
+          <p>We'll get back to you as soon as we can.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {{> footer}}
+  <script type="module">
+    import { api } from '/js/common.js';
+
+    const form = document.getElementById('contact-form');
+    const error = document.getElementById('contact-error');
+    const button = document.getElementById('contact-submit');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      error.hidden = true;
+      if (!form.reportValidity()) return;
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner" aria-hidden="true"></span> Sending…';
+      try {
+        await api('/api/messages', { method: 'POST', body: Object.fromEntries(new FormData(form)) });
+        form.hidden = true;
+        document.getElementById('contact-sent').hidden = false;
+      } catch (err) {
+        error.textContent = err.message;
+        error.hidden = false;
+        button.disabled = false;
+        button.textContent = 'Send message';
+      }
+    });
+  </script>
+</body>
+</html>

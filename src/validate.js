@@ -39,27 +39,27 @@ export function localDate(offsetDays = 0) {
 }
 
 export function pickupDate(value, { minDaysAhead = 0 } = {}) {
-  const s = text(value, 'Pickup date', { required: true, max: 10 });
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s) || Number.isNaN(Date.parse(s))) throw bad('Pickup date is not valid.');
+  const s = text(value, 'Date', { required: true, max: 10 });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s) || Number.isNaN(Date.parse(s))) throw bad('Date is not valid.');
   const earliest = localDate(minDaysAhead);
   if (s < earliest) {
     throw bad(minDaysAhead > 0
-      ? `Please choose a pickup date on or after ${earliest} (we need ${minDaysAhead} day${minDaysAhead === 1 ? '' : 's'} to prepare custom cakes).`
-      : 'Pickup date can\'t be in the past.');
+      ? `Please choose a date on or after ${earliest} (we need ${minDaysAhead} day${minDaysAhead === 1 ? '' : 's'} to prepare custom cakes).`
+      : 'Date can\'t be in the past.');
   }
-  if (s > localDate(180)) throw bad('Pickup date is too far ahead.');
+  if (s > localDate(180)) throw bad('Date is too far ahead.');
   return s;
 }
 
 // Same-day pickups need at least 30 minutes' notice.
 export function pickupTime(value, date) {
-  const s = text(value, 'Pickup time', { required: true, max: 5 });
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(s)) throw bad('Pickup time is not valid.');
+  const s = text(value, 'Time', { required: true, max: 5 });
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(s)) throw bad('Time is not valid.');
   if (date === localDate(0)) {
     const soon = new Date(Date.now() + 30 * 60 * 1000);
     const earliest = `${String(soon.getHours()).padStart(2, '0')}:${String(soon.getMinutes()).padStart(2, '0')}`;
-    if (soon.getDate() !== new Date().getDate()) throw bad('It\'s too late for a pickup today. Please choose another day.');
-    if (s < earliest) throw bad(`For pickup today, please choose a time after ${earliest}.`);
+    if (soon.getDate() !== new Date().getDate()) throw bad('It\'s too late for today. Please choose another day.');
+    if (s < earliest) throw bad(`For today, please choose a time after ${earliest}.`);
   }
   return s;
 }
@@ -74,4 +74,34 @@ export function customer(body) {
     phone,
     email,
   };
+}
+
+// Pickup or delivery. Returns { fulfillment, address, fee_cents } and checks the delivery minimum.
+export function fulfillment(body, settings, subtotalCents) {
+  if (body.fulfillment !== 'delivery') return { fulfillment: 'pickup', address: '', fee_cents: 0 };
+  if (settings.delivery_enabled !== '1') throw bad('Sorry, we\'re not offering delivery right now. Please choose pickup.');
+  const address = text(body.delivery_address, 'Delivery address', { required: true, max: 300 });
+  const minimum = Number(settings.delivery_min) || 0;
+  if (subtotalCents < minimum) {
+    throw bad(`Delivery needs a minimum order of ${(minimum / 100).toFixed(2)}. Please add a little more or choose pickup.`);
+  }
+  return { fulfillment: 'delivery', address, fee_cents: Number(settings.delivery_fee) || 0 };
+}
+
+export function hexColor(value, label) {
+  const s = text(value, label, { max: 7 });
+  if (s && !/^#[0-9a-fA-F]{6}$/.test(s)) throw bad(`${label} must be a color like #f1c1c4.`);
+  return s.toLowerCase();
+}
+
+export function url(value, label) {
+  const s = text(value, label, { max: 300 });
+  if (s && !/^https:\/\/[^\s"'<>]+$/.test(s)) throw bad(`${label} must be a full link starting with https://`);
+  return s;
+}
+
+export function email(value, label = 'Email', { required = false } = {}) {
+  const s = text(value, label, { max: 200, required });
+  if (s && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) throw bad(`${label} address is not valid.`);
+  return s;
 }

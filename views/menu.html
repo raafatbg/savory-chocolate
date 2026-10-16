@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Menu · {{shop_name}}</title>
+  <meta name="description" content="Order slices, bakes and drinks ahead for pickup or delivery.">
+  {{> head}}
+</head>
+<body>
+  {{> header}}
+
+  <main id="main">
+    <section class="page-hero" style="padding-bottom: 28px;">
+      <div class="container" data-reveal>
+        <span class="eyebrow">Order ahead</span>
+        <h1>Our <em class="gold-text">menu</em></h1>
+        <p>Add your favorites, choose pickup or delivery, and we'll have everything fresh and ready.</p>
+      </div>
+    </section>
+
+    <div class="container" id="page">
+      <div id="closed-notice" class="alert alert-info" hidden>We're not taking online orders right now. Please give us a call instead.</div>
+
+      <div class="order-layout">
+        <div>
+          <nav class="category-nav" id="category-nav" aria-label="Menu categories"></nav>
+          <div id="menu"><p class="loading">Loading the menu…</p></div>
+        </div>
+
+        <aside class="sticky-panel" id="cart">
+          <div class="card panel">
+            <h2>Your order</h2>
+            <div id="cart-empty" class="empty-state">
+              <div class="icon" aria-hidden="true">🧁</div>
+              <p>Your order is empty.<br>Add something delicious from the menu.</p>
+            </div>
+            <form id="checkout-form" autocomplete="on" hidden>
+              <ul class="cart-lines" id="cart-lines"></ul>
+              <div class="sum-rows" id="sum-rows"></div>
+              <div class="total-row"><span>Total</span><span class="amount" id="cart-total"></span></div>
+
+              {{> fulfillment}}
+              {{> customer}}
+              <div class="field">
+                <label for="notes">Notes <span class="optional">(optional)</span></label>
+                <textarea id="notes" name="notes" maxlength="1000" rows="2" placeholder="Allergies, special requests…"></textarea>
+              </div>
+              <div id="form-error" class="alert alert-error" role="alert" hidden></div>
+              <button type="submit" class="btn btn-gold btn-lg btn-block" id="submit-btn">Place order</button>
+              <p class="pay-note">Nothing to pay now. Pay on pickup or delivery.</p>
+            </form>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <a href="#cart" class="btn btn-gold bottom-bar" id="cart-bar">
+    <span id="cart-bar-count"></span>
+    <span id="cart-bar-total"></span>
+  </a>
+
+  <dialog id="item-dialog" aria-labelledby="d-name">
+    <form class="dialog-body" id="item-form">
+      <div class="dialog-head">
+        <div>
+          <h2 id="d-name"></h2>
+          <p class="muted" id="d-desc" style="margin: 0;"></p>
+        </div>
+        <button type="button" class="dialog-close" data-close aria-label="Close">✕</button>
+      </div>
+      <div id="d-groups"></div>
+      <div id="d-error" class="alert alert-error" role="alert" hidden style="margin-top: 16px;"></div>
+      <div class="dialog-actions">
+        <span class="qty">
+          <button type="button" id="d-dec" aria-label="One fewer">−</button>
+          <span id="d-qty" aria-live="polite">1</span>
+          <button type="button" id="d-inc" aria-label="One more">+</button>
+        </span>
+        <button type="submit" class="btn btn-gold" id="d-add">Add to order</button>
+      </div>
+    </form>
+  </dialog>
+
+  {{> footer}}
+  <script type="module" src="/js/menu.js"></script>
+</body>
+</html>

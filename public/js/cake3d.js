@@ -1,0 +1,921 @@
+// Real-time 3D cake on a gold stand, built with Three.js.
+//
+//   const stage = createCakeStage(element, { sparkles: true });
+//   stage.setCake({ shape: 'heart', tiers: 2, color: '#f1c1c4', drip: '#2b160d', toppings: ['berries'] });
+//
+// Returns null when the browser has no WebGL, so callers can keep a static fallback.
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const finePointer = window.matchMedia('(pointer: fine)').matches;
+
+export const DEFAULT_CAKE = {
+  shape: 'round', // round | square | heart
+  tiers: 1, // 1–3
+  size: 1, // footprint scale, roughly 0.85–1.2
+  color: '#f3e6d3', // frosting color
+  tierColors: null, // optional per-tier colors, bottom first
+  drip: '', // drip color, '' for none
+  dripMetallic: false,
+  toppings: [], // berries | macarons | shards | goldleaf | sprinkles | flowers | cherries
+  extras: [], // candles | topper | sparklers
+  message: '', // written on a chocolate plaque
+};
+
+export function webglAvailable() {
+  try {
+    const canvas = document.createElement('canvas');
+    return Boolean(window.WebGLRenderingContext && (canvas.getContext('webgl2') || canvas.getContext('webgl')));
+  } catch {
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------- stage
+
+export function createCakeStage(container, { autoRotate = true, interactive = finePointer, sparkles = false, float = false } = {}) {
+  if (!webglAvailable()) return null;
+
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+  } catch {
+    return null;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.92;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.domElement.setAttribute('role', 'img');
+  renderer.domElement.setAttribute('aria-label', 'A 3D preview of the cake');
+  container.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.55;
+  pmrem.dispose();
+
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+
+  scene.add(new THREE.HemisphereLight(0xfff1e0, 0x2a160c, 0.4));
+  const key = new THREE.DirectionalLight(0xfff0dc, 2.3);
+  key.position.set(4, 9, 6);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  Object.assign(key.shadow.camera, { left: -4.5, right: 4.5, top: 4.5, bottom: -4.5, near: 2, far: 25 });
+  key.shadow.bias = -0.0004;
+  key.shadow.normalBias = 0.02;
+  key.shadow.radius = 5;
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffc27a, 2.2);
+  rim.position.set(-6, 5, -6);
+  scene.add(rim);
+  const fill = new THREE.DirectionalLight(0xffe4c8, 0.6);
+  fill.position.set(-5, 2, 6);
+  scene.add(fill);
+
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(9, 64), new THREE.ShadowMaterial({ opacity: 0.4 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  const turntable = new THREE.Group();
+  scene.add(turntable);
+
+  let controls = null;
+  if (interactive) {
+    controls = new OrbitControls(camera, renderer.domElement);
+    Object.assign(controls, {
+      enableZoom: false,
+      enablePan: false,
+      enableDamping: true,
+      dampingFactor: 0.08,
+      rotateSpeed: 0.7,
+      minPolarAngle: 0.75,
+      maxPolarAngle: 1.45,
+      autoRotate: autoRotate && !reduceMotion,
+      autoRotateSpeed: 1.6,
+    });
+  }
+
+  const dust = sparkles ? createSparkles() : null;
+  if (dust) scene.add(dust.points);
+
+  // Camera framing eases toward these whenever the cake changes size.
+  const view = { target: new THREE.Vector3(0, 1.5, 0), distance: 10, polar: 1.2 };
+  const targetView = { ...view, target: view.target.clone() };
+  placeCamera(view);
+
+  let current = null;
+  let pop = 1;
+
+  function setCake(config) {
+    const next = buildCake({ ...DEFAULT_CAKE, ...config });
+    const first = !current;
+    if (current) {
+      turntable.remove(current.group);
+      disposeTree(current.group);
+    }
+    current = next;
+    turntable.add(next.group);
+    pop = reduceMotion ? 1 : 0;
+
+    const fov = THREE.MathUtils.degToRad(camera.fov);
+    const fitHeight = (next.height * 0.74) / Math.tan(fov / 2);
+    const fitWidth = (next.width * 0.74) / (Math.tan(fov / 2) * Math.max(camera.aspect, 0.5));
+    targetView.distance = Math.max(fitHeight, fitWidth, 7);
+    targetView.target.set(0, next.height * 0.5, 0);
+    if (first) {
+      view.distance = targetView.distance;
+      view.target.copy(targetView.target);
+      placeCamera(view);
+    }
+    requestRender();
+  }
+
+  function placeCamera(v) {
+    if (controls) {
+      const offset = camera.position.clone().sub(controls.target);
+      if (offset.lengthSq() < 0.01) offset.setFromSphericalCoords(1, v.polar, 0.35);
+      offset.setLength(v.distance);
+      controls.target.copy(v.target);
+      camera.position.copy(v.target).add(offset);
+    } else {
+      camera.position.setFromSphericalCoords(v.distance, v.polar, 0.35).add(v.target);
+      camera.lookAt(v.target);
+    }
+  }
+
+  // ---- render loop (paused while off screen or in a background tab) ----
+  const clock = new THREE.Clock();
+  let visible = true;
+  let frame = 0;
+
+  function loop() {
+    frame = 0;
+    if (!visible || document.hidden) return;
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const t = clock.elapsedTime;
+
+    view.distance += (targetView.distance - view.distance) * 0.08;
+    view.target.lerp(targetView.target, 0.08);
+    if (controls) {
+      placeCamera(view);
+      controls.update(dt);
+    } else {
+      if (autoRotate && !reduceMotion) turntable.rotation.y += dt * 0.35;
+      placeCamera(view);
+    }
+
+    if (current) {
+      if (pop < 1) {
+        pop = Math.min(1, pop + dt * 2.2);
+        const s = 0.9 + 0.1 * easeOutBack(pop);
+        current.group.scale.setScalar(s);
+      }
+      if (float && !reduceMotion) current.group.position.y = Math.sin(t * 1.1) * 0.05;
+      current.animate?.(t, dt);
+    }
+    dust?.animate(dt);
+
+    renderer.render(scene, camera);
+    frame = requestAnimationFrame(loop);
+  }
+
+  // Draws one frame right away (so the cake shows even before animation starts), then keeps animating.
+  function requestRender() {
+    if (current) {
+      placeCamera(view);
+      renderer.render(scene, camera);
+    }
+    if (!frame && visible && !document.hidden) {
+      clock.getDelta();
+      frame = requestAnimationFrame(loop);
+    }
+  }
+
+  function resize() {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    if (current) {
+      const fov = THREE.MathUtils.degToRad(camera.fov);
+      targetView.distance = Math.max(
+        (current.height * 0.74) / Math.tan(fov / 2),
+        (current.width * 0.74) / (Math.tan(fov / 2) * Math.max(camera.aspect, 0.5)),
+        7,
+      );
+    }
+    requestRender();
+  }
+
+  const resizeObserver = new ResizeObserver(resize);
+  resizeObserver.observe(container);
+  const visibility = new IntersectionObserver(([entry]) => {
+    visible = entry.isIntersecting;
+    requestRender();
+  });
+  visibility.observe(container);
+  const onVisibility = () => requestRender();
+  document.addEventListener('visibilitychange', onVisibility);
+
+  resize();
+  container.classList.add('ready');
+
+  return {
+    setCake,
+    dispose() {
+      cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+      visibility.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
+      controls?.dispose();
+      disposeTree(scene);
+      renderer.dispose();
+      renderer.domElement.remove();
+    },
+  };
+}
+
+// ---------------------------------------------------------------- cake model
+
+const STAND_HEIGHT = 0.78;
+const BEVEL = 0.09;
+
+const gold = () => new THREE.MeshStandardMaterial({ color: 0xd9b066, metalness: 1, roughness: 0.24 });
+
+function frostingMaterial(color) {
+  return new THREE.MeshPhysicalMaterial({
+    color,
+    roughness: 0.62,
+    sheen: 0.22,
+    sheenRoughness: 0.55,
+    sheenColor: lighten(color, 0.35),
+  });
+}
+
+function dripMaterial(color, metallic) {
+  if (metallic) return new THREE.MeshStandardMaterial({ color: 0xd4a75a, metalness: 1, roughness: 0.2 });
+  return new THREE.MeshPhysicalMaterial({ color, roughness: 0.16, clearcoat: 0.9, clearcoatRoughness: 0.12 });
+}
+
+function lighten(hex, amount) {
+  return new THREE.Color(hex).lerp(new THREE.Color(0xffffff), amount);
+}
+
+function buildCake(c) {
+  const group = new THREE.Group();
+  const animations = [];
+  const tierCount = Math.min(3, Math.max(1, Number(c.tiers) || 1));
+  const size = THREE.MathUtils.clamp(Number(c.size) || 1, 0.75, 1.3);
+  const base = 1.5 * size;
+  const radii = [[base * 1.04], [base, base * 0.7], [base, base * 0.73, base * 0.48]][tierCount - 1];
+  const heights = [[1.2], [1.05, 0.95], [1.0, 0.9, 0.8]][tierCount - 1];
+
+  const stand = buildStand(radii[0]);
+  group.add(stand);
+
+  let y = STAND_HEIGHT;
+  let top = null;
+  radii.forEach((r, i) => {
+    const h = heights[i];
+    const color = c.tierColors?.[i] || c.color;
+    const tier = buildTier(c.shape, r, h, color, c.drip ? { color: c.drip, metallic: c.dripMetallic, seed: i } : null);
+    tier.position.y = y;
+    group.add(tier);
+    top = { y: y + h, r, h, edge: edgeSampler(c.shape, r) };
+    y += h;
+  });
+
+  const rng = random(7);
+  let extraHeight = 0.2;
+  const toppings = new Set(c.toppings || []);
+  const extras = new Set(c.extras || []);
+  const hasMessage = Boolean(c.message && c.message.trim());
+
+  if (toppings.has('sprinkles')) group.add(sprinkles(top, rng));
+  if (toppings.has('goldleaf')) group.add(goldLeaf(top, radii, heights, rng));
+  if (toppings.has('berries')) group.add(berries(top, rng));
+  if (toppings.has('macarons')) group.add(macarons(top, hasMessage));
+  if (toppings.has('cherries')) group.add(cherries(top, hasMessage));
+  if (toppings.has('flowers')) group.add(flowers(top));
+  if (toppings.has('shards')) { group.add(shards(top, rng)); extraHeight = Math.max(extraHeight, 0.6); }
+
+  if (hasMessage) group.add(plaque(top, c.message.trim(), c.shape));
+
+  if (extras.has('candles')) {
+    const candleSet = candles(top);
+    group.add(candleSet.group);
+    animations.push(candleSet.animate);
+    extraHeight = Math.max(extraHeight, 0.85);
+  }
+  if (extras.has('topper')) { group.add(topper(top)); extraHeight = Math.max(extraHeight, 1.35); }
+  if (extras.has('sparklers')) {
+    const set = sparklers(top);
+    group.add(set.group);
+    animations.push(set.animate);
+    extraHeight = Math.max(extraHeight, 1.1);
+  }
+
+  group.traverse((o) => {
+    if (o.isMesh && !o.userData.noShadow) {
+      o.castShadow = true;
+      o.receiveShadow = true;
+    }
+  });
+
+  return {
+    group,
+    height: top.y + extraHeight,
+    width: radii[0] * 2.7,
+    animate: animations.length ? (t, dt) => animations.forEach((fn) => fn(t, dt)) : null,
+  };
+}
+
+// 2D outline of a tier, roughly `r` from the center. Shape y becomes world -z.
+function outline(shape, r) {
+  const s = new THREE.Shape();
+  if (shape === 'square') {
+    const half = r * 0.9;
+    const k = r * 0.18;
+    s.moveTo(-half + k, -half);
+    s.lineTo(half - k, -half);
+    s.quadraticCurveTo(half, -half, half, -half + k);
+    s.lineTo(half, half - k);
+    s.quadraticCurveTo(half, half, half - k, half);
+    s.lineTo(-half + k, half);
+    s.quadraticCurveTo(-half, half, -half, half - k);
+    s.lineTo(-half, -half + k);
+    s.quadraticCurveTo(-half, -half, -half + k, -half);
+  } else if (shape === 'heart') {
+    // Classic heart curve, re-centered and scaled; its point faces the front (+z).
+    const k = (r * 2.15) / 22;
+    const P = (x, yy) => [(x - 5) * k, (yy - 9.2) * k];
+    s.moveTo(...P(5, 5));
+    s.bezierCurveTo(...P(5, 5), ...P(4, 0), ...P(0, 0));
+    s.bezierCurveTo(...P(-6, 0), ...P(-6, 7), ...P(-6, 7));
+    s.bezierCurveTo(...P(-6, 11), ...P(-3, 15.4), ...P(5, 19));
+    s.bezierCurveTo(...P(12, 15.4), ...P(16, 11), ...P(16, 7));
+    s.bezierCurveTo(...P(16, 7), ...P(16, 0), ...P(10, 0));
+    s.bezierCurveTo(...P(7, 0), ...P(5, 5), ...P(5, 5));
+  } else {
+    s.absarc(0, 0, r, 0, Math.PI * 2, false);
+  }
+  return s;
+}
+
+// Returns a function giving the point on the tier's edge in a world direction (radians, +x = 0, front +z = PI/2).
+function edgeSampler(shape, r) {
+  const pts = outline(shape, r).getSpacedPoints(240).map((p) => {
+    const x = p.x;
+    const z = -p.y;
+    return { x, z, angle: Math.atan2(z, x), dist: Math.hypot(x, z) };
+  });
+  return (angle, factor = 1) => {
+    let best = pts[0];
+    let bestDiff = Infinity;
+    for (const p of pts) {
+      const diff = Math.abs(Math.atan2(Math.sin(p.angle - angle), Math.cos(p.angle - angle)));
+      if (diff < bestDiff) { bestDiff = diff; best = p; }
+    }
+    return new THREE.Vector3(best.x * factor, 0, best.z * factor);
+  };
+}
+
+function solid(shape, r, h, bevel = BEVEL, curveSegments = 72) {
+  let geo = new THREE.ExtrudeGeometry(outline(shape, r - bevel), {
+    depth: Math.max(0.001, h - bevel * 2),
+    bevelEnabled: true,
+    bevelThickness: bevel,
+    bevelSize: bevel,
+    bevelSegments: 6,
+    curveSegments,
+  });
+  geo.rotateX(-Math.PI / 2);
+  geo.translate(0, bevel, 0);
+  // Weld the vertices so the frosting shades smoothly instead of in flat facets.
+  geo.deleteAttribute('normal');
+  geo.deleteAttribute('uv');
+  geo = mergeVertices(geo, 1e-4);
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function buildTier(shape, r, h, color, drip) {
+  const tier = new THREE.Group();
+  const body = new THREE.Mesh(solid(shape, r, h), frostingMaterial(color));
+  tier.add(body);
+
+  const sampler = outline(shape, r);
+  const perimeter = sampler.getLength();
+
+  // Piped pearl border around the base.
+  const pearlCount = Math.floor(perimeter / 0.13);
+  const pearls = new THREE.InstancedMesh(new THREE.SphereGeometry(0.075, 14, 10), frostingMaterial(lighten(color, 0.12)), pearlCount);
+  const m = new THREE.Matrix4();
+  sampler.getSpacedPoints(pearlCount).slice(0, pearlCount).forEach((p, i) => {
+    m.makeTranslation(p.x, 0.07, -p.y);
+    pearls.setMatrixAt(i, m);
+  });
+  tier.add(pearls);
+
+  if (drip) {
+    const mat = dripMaterial(drip.color, drip.metallic);
+    const cap = new THREE.Mesh(solid(shape, r + 0.018, 0.08, 0.035, 72), mat);
+    cap.position.y = h - 0.05;
+    tier.add(cap);
+
+    const count = Math.floor(perimeter / 0.16);
+    const rng = random(31 + drip.seed * 17);
+    sampler.getSpacedPoints(count).slice(0, count).forEach((p) => {
+      const len = (0.04 + rng() ** 1.6 * 0.5) * Math.min(1, h);
+      const rad = 0.042 + rng() * 0.026;
+      const d = new THREE.Mesh(new THREE.CapsuleGeometry(rad, len, 4, 10), mat);
+      const out = new THREE.Vector2(p.x, p.y).normalize().multiplyScalar(0.012);
+      d.position.set(p.x + out.x, h - len / 2 - 0.04, -(p.y + out.y));
+      tier.add(d);
+      // A slightly fatter bead where the drip has pooled at its tip.
+      if (len > 0.12) {
+        const bead = new THREE.Mesh(new THREE.SphereGeometry(rad * 1.22, 12, 10), mat);
+        bead.position.set(d.position.x, h - len - 0.04, d.position.z);
+        tier.add(bead);
+      }
+    });
+  } else {
+    // Without a drip, finish the top edge with smaller pearls.
+    const n = Math.floor(perimeter / 0.11);
+    const topPearls = new THREE.InstancedMesh(new THREE.SphereGeometry(0.058, 12, 8), frostingMaterial(lighten(color, 0.18)), n);
+    outline(shape, r - 0.07).getSpacedPoints(n).slice(0, n).forEach((p, i) => {
+      m.makeTranslation(p.x, h - 0.005, -p.y);
+      topPearls.setMatrixAt(i, m);
+    });
+    tier.add(topPearls);
+  }
+  return tier;
+}
+
+function buildStand(cakeRadius) {
+  const stand = new THREE.Group();
+  const R = cakeRadius * 1.24 + 0.15;
+  const mat = gold();
+
+  const plate = new THREE.Mesh(new THREE.CylinderGeometry(R, R * 0.96, 0.08, 96), mat);
+  plate.position.y = STAND_HEIGHT - 0.04;
+  stand.add(plate);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.035, 12, 120), mat);
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = STAND_HEIGHT - 0.03;
+  stand.add(rim);
+
+  const profile = [
+    [0.001, 0], [R * 0.48, 0], [R * 0.48, 0.05], [R * 0.3, 0.1], [0.2, 0.18],
+    [0.13, 0.35], [0.12, 0.5], [0.16, 0.62], [0.32, STAND_HEIGHT - 0.08], [0.001, STAND_HEIGHT - 0.08],
+  ].map(([x, yy]) => new THREE.Vector2(x, yy));
+  stand.add(new THREE.Mesh(new THREE.LatheGeometry(profile, 72), mat));
+  return stand;
+}
+
+// ---------------------------------------------------------------- toppings
+
+function mesh(geo, mat, x, y, z) {
+  const o = new THREE.Mesh(geo, mat);
+  o.position.set(x, y, z);
+  return o;
+}
+
+function berries(top, rng) {
+  const g = new THREE.Group();
+  const rasp = new THREE.MeshStandardMaterial({ color: 0xb3203b, roughness: 0.55, flatShading: true });
+  const blue = new THREE.MeshPhysicalMaterial({ color: 0x2b3263, roughness: 0.35, clearcoat: 0.4 });
+  const mint = new THREE.MeshStandardMaterial({ color: 0x4f8a3a, roughness: 0.5 });
+  for (let i = 0; i < 16; i++) {
+    const angle = -Math.PI * 1.05 + (i / 15) * Math.PI * 1.1 + (rng() - 0.5) * 0.15;
+    const p = top.edge(angle, 0.62 + rng() * 0.16);
+    if (i % 3 === 2) {
+      g.add(mesh(new THREE.SphereGeometry(0.075, 16, 12), blue, p.x, top.y + 0.07, p.z));
+    } else {
+      const berry = mesh(new THREE.IcosahedronGeometry(0.105, 1), rasp, p.x, top.y + 0.1, p.z);
+      berry.scale.set(1, 1.15, 1);
+      berry.rotation.set(rng(), rng(), rng());
+      g.add(berry);
+    }
+    if (i % 5 === 1) {
+      const leaf = mesh(new THREE.SphereGeometry(0.11, 12, 8), mint, p.x * 0.9, top.y + 0.13, p.z * 0.9);
+      leaf.scale.set(1, 0.18, 0.5);
+      leaf.rotation.y = rng() * Math.PI;
+      leaf.rotation.z = 0.4;
+      g.add(leaf);
+    }
+  }
+  return g;
+}
+
+function macarons(top, gapAtFront) {
+  const g = new THREE.Group();
+  const colors = [0xf2b8c6, 0xc9e4b4, 0xd9c7ef, 0xf6e3a1, 0xf7cfb0];
+  const cream = new THREE.MeshStandardMaterial({ color: 0xfaf3e6, roughness: 0.7 });
+  const count = 7;
+  let placed = 0;
+  for (let i = 0; i < count + 2 && placed < count; i++) {
+    const angle = Math.PI / 2 + ((i + 0.5) / (count + 1)) * Math.PI * 2;
+    if (gapAtFront && Math.abs(Math.atan2(Math.sin(angle - Math.PI / 2), Math.cos(angle - Math.PI / 2))) < 0.6) continue;
+    const p = top.edge(angle, 0.74);
+    const shell = new THREE.MeshStandardMaterial({ color: colors[placed % colors.length], roughness: 0.65 });
+    const mac = new THREE.Group();
+    const lower = mesh(new THREE.SphereGeometry(0.17, 24, 14), shell, 0, 0.06, 0);
+    lower.scale.set(1, 0.36, 1);
+    const upper = lower.clone();
+    upper.position.y = 0.17;
+    mac.add(lower, upper, mesh(new THREE.CylinderGeometry(0.145, 0.145, 0.06, 24), cream, 0, 0.115, 0));
+    mac.position.set(p.x, top.y + 0.02, p.z);
+    mac.lookAt(p.x * 2, top.y + 0.02, p.z * 2);
+    mac.rotateX(-0.45);
+    g.add(mac);
+    placed++;
+  }
+  return g;
+}
+
+function cherries(top, gapAtFront) {
+  const g = new THREE.Group();
+  const red = new THREE.MeshPhysicalMaterial({ color: 0x8e0f22, roughness: 0.15, clearcoat: 1 });
+  const stem = new THREE.MeshStandardMaterial({ color: 0x5b6b2a, roughness: 0.6 });
+  const count = 8;
+  for (let i = 0; i < count; i++) {
+    const angle = Math.PI / 2 + ((i + 0.5) / count) * Math.PI * 2;
+    if (gapAtFront && Math.abs(Math.atan2(Math.sin(angle - Math.PI / 2), Math.cos(angle - Math.PI / 2))) < 0.5) continue;
+    const p = top.edge(angle, 0.84);
+    g.add(mesh(new THREE.SphereGeometry(0.1, 20, 16), red, p.x, top.y + 0.1, p.z));
+    const s = mesh(new THREE.CylinderGeometry(0.008, 0.01, 0.26, 6), stem, p.x, top.y + 0.28, p.z);
+    s.rotation.z = 0.35;
+    s.rotation.y = angle;
+    g.add(s);
+  }
+  return g;
+}
+
+function flowers(top) {
+  const g = new THREE.Group();
+  const petalColors = [0xfbf4ef, 0xf4b6c2, 0xcbb7ea];
+  const center = new THREE.MeshStandardMaterial({ color: 0xf2c84b, roughness: 0.5 });
+  [[Math.PI * 0.18, 0.62], [Math.PI * 0.32, 0.8], [Math.PI * 0.02, 0.8]].forEach(([angle, f], i) => {
+    const p = top.edge(angle, f);
+    const flower = new THREE.Group();
+    const petal = new THREE.MeshStandardMaterial({ color: petalColors[i % 3], roughness: 0.6, side: THREE.DoubleSide });
+    for (let k = 0; k < 5; k++) {
+      const a = (k / 5) * Math.PI * 2;
+      const pm = mesh(new THREE.SphereGeometry(0.1, 14, 10), petal, Math.cos(a) * 0.1, 0, Math.sin(a) * 0.1);
+      pm.scale.set(1, 0.3, 0.62);
+      pm.rotation.y = -a;
+      flower.add(pm);
+    }
+    flower.add(mesh(new THREE.SphereGeometry(0.045, 12, 10), center, 0, 0.03, 0));
+    flower.position.set(p.x, top.y + 0.05, p.z);
+    flower.rotation.set(-0.25, i, 0);
+    g.add(flower);
+  });
+  return g;
+}
+
+function shards(top, rng) {
+  const g = new THREE.Group();
+  const choc = new THREE.MeshPhysicalMaterial({ color: 0x2a150c, roughness: 0.25, clearcoat: 0.6 });
+  for (let i = 0; i < 5; i++) {
+    const p = top.edge(-Math.PI / 2 + (i - 2) * 0.45, 0.32 + rng() * 0.15);
+    const w = 0.35 + rng() * 0.25;
+    const h = 0.45 + rng() * 0.3;
+    const shard = mesh(new THREE.BoxGeometry(w, h, 0.025), choc, p.x, top.y + h * 0.38, p.z);
+    shard.rotation.set((rng() - 0.5) * 0.5, rng() * Math.PI, (rng() - 0.5) * 0.6);
+    g.add(shard);
+  }
+  return g;
+}
+
+function goldLeaf(top, radii, heights, rng) {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({ color: 0xe1b866, metalness: 1, roughness: 0.28, side: THREE.DoubleSide });
+  for (let i = 0; i < 26; i++) {
+    const flake = new THREE.Mesh(new THREE.CircleGeometry(0.05 + rng() * 0.06, 5), mat);
+    flake.userData.noShadow = true;
+    const angle = rng() * Math.PI * 2;
+    if (i < 9) {
+      const p = top.edge(angle, 0.2 + rng() * 0.65);
+      flake.position.set(p.x, top.y + 0.012, p.z);
+      flake.rotation.set(-Math.PI / 2, 0, rng() * Math.PI);
+    } else {
+      // On the side of the top tier.
+      const p = top.edge(angle, 1.012);
+      flake.position.set(p.x, top.y - 0.15 - rng() * (top.h - 0.3), p.z);
+      flake.lookAt(p.x * 2, flake.position.y, p.z * 2);
+      flake.rotateZ(rng() * Math.PI);
+    }
+    g.add(flake);
+  }
+  return g;
+}
+
+function sprinkles(top, rng) {
+  const count = 320;
+  const palette = ['#f5b8c9', '#9ad0ec', '#ffe08a', '#b8e0a8', '#ffffff', '#f7a072', '#c9a7eb'].map((c) => new THREE.Color(c));
+  const mesh = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.014, 0.055, 2, 5), new THREE.MeshStandardMaterial({ roughness: 0.45 }), count);
+  mesh.userData.noShadow = true;
+  const m = new THREE.Matrix4();
+  const q = new THREE.Quaternion();
+  const e = new THREE.Euler();
+  for (let i = 0; i < count; i++) {
+    const p = top.edge(rng() * Math.PI * 2, Math.sqrt(rng()) * 0.9);
+    e.set(Math.PI / 2, 0, rng() * Math.PI * 2);
+    q.setFromEuler(e);
+    m.compose(new THREE.Vector3(p.x, top.y + 0.016, p.z), q, new THREE.Vector3(1, 1, 1));
+    mesh.setMatrixAt(i, m);
+    mesh.setColorAt(i, palette[i % palette.length]);
+  }
+  return mesh;
+}
+
+// ---------------------------------------------------------------- extras
+
+function candles(top) {
+  const group = new THREE.Group();
+  const colors = [0xf7d9e3, 0xfdf3dc, 0xd7e8f5, 0xf3e1b5];
+  const flameMat = new THREE.MeshBasicMaterial({ color: 0xffd17a, toneMapped: false });
+  const glowMat = new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffb35a, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+  const flames = [];
+  const n = 5;
+  for (let i = 0; i < n; i++) {
+    const angle = -Math.PI / 2 + (i - (n - 1) / 2) * 0.55;
+    const p = top.edge(angle, 0.42);
+    const candle = new THREE.Group();
+    const wax = new THREE.MeshStandardMaterial({ color: colors[i % colors.length], roughness: 0.5 });
+    candle.add(mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.55, 14), wax, 0, 0.275, 0));
+    candle.add(mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.06, 6), new THREE.MeshBasicMaterial({ color: 0x222222 }), 0, 0.58, 0));
+    const flame = mesh(new THREE.SphereGeometry(0.04, 12, 10), flameMat, 0, 0.66, 0);
+    flame.scale.set(1, 2.1, 1);
+    flame.userData.noShadow = true;
+    const glow = new THREE.Sprite(glowMat);
+    glow.scale.setScalar(0.42);
+    glow.position.y = 0.66;
+    candle.add(flame, glow);
+    candle.position.set(p.x, top.y, p.z);
+    group.add(candle);
+    flames.push({ flame, glow, phase: i * 1.7 });
+  }
+  const light = new THREE.PointLight(0xffb560, 2.5, 4, 2);
+  light.position.set(0, top.y + 0.8, -0.2);
+  group.add(light);
+
+  return {
+    group,
+    animate(t) {
+      if (reduceMotion) return;
+      for (const f of flames) {
+        const flicker = 1 + Math.sin(t * 17 + f.phase) * 0.08 + Math.sin(t * 29 + f.phase * 2) * 0.05;
+        f.flame.scale.set(1, 2.1 * flicker, 1);
+        f.glow.scale.setScalar(0.42 * flicker);
+      }
+      light.intensity = 2.5 + Math.sin(t * 13) * 0.3;
+    },
+  };
+}
+
+function topper(top) {
+  const g = new THREE.Group();
+  const mat = gold();
+  const texture = textTexture(1024, 400, (ctx, w, h) => {
+    const grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, '#fbe7b0');
+    grad.addColorStop(0.5, '#d9b066');
+    grad.addColorStop(1, '#a57936');
+    ctx.fillStyle = grad;
+    fitText(ctx, 'Happy Birthday', w * 0.92, 200, '"Great Vibes", cursive');
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Happy Birthday', w / 2, h / 2);
+  });
+  const sign = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.5, 0.58),
+    new THREE.MeshStandardMaterial({ map: texture, transparent: true, alphaTest: 0.2, metalness: 0.6, roughness: 0.3, side: THREE.DoubleSide }),
+  );
+  const back = top.edge(-Math.PI / 2, 0.35);
+  sign.position.set(back.x, top.y + 0.95, back.z);
+  sign.userData.noShadow = true;
+  g.add(sign);
+  for (const x of [-0.42, 0.42]) {
+    g.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.75, 8), mat, back.x + x, top.y + 0.37, back.z));
+  }
+  return g;
+}
+
+function sparklers(top) {
+  const group = new THREE.Group();
+  const stickMat = new THREE.MeshStandardMaterial({ color: 0x6b6b6b, metalness: 0.6, roughness: 0.4 });
+  const sets = [-0.35, 0.35].map((dx, i) => {
+    const p = top.edge(-Math.PI / 2 + dx, 0.45);
+    group.add(mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.75, 6), stickMat, p.x, top.y + 0.37, p.z));
+    const count = 70;
+    const positions = new Float32Array(count * 3);
+    const velocities = new Float32Array(count * 3);
+    const life = new Float32Array(count);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const points = new THREE.Points(geo, new THREE.PointsMaterial({
+      map: glowTexture(), color: 0xffe6a8, size: 0.07, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    }));
+    const tip = new THREE.Vector3(p.x, top.y + 0.72, p.z);
+    const rng = random(91 + i);
+    const respawn = (k) => {
+      positions.set([tip.x, tip.y, tip.z], k * 3);
+      const a = rng() * Math.PI * 2;
+      const up = rng() * 1.6 - 0.3;
+      velocities.set([Math.cos(a) * 0.9, up, Math.sin(a) * 0.9], k * 3);
+      life[k] = 0.15 + rng() * 0.35;
+    };
+    for (let k = 0; k < count; k++) { respawn(k); life[k] *= rng(); }
+    group.add(points);
+    return { geo, positions, velocities, life, respawn, count };
+  });
+
+  return {
+    group,
+    animate(t, dt) {
+      if (reduceMotion) return;
+      for (const s of sets) {
+        for (let k = 0; k < s.count; k++) {
+          s.life[k] -= dt;
+          if (s.life[k] <= 0) { s.respawn(k); continue; }
+          s.velocities[k * 3 + 1] -= dt * 2.5;
+          s.positions[k * 3] += s.velocities[k * 3] * dt;
+          s.positions[k * 3 + 1] += s.velocities[k * 3 + 1] * dt;
+          s.positions[k * 3 + 2] += s.velocities[k * 3 + 2] * dt;
+        }
+        s.geo.attributes.position.needsUpdate = true;
+      }
+    },
+  };
+}
+
+function plaque(top, message, shape) {
+  const g = new THREE.Group();
+  const stretch = 1.55;
+  const texture = textTexture(1024, 1024, (ctx, w, h) => {
+    ctx.fillStyle = '#f6ead8';
+    ctx.fillRect(0, 0, w, h);
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.scale(1 / stretch, 1);
+    ctx.strokeStyle = '#c9a063';
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.arc(0, 0, w * 0.44, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#3a1d10';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const lines = wrap(message, 18);
+    const size = fitText(ctx, lines.reduce((a, b) => (a.length > b.length ? a : b)), w * 1.1, lines.length > 1 ? 150 : 200, '"Great Vibes", cursive');
+    lines.forEach((line, i) => ctx.fillText(line, 0, (i - (lines.length - 1) / 2) * size * 1.05));
+    ctx.restore();
+  });
+  const side = new THREE.MeshStandardMaterial({ color: 0xefe0c8, roughness: 0.5 });
+  const face = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.5 });
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.04, 48), [side, face, side]);
+  // A cylinder's top-cap texture runs along its local z axis, so stretch z and turn it to face the front.
+  disc.scale.z = stretch;
+  disc.rotation.y = Math.PI / 2;
+  disc.userData.noShadow = true;
+  const front = top.edge(Math.PI / 2, shape === 'heart' ? 0.2 : 0.42);
+  g.position.set(front.x, top.y + 0.09, front.z);
+  g.rotation.x = 0.32;
+  g.add(disc);
+  return g;
+}
+
+// ---------------------------------------------------------------- sparkle dust
+
+function createSparkles() {
+  const count = 140;
+  const positions = new Float32Array(count * 3);
+  const speeds = new Float32Array(count);
+  const rng = random(3);
+  for (let i = 0; i < count; i++) {
+    const a = rng() * Math.PI * 2;
+    const r = 1.5 + rng() * 3.5;
+    positions.set([Math.cos(a) * r, rng() * 6, Math.sin(a) * r - 0.5], i * 3);
+    speeds[i] = 0.08 + rng() * 0.22;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const points = new THREE.Points(geo, new THREE.PointsMaterial({
+    map: glowTexture(), color: 0xf3d08a, size: 0.09, transparent: true, opacity: 0.85,
+    depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  return {
+    points,
+    animate(dt) {
+      if (reduceMotion) return;
+      for (let i = 0; i < count; i++) {
+        positions[i * 3 + 1] += speeds[i] * dt;
+        if (positions[i * 3 + 1] > 6) positions[i * 3 + 1] = 0;
+      }
+      geo.attributes.position.needsUpdate = true;
+      points.rotation.y += dt * 0.03;
+    },
+  };
+}
+
+// ---------------------------------------------------------------- helpers
+
+let glow = null;
+function glowTexture() {
+  if (glow) return glow;
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.25, 'rgba(255,240,200,0.8)');
+  grad.addColorStop(1, 'rgba(255,200,120,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 64, 64);
+  glow = new THREE.CanvasTexture(c);
+  glow.userData.shared = true;
+  return glow;
+}
+
+// Draws text onto a canvas texture, and redraws once the script font has loaded.
+function textTexture(w, h, draw) {
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  const paint = () => {
+    ctx.clearRect(0, 0, w, h);
+    draw(ctx, w, h);
+    texture.needsUpdate = true;
+  };
+  paint();
+  if (document.fonts && !document.fonts.check('80px "Great Vibes"')) {
+    document.fonts.load('80px "Great Vibes"').then(paint).catch(() => {});
+  }
+  return texture;
+}
+
+function fitText(ctx, text, maxWidth, maxSize, family) {
+  let size = maxSize;
+  do {
+    ctx.font = `${size}px ${family}`;
+    size -= 6;
+  } while (ctx.measureText(text).width > maxWidth && size > 30);
+  return size + 6;
+}
+
+function wrap(text, max) {
+  if (text.length <= max) return [text];
+  const words = text.split(/\s+/);
+  const lines = [''];
+  for (const word of words) {
+    const line = lines[lines.length - 1];
+    if ((line + ' ' + word).trim().length > max && line && lines.length < 3) lines.push(word);
+    else lines[lines.length - 1] = (line + ' ' + word).trim();
+  }
+  return lines;
+}
+
+function random(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function easeOutBack(x) {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2;
+}
+
+function disposeTree(root) {
+  root.traverse((o) => {
+    o.geometry?.dispose();
+    const materials = Array.isArray(o.material) ? o.material : o.material ? [o.material] : [];
+    for (const mat of materials) {
+      if (mat.map && !mat.map.userData.shared) mat.map.dispose();
+      mat.dispose();
+    }
+  });
+}

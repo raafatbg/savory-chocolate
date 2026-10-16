@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Gallery · {{shop_name}}</title>
+  <meta name="description" content="Cakes and treats from the {{shop_name}} kitchen.">
+  {{> head}}
+</head>
+<body>
+  {{> header}}
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container" data-reveal>
+        <span class="eyebrow">Gallery</span>
+        <h1>From our <em class="gold-text">kitchen</em></h1>
+        <p>A few of the cakes and treats we've had the pleasure of making.</p>
+      </div>
+    </section>
+
+    <div class="container" style="padding-bottom: 96px;">
+      <div class="masonry" id="gallery"><p class="loading">Loading…</p></div>
+      <div class="card empty-state" id="gallery-empty" hidden style="padding: 64px 24px;">
+        <span class="script" style="font-size: 2.2rem;">Coming soon</span>
+        <h2 style="margin-top: 8px;">Our gallery is being plated</h2>
+        <p>We're photographing our latest creations. In the meantime, why not design your own?</p>
+        <a class="btn btn-gold" href="/cakes" style="margin-top: 12px;">Design a cake</a>
+      </div>
+    </div>
+  </main>
+
+  <dialog class="lightbox" id="lightbox" aria-label="Photo">
+    <button type="button" class="dialog-close" data-close aria-label="Close">✕</button>
+    <button type="button" class="nav prev" data-step="-1" aria-label="Previous photo">‹</button>
+    <figure><img id="lb-img" alt=""><figcaption id="lb-caption"></figcaption></figure>
+    <button type="button" class="nav next" data-step="1" aria-label="Next photo">›</button>
+  </dialog>
+
+  {{> footer}}
+  <script type="module">
+    import { api, esc, reveal } from '/js/common.js';
+
+    const grid = document.getElementById('gallery');
+    let photos = [];
+    try {
+      photos = await api('/api/gallery');
+    } catch (err) {
+      grid.innerHTML = `<p class="alert alert-error">${esc(err.message)}</p>`;
+    }
+
+    if (!photos.length && !grid.querySelector('.alert')) {
+      grid.hidden = true;
+      document.getElementById('gallery-empty').hidden = false;
+    } else if (photos.length) {
+      grid.innerHTML = photos.map((p, i) => `
+        <figure tabindex="0" data-index="${i}" data-reveal style="--delay: ${(i % 3) * 0.08}s">
+          <img src="/uploads/${esc(p.image)}" alt="${esc(p.caption || 'Cake from our kitchen')}" loading="lazy">
+          ${p.caption ? `<figcaption>${esc(p.caption)}</figcaption>` : ''}
+        </figure>`).join('');
+      reveal(grid);
+    }
+
+    const box = document.getElementById('lightbox');
+    let index = 0;
+    function show(i) {
+      index = (i + photos.length) % photos.length;
+      const p = photos[index];
+      document.getElementById('lb-img').src = `/uploads/${p.image}`;
+      document.getElementById('lb-img').alt = p.caption || 'Cake from our kitchen';
+      document.getElementById('lb-caption').textContent = p.caption;
+      box.querySelectorAll('.nav').forEach((b) => { b.hidden = photos.length < 2; });
+    }
+    grid.addEventListener('click', (e) => {
+      const fig = e.target.closest('figure');
+      if (fig) { show(Number(fig.dataset.index)); box.showModal(); }
+    });
+    grid.addEventListener('keydown', (e) => {
+      const fig = e.target.closest('figure');
+      if (fig && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); show(Number(fig.dataset.index)); box.showModal(); }
+    });
+    box.addEventListener('click', (e) => {
+      if (e.target.closest('[data-close]') || e.target === box) box.close();
+      const step = e.target.closest('[data-step]');
+      if (step) show(index + Number(step.dataset.step));
+    });
+    box.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') show(index + 1);
+      if (e.key === 'ArrowLeft') show(index - 1);
+    });
+  </script>
+</body>
+</html>

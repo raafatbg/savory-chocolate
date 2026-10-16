@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Our story · {{shop_name}}</title>
+  <meta name="description" content="{{about}}">
+  {{> head}}
+</head>
+<body>
+  {{> header}}
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container" data-reveal>
+        <span class="eyebrow">About us</span>
+        <h1>Our <em class="gold-text">story</em></h1>
+        <p>{{tagline}}</p>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top: 24px;">
+      <div class="container story">
+        <div class="stage" id="about-stage" data-reveal>
+          <img class="fallback" src="/img/cake.svg" alt="">
+        </div>
+        <div class="story-text pre-line" data-reveal style="--delay: 0.1s">{{about_story}}</div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <span class="eyebrow">What we believe</span>
+          <h2>Three little promises</h2>
+        </div>
+        <div class="values">
+          <div class="card value" data-reveal>
+            <span class="glyph">✦</span>
+            <h3>Made from scratch</h3>
+            <p>Real butter, fresh cream, good chocolate. Every sponge, filling and frosting is made in our kitchen.</p>
+          </div>
+          <div class="card value" data-reveal style="--delay: 0.1s">
+            <span class="glyph">✦</span>
+            <h3>Baked to order</h3>
+            <p>Nothing sits on a shelf. Your cake is baked for your day, so it's as fresh as it can be.</p>
+          </div>
+          <div class="card value" data-reveal style="--delay: 0.2s">
+            <span class="glyph">✦</span>
+            <h3>Made for you</h3>
+            <p>Your flavors, your colors, your message. Tell us what you have in mind and we'll bring it to life.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top: 0;">
+      <div class="container visit">
+        <div class="card" data-reveal>
+          <span class="eyebrow left">Visit us</span>
+          <h2>Come and say hello</h2>
+          <dl class="info-list">
+            <div><dt>Opening hours</dt><dd>{{hours}}</dd></div>
+            {{#address}}<div><dt>Address</dt><dd>{{address}}</dd>{{#maps_url}}<dd style="margin-top: 6px;"><a href="{{maps_url}}" target="_blank" rel="noopener">Get directions →</a></dd>{{/maps_url}}</div>{{/address}}
+          </dl>
+        </div>
+        <div class="card" data-reveal style="--delay: 0.1s">
+          <span class="eyebrow left">Celebrating soon?</span>
+          <h2>Let's make something beautiful</h2>
+          <p class="muted">Design your cake in our 3D builder, or get in touch and tell us about your idea.</p>
+          <div class="hero-actions" style="margin-top: 20px;">
+            <a class="btn btn-gold" href="/cakes">Design a cake</a>
+            <a class="btn btn-outline" href="/contact">Contact us</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  {{> footer}}
+  <script type="module">
+    import '/js/common.js';
+    import { createCakeStage } from '/js/cake3d.js';
+
+    createCakeStage(document.getElementById('about-stage'), { sparkles: true })?.setCake({
+      shape: 'round',
+      tiers: 2,
+      tierColors: ['#3a2016', '#efe0c9'],
+      drip: '#d4a75a',
+      dripMetallic: true,
+      toppings: ['macarons', 'goldleaf'],
+    });
+  </script>
+</body>
+</html>
