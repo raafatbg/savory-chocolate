@@ -1607,3 +1607,108 @@ html { scrollbar-color: #5a3f2a var(--bg); scrollbar-width: thin; }
 .wa-send { background: linear-gradient(145deg, #2fe07a, #1faa55); color: #fff; box-shadow: 0 14px 30px -12px rgba(31, 170, 85, 0.7); }
 .wa-send:hover { color: #fff; transform: translateY(-2px); }
 .wa-send svg { width: 22px; height: 22px; fill: currentColor; }
+
+/* =================================================================
+   OMVI — the studio that built the site
+   ================================================================= */
+
+.omvi {
+  letter-spacing: 0.32em;
+  margin-right: -0.32em;
+}
+
+/* Hero badge */
+.omvi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 26px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(90deg, rgba(211, 182, 130, 0.12), rgba(211, 182, 130, 0.03));
+  text-decoration: none;
+  transition: border-color 0.3s, transform 0.3s var(--ease);
+}
+.omvi-badge:hover { border-color: var(--gold); transform: translateY(-2px); }
+.omvi-badge-label { font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); }
+.omvi-badge .omvi { font-size: 1.9rem; line-height: 1; }
+@media (max-width: 900px) { .omvi-badge { margin-left: auto; margin-right: auto; } }
+@media (max-width: 480px) { .omvi-badge { flex-direction: column; gap: 4px; border-radius: 20px; } }
+
+/* Big wordmark */
+.omvi-wordmark {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: clamp(3.4rem, 9vw, 6.5rem);
+  line-height: 1;
+  letter-spacing: 0.22em;
+  margin: 4px -0.22em 18px 0;
+  background: var(--gold-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Home section and Contact card share the look: dark card, huge faint OMVI behind. */
+.omvi-band, .omvi-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  align-items: center;
+  gap: 32px 56px;
+  padding: clamp(32px, 5vw, 64px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line-strong);
+  background:
+    radial-gradient(70% 120% at 0% 0%, rgba(211, 182, 130, 0.16), transparent 60%),
+    radial-gradient(60% 100% at 100% 100%, rgba(160, 70, 50, 0.12), transparent 60%),
+    var(--surface);
+  box-shadow: var(--shadow);
+}
+.omvi-band { grid-template-columns: 1.6fr auto; }
+.omvi-card { grid-template-columns: 1.4fr 1fr; align-items: start; }
+@media (max-width: 860px) { .omvi-band, .omvi-card { grid-template-columns: 1fr; } }
+.omvi-band p, .omvi-card p { max-width: 60ch; color: var(--text-soft); }
+.omvi-band .chips, .omvi-card .chips { margin-top: 18px; }
+.omvi-band-bg {
+  position: absolute;
+  right: -2%;
+  bottom: -12%;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: clamp(8rem, 24vw, 20rem);
+  letter-spacing: 0.1em;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(211, 182, 130, 0.12);
+  pointer-events: none;
+  user-select: none;
+}
+.omvi-band > *:not(.omvi-band-bg), .omvi-card > *:not(.omvi-band-bg) { position: relative; }
+.omvi-tagline { font-family: var(--font-display); font-size: 1.5rem; color: var(--text) !important; margin-bottom: 10px; }
+
+.omvi-section { padding-top: 0; }
+.omvi-card-contact h3 { font-size: 1.8rem; margin-bottom: 6px; }
+.omvi-links { display: grid; gap: 10px; margin-top: 18px; }
+.omvi-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.2s, background-color 0.2s;
+  overflow-wrap: anywhere;
+}
+.omvi-link span { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-text); flex: none; }
+.omvi-link:hover { border-color: var(--gold); background: rgba(211, 182, 130, 0.08); color: var(--gold-light); }
+
+/* Footer credit */
+a.credit { text-decoration: none; color: var(--muted); }
+a.credit:hover { color: var(--text); }
+.footer-bottom .omvi { font-size: 1.05rem; }

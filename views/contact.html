@@ -64,6 +64,27 @@
         </div>
       </div>
     </div>
+
+    <section class="section omvi-section" id="omvi">
+      <div class="container">
+        <div class="omvi-card" data-reveal>
+          <span class="omvi-band-bg" aria-hidden="true">{{omvi_name}}</span>
+          <div class="omvi-card-about">
+            <span class="eyebrow left">The studio behind this website</span>
+            <div class="omvi-wordmark">{{omvi_name}}</div>
+            <p class="omvi-tagline">{{omvi_tagline}}</p>
+            <p class="muted">{{omvi_about}}</p>
+            <div class="chips">{{{omvi_services}}}</div>
+          </div>
+          <div class="omvi-card-contact">
+            <h3>Contact {{omvi_name}}</h3>
+            <p class="muted small">Want a website like this for your business? Get in touch with us.</p>
+            {{#has_omvi_contact}}<div class="omvi-links">{{{omvi_contacts}}}</div>{{/has_omvi_contact}}
+            {{#no_omvi_contact}}<p class="muted small"><em>Contact details coming soon.</em></p>{{/no_omvi_contact}}
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   {{> footer}}

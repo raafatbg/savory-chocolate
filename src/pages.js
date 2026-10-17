@@ -7,6 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { db, getSettings } from './db.js';
+import { OMVI } from './omvi.js';
 
 const VIEWS = path.resolve('views');
 const cache = new Map();
@@ -80,6 +81,22 @@ function whatsappFloat(list, s) {
 </div>`;
 }
 
+// OMVI's contact links, only the ones filled in (src/omvi.js).
+function omviContacts() {
+  const handle = (link) => `@${link.replace(/^https?:\/\/(www\.)?instagram\.com\//, '').split(/[/?#]/)[0]}`;
+  const links = [
+    OMVI.whatsapp && ['WhatsApp', waHref(OMVI.whatsapp, OMVI.name), OMVI.whatsapp],
+    OMVI.phone && ['Call', telHref(OMVI.phone), OMVI.phone],
+    OMVI.email && ['Email', `mailto:${OMVI.email}`, OMVI.email],
+    OMVI.instagram && ['Instagram', OMVI.instagram, handle(OMVI.instagram)],
+    OMVI.website && ['Website', OMVI.website, OMVI.website.replace(/^https?:\/\//, '').replace(/\/$/, '')],
+  ].filter(Boolean);
+  return links.map(([label, href, text]) => {
+    const external = href.startsWith('http') ? ' target="_blank" rel="noopener"' : '';
+    return `<a class="omvi-link" href="${esc(href)}"${external}><span>${esc(label)}</span>${esc(text)}</a>`;
+  }).join('');
+}
+
 export function renderPage(name) {
   const s = getSettings();
   const places = locations(s);
@@ -94,11 +111,18 @@ export function renderPage(name) {
     whatsapp_href: s.whatsapp ? waHref(s.whatsapp, s.shop_name) : '',
     has_social: s.instagram || s.facebook || s.whatsapp ? '1' : '',
     has_places: places.length ? '1' : '',
+    omvi_name: OMVI.name,
+    omvi_tagline: OMVI.tagline,
+    omvi_about: OMVI.about,
+    has_omvi_contact: OMVI.email || OMVI.phone || OMVI.whatsapp || OMVI.instagram || OMVI.website ? '1' : '',
+    no_omvi_contact: OMVI.email || OMVI.phone || OMVI.whatsapp || OMVI.instagram || OMVI.website ? '' : '1',
   };
   const blocks = {
     visit_rows: visitRows(places),
     footer_visit: footerVisit(places),
     whatsapp_float: whatsappFloat(places, s),
+    omvi_services: OMVI.services.map((x) => `<span class="chip">${esc(x)}</span>`).join(''),
+    omvi_contacts: omviContacts(),
     contact_buttons: places.filter((b) => b.whatsapp).map((b) => `<a class="btn btn-gold btn-block wa-btn" href="${esc(waHref(b.whatsapp, s.shop_name))}" target="_blank" rel="noopener">${WA_ICON()} WhatsApp ${esc(b.name || s.shop_name)}</a>`).join(''),
   };
 
