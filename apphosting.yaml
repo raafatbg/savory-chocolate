@@ -1,0 +1,17 @@
+# Firebase App Hosting (runs the Node.js server on Cloud Run).
+# Docs: https://firebase.google.com/docs/app-hosting/configure
+runConfig:
+  # One instance, so every visitor shares the same database file.
+  # Note: the database and uploaded photos live on the instance's disk and are reset
+  # whenever Firebase starts a fresh instance. Fine for client testing, not for going live.
+  minInstances: 0
+  maxInstances: 1
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  - variable: NODE_ENV
+    value: production
+  - variable: TRUST_PROXY
+    value: "1"
