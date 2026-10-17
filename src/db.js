@@ -94,6 +94,7 @@ if (isNew) seedVersion1();
 const MIGRATIONS = [
   null, // version 1 is the schema above
   migrateToVersion2,
+  migrateToVersion3,
 ];
 const LATEST = MIGRATIONS.length;
 
@@ -114,6 +115,29 @@ function backup(fromVersion) {
     db.exec(`VACUUM INTO '${target.replace(/'/g, "''")}'`);
     console.log(`Backed up the database to ${target} before upgrading it.`);
   }
+}
+
+// Version 3: bigger cakes cost more to decorate and need more notice.
+//   price_scale (sizes): multiplies the extra charge of every add-on that scales with size
+//   scales (other choices): 1 = its price grows with the cake size, 0 = fixed price (candles, toppers…)
+//   lead_days (sizes): extra days of notice on top of the shop-wide minimum
+function migrateToVersion3() {
+  db.exec(`
+    ALTER TABLE cake_options ADD COLUMN price_scale REAL NOT NULL DEFAULT 1;
+    ALTER TABLE cake_options ADD COLUMN scales INTEGER NOT NULL DEFAULT 1;
+    ALTER TABLE cake_options ADD COLUMN lead_days INTEGER NOT NULL DEFAULT 0;
+    UPDATE cake_options SET scales = 0 WHERE type = 'extras';
+  `);
+
+  // Starting point: add-ons scale with the size's price (a size that costs twice as much
+  // makes twice as much cake to cover), and the largest size needs one extra day.
+  const sizes = db.prepare("SELECT id, price_cents FROM cake_options WHERE type = 'size' ORDER BY price_cents, sort_order").all();
+  const smallest = sizes.find((s) => s.price_cents > 0)?.price_cents;
+  if (smallest) {
+    const update = db.prepare('UPDATE cake_options SET price_scale = ? WHERE id = ?');
+    for (const s of sizes) update.run(Math.max(1, Math.round((s.price_cents / smallest) * 4) / 4), s.id);
+  }
+  if (sizes.length >= 3) db.prepare('UPDATE cake_options SET lead_days = 1 WHERE id = ?').run(sizes[sizes.length - 1].id);
 }
 
 // Version 2: richer cake builder, menu add-ons, delivery, gallery, reviews, FAQ, contact messages.
@@ -247,6 +271,7 @@ function seedVersion1() {
 export const DEFAULT_SETTINGS = {
   shop_name: 'Savory Chocolate',
   hero_title: 'Cakes as beautiful as your moments',
+  slogan: 'Where every bite is a Savory moment',
   tagline: 'Chocolates, cakes and ice cream, made in Aramoun, Aley.',
   about: 'Savory Chocolate is a chocolate and sweets maker in Aramoun, Aley. We make chocolates, cakes, éclairs and ice cream, carry a wide selection of mixed nuts, and prepare chocolate favors for weddings and new arrivals.',
   about_story: 'Savory Chocolate is a chocolate and sweets maker in Aramoun, in the Aley district of Mount Lebanon.\n\nWe make chocolates, ice cream, éclairs and cakes, from classic gateaux to custom designs. Tell us your idea, or leave the design to our chef.\n\nFor weddings, baby showers and every kind of celebration we prepare wrapped chocolate favors, and during Ramadan and Eid you\'ll find Arabic sweets alongside our chocolates.\n\nCome and visit us in Aramoun, or send us a message on WhatsApp.',
@@ -256,7 +281,7 @@ export const DEFAULT_SETTINGS = {
   address: 'Aramoun, Aley\nMount Lebanon, Lebanon',
   maps_link: 'https://maps.google.com/?cid=4880834083851702817',
   hours: 'Call or WhatsApp us for today\'s opening hours.',
-  instagram: '',
+  instagram: 'https://www.instagram.com/savory.chocolate/',
   facebook: 'https://www.facebook.com/SavoryChocolate/',
   currency: 'USD',
   cake_lead_days: '2',

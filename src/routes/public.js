@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { Router } from 'express';
 import { db, getSettings, transaction } from '../db.js';
-import { CAKE_GROUPS } from '../cake-groups.js';
+import { CAKE_GROUPS, scaledPrice } from '../cake-groups.js';
 import { parseOptions, priceChoices } from '../menu-options.js';
 import {
   HttpError, bad, text, int, customer, pickupDate, pickupTime, fulfillment, email,
@@ -24,7 +24,7 @@ router.get('/menu', (req, res) => {
 
 router.get('/cake-options', (req, res) => {
   const rows = db.prepare(`
-    SELECT id, type, name, description, price_cents, color, visual
+    SELECT id, type, name, description, price_cents, color, visual, price_scale, scales, lead_days
     FROM cake_options WHERE available = 1
     ORDER BY sort_order, id
   `).all();
@@ -80,12 +80,23 @@ router.post('/orders/cake', (req, res) => {
   const settings = assertOrdersOpen();
   const body = req.body ?? {};
   const who = customer(body);
-  const date = pickupDate(body.pickup_date, { minDaysAhead: Number(settings.cake_lead_days) || 0 });
-  const time = pickupTime(body.pickup_time, date);
   const notes = text(body.notes, 'Design notes', { max: 1000 });
   const message = text(body.message, 'Message on the cake', { max: 60 });
 
-  const available = db.prepare('SELECT id, type, name, price_cents FROM cake_options WHERE available = 1').all();
+  const available = db.prepare(
+    'SELECT id, type, name, price_cents, price_scale, scales, lead_days FROM cake_options WHERE available = 1',
+  ).all();
+
+  // The size sets the multiplier for add-on prices and may need extra days of notice.
+  const sizes = available.filter((o) => o.type === 'size');
+  const size = sizes.find((o) => o.id === Number(body.size));
+  if (sizes.length && !size) throw bad('Please choose a size.');
+  const scale = size?.price_scale || 1;
+  const leadDays = (Number(settings.cake_lead_days) || 0) + (size?.lead_days || 0);
+  const date = pickupDate(body.pickup_date, { minDaysAhead: leadDays });
+  const time = pickupTime(body.pickup_time, date);
+  const cost = (o) => (o.type === 'size' || !o.scales ? o.price_cents : scaledPrice(o.price_cents, scale));
+
   const details = {};
   let price = 0;
 
@@ -98,7 +109,7 @@ router.post('/orders/cake', (req, res) => {
       const option = byId.get(Number(body[group.key]));
       if (!option) throw bad(`Please choose a ${group.label.toLowerCase()}.`);
       details[group.key] = option.name;
-      price += option.price_cents;
+      price += cost(option);
     } else {
       const ids = body[group.key] === undefined ? [] : body[group.key];
       if (!Array.isArray(ids) || ids.length > 20) throw bad(`Your ${group.label.toLowerCase()} choice is not valid.`);
@@ -108,7 +119,7 @@ router.post('/orders/cake', (req, res) => {
         return option;
       });
       if (chosen.length) details[group.key] = chosen.map((o) => o.name).join(', ');
-      price += chosen.reduce((sum, o) => sum + o.price_cents, 0);
+      price += chosen.reduce((sum, o) => sum + cost(o), 0);
     }
   }
   if (message) details.message = message;

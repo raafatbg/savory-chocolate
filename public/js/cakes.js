@@ -1,7 +1,7 @@
 import {
   api, esc, money, isoDate, friendlyDate, friendlyTime, loadSettings, setupFulfillment, deliveryFee, whatsappLink,
 } from '/js/common.js';
-import { createCakeStage, renderCakeSnapshot } from '/js/cake3d.js';
+import { createCakeStage, renderCakeSnapshot, releaseSnapshots } from '/js/cake3d.js';
 import { SIGNATURE_DESIGNS } from '/js/designs.js';
 import { confetti } from '/js/confetti.js';
 
@@ -25,11 +25,10 @@ const stage = createCakeStage(document.getElementById('cake-stage'));
 const settings = await loadSettings();
 let ordersOpen = settings.orders_open !== '0';
 
-const leadDays = Number(settings.cake_lead_days) || 0;
-form.pickup_date.min = isoDate(leadDays);
+const baseLeadDays = Number(settings.cake_lead_days) || 0;
+form.pickup_date.min = isoDate(baseLeadDays);
 form.pickup_date.max = isoDate(180);
-form.pickup_date.value = isoDate(leadDays);
-document.getElementById('date-hint').textContent = leadDays > 0 ? `Earliest: ${friendlyDate(form.pickup_date.min)}.` : '';
+form.pickup_date.value = isoDate(baseLeadDays);
 
 let groups = [];
 try {
@@ -44,9 +43,16 @@ const optionById = new Map(groups.flatMap((g) => g.options.map((o) => [String(o.
 
 // ---------- render the choices ----------
 
+let sizeScale = 1;
+
+function priceOf(o) {
+  if (o.type === 'size' || !o.scales || !o.price_cents || sizeScale === 1) return o.price_cents;
+  return Math.round((o.price_cents * sizeScale) / 50) * 50;
+}
+
 function cost(group, o) {
   if (group.key === 'size') return money(o.price_cents);
-  return o.price_cents ? `+ ${money(o.price_cents)}` : 'Included';
+  return o.price_cents ? `+ ${money(priceOf(o))}` : 'Included';
 }
 
 function renderChoice(group, o, index) {
@@ -60,7 +66,7 @@ function renderChoice(group, o, index) {
       <label class="choice swatch">${input}
         <span class="dot ${dotClass}" style="${o.color ? `background:${esc(o.color)}` : ''}"></span>
         <span class="name">${esc(o.name)}</span>
-        <span class="cost">${cost(group, o)}</span>
+        <span class="cost" data-cost="${o.id}">${cost(group, o)}</span>
       </label>`;
   }
   const icon = group.key === 'shape' ? SHAPE_ICONS[o.visual] || '' : group.key === 'tiers' ? TIER_ICONS[o.visual] || '' : '';
@@ -69,7 +75,8 @@ function renderChoice(group, o, index) {
       ${icon}
       <span class="name">${esc(o.name)}</span>
       ${o.description ? `<span class="meta">${esc(o.description)}</span>` : ''}
-      <span class="cost">${cost(group, o)}</span>
+      ${group.key === 'size' && o.lead_days ? `<span class="meta">Needs ${o.lead_days} extra day${o.lead_days === 1 ? '' : 's'} of notice</span>` : ''}
+      <span class="cost" data-cost="${o.id}">${cost(group, o)}</span>
     </label>`;
 }
 
@@ -82,6 +89,8 @@ form.querySelectorAll('[data-groups]').forEach((container) => {
       <div class="group" role="${group.mode === 'single' ? 'radiogroup' : 'group'}" aria-label="${esc(group.label)}">
         <div class="group-title"><span class="label">${esc(group.label)}</span><span class="chosen" data-chosen="${key}"></span></div>
         <div class="${layout}">${group.options.map((o, i) => renderChoice(group, o, i)).join('')}</div>
+        ${key === 'size' && group.options.some((o) => Number(o.price_scale) !== 1)
+          ? '<p class="size-note">✦ Bigger cakes use more of everything, so toppings, fillings and finishes are priced for the size you choose.</p>' : ''}
       </div>`;
   }).join('') || '<p class="muted">No options available right now.</p>';
 });
@@ -122,6 +131,25 @@ function update({ redraw = true, intro = false } = {}) {
   if (redraw) stage?.setCake(cakeConfig(), { intro });
   document.getElementById('message-count').textContent = `${messageInput.value.length} / 60 · shown on a chocolate plaque`;
 
+  const size = selected('size')[0];
+  const scale = Number(size?.price_scale) || 1;
+  if (scale !== sizeScale) {
+    sizeScale = scale;
+    for (const group of groups) {
+      if (group.key === 'size') continue;
+      for (const o of group.options) {
+        const label = form.querySelector(`[data-cost="${o.id}"]`);
+        if (label) label.textContent = cost(group, o);
+      }
+    }
+  }
+  const leadDays = baseLeadDays + (Number(size?.lead_days) || 0);
+  const earliest = isoDate(leadDays);
+  form.pickup_date.min = earliest;
+  if (form.pickup_date.value < earliest) form.pickup_date.value = earliest;
+  document.getElementById('date-hint').textContent = leadDays > 0
+    ? `Earliest: ${friendlyDate(earliest)}${size?.lead_days ? ` (${size.name} cakes need ${leadDays} days)` : ''}.` : '';
+
   let subtotal = 0;
   const rows = [];
   for (const group of groups) {
@@ -129,8 +157,8 @@ function update({ redraw = true, intro = false } = {}) {
     const label = form.querySelector(`[data-chosen="${group.key}"]`);
     if (label) label.textContent = group.mode === 'single' ? chosen[0]?.name || '' : chosen.length ? `${chosen.length} selected` : 'Optional';
     for (const o of chosen) {
-      subtotal += o.price_cents;
-      rows.push(`<li><span class="k">${esc(group.label)}: ${esc(o.name)}</span><span class="v">${group.key === 'size' ? money(o.price_cents) : o.price_cents ? `+ ${money(o.price_cents)}` : '—'}</span></li>`);
+      subtotal += priceOf(o);
+      rows.push(`<li><span class="k">${esc(group.label)}: ${esc(o.name)}</span><span class="v">${group.key === 'size' ? money(o.price_cents) : o.price_cents ? `+ ${money(priceOf(o))}` : '—'}</span></li>`);
     }
   }
   const message = messageInput.value.trim();
@@ -259,6 +287,7 @@ document.getElementById('save-btn').addEventListener('click', async (e) => {
     link.download = `${(settings.shop_name || 'cake').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-my-cake.png`;
     link.click();
   } finally {
+    releaseSnapshots();
     button.disabled = false;
   }
 });

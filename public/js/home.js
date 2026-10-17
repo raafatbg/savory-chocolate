@@ -1,18 +1,18 @@
-import { api, esc, money, loadSettings, reveal, splitHeadline } from '/js/common.js';
-import { createCakeStage, renderCakeSnapshot } from '/js/cake3d.js';
+import { api, esc, money, storage, loadSettings, reveal, splitHeadline } from '/js/common.js';
+import { createCakeStage, renderCakeSnapshot, releaseSnapshots } from '/js/cake3d.js';
 import { SIGNATURE_DESIGNS } from '/js/designs.js';
 import { illustrationFor, art } from '/js/illustrations.js';
 
 // What the shop makes (from its public listings and customer reviews).
 const PRODUCT_LINES = [
-  { art: 'chocolate', name: 'Fine chocolates', text: 'Chocolates for gifting, sharing and celebrating.', href: '/menu', go: 'See the menu' },
+  { art: 'chocolate', name: 'Chocolates & bark', text: 'Fine chocolates and loaded chocolate bark, for gifting or sharing.', href: '/menu', go: 'See the menu' },
   { art: 'cake', name: 'Cakes & gateaux', text: 'Classic gateaux and custom designs, made to order.', href: '/cakes', go: 'Design a cake' },
-  { art: 'icecream', name: 'Ice cream', text: 'Made in-house. Ask us about today\'s flavors.', href: '/menu', go: 'See the menu' },
+  { art: 'icecream', name: 'Ice cream & Flurry', text: 'Scoops, soft serve and Savory Flurry cups piled with toppings.', href: '/menu', go: 'See the menu' },
+  { art: 'crepe', name: 'Crepes', text: 'Warm crepes drizzled with chocolate, pistachio and more.', href: '/menu', go: 'See the menu' },
+  { art: 'shake', name: 'Shakes', text: 'Thick shakes crowned with cookies and chocolate.', href: '/menu', go: 'See the menu' },
   { art: 'eclair', name: 'Éclairs & pastries', text: 'Éclairs and sweet pastries, fresh from our kitchen.', href: '/menu', go: 'See the menu' },
   { art: 'nuts', name: 'Mixed nuts', text: 'Smoked almonds, pistachios, cashews, hazelnuts and more.', href: '/menu', go: 'See the menu' },
-  { art: 'gift', name: 'Wedding & baby favors', text: 'Wrapped chocolates for weddings, baby showers and every celebration.', href: '/contact', go: 'Plan your favors' },
-  { art: 'crescent', name: 'Ramadan & Eid', text: 'Arabic sweets alongside our chocolates for the holidays.', href: '/contact', go: 'Order for Eid' },
-  { art: 'cloche', name: 'Custom orders', text: 'Have something special in mind? Tell us and we\'ll make it.', href: '/contact', go: 'Get in touch' },
+  { art: 'gift', name: 'Occasions & holidays', text: 'Chocolate favors for weddings and baby showers, and sweets for Ramadan & Eid.', href: '/contact', go: 'Plan your order' },
 ];
 
 const linesEl = document.getElementById('product-lines');
@@ -53,17 +53,26 @@ designsEl.innerHTML = SIGNATURE_DESIGNS.map((d, i) => `
 reveal(designsEl);
 reveal(linesEl);
 
+// Renders are cached in the browser, so returning visitors don't pay for them again.
+// Bump the version whenever the designs or the 3D look change.
+const RENDER_CACHE = 'sc_design_render_v2_';
 const renderDesigns = async () => {
+  let rendered = false;
   for (const d of SIGNATURE_DESIGNS) {
     const slot = designsEl.querySelector(`[data-render="${d.id}"]`);
-    let url = null;
-    try {
-      url = await renderCakeSnapshot(d.cake, { width: 640, height: 640 });
-    } catch { /* falls back to the illustration below */ }
+    let url = storage.get(RENDER_CACHE + d.id, null);
+    if (!url) {
+      try {
+        url = await renderCakeSnapshot(d.cake, { width: 560, height: 560, type: 'image/webp', quality: 0.86 });
+        rendered = true;
+        if (url) storage.set(RENDER_CACHE + d.id, url);
+      } catch { /* falls back to the illustration below */ }
+      await new Promise((r) => setTimeout(r, 30));
+    }
     slot.classList.remove('loading');
-    slot.innerHTML = `<img src="${url || '/img/cake.svg'}" alt="${esc(d.name)}: ${esc(d.description)}" width="640" height="640">`;
-    await new Promise((r) => setTimeout(r, 30));
+    slot.innerHTML = `<img src="${url || '/img/cake.svg'}" alt="${esc(d.name)}: ${esc(d.description)}" width="560" height="560">`;
   }
+  if (rendered) releaseSnapshots();
 };
 new IntersectionObserver((entries, observer) => {
   if (entries.some((e) => e.isIntersecting)) {

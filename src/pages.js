@@ -30,6 +30,10 @@ export function renderPage(name) {
   const values = {
     ...s,
     year: String(new Date().getFullYear()),
+    // Wordmark: first word in script, the rest in small caps (Savory / CHOCOLATE).
+    brand_script: (s.shop_name || '').trim().split(/\s+/)[0] || '',
+    brand_caps: (s.shop_name || '').trim().split(/\s+/).slice(1).join(' '),
+    instagram_handle: (s.instagram || '').replace(/^https?:\/\/(www\.)?instagram\.com\//, '').split(/[/?#]/)[0],
     phone_href: s.phone ? `tel:${s.phone.replace(/[^\d+]/g, '')}` : '',
     whatsapp_href: s.whatsapp
       ? `https://wa.me/${s.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${s.shop_name}!`)}` : '',

@@ -356,3 +356,10 @@ body.admin { scrollbar-color: #d6c3ad var(--bg); }
 body.admin ::-webkit-scrollbar-thumb { background: #d6c3ad; border-color: var(--bg); }
 
 .thumb-sm svg { width: 74%; color: #a57936; }
+
+.admin-credit { text-align: center; margin: 28px 0 0; font-size: 0.8rem; color: var(--muted); }
+.admin-credit .omvi { background: none; color: #946521; -webkit-text-fill-color: currentColor; }
+.admin-header .wm-script { font-size: 1.6rem; }
+.auth-card .wm-script { color: #6b4a2b; background: none; -webkit-text-fill-color: currentColor; }
+.auth-card .wm-caps { color: #8a7364; }
+.auth-card .wm-caps::before { background: #6b4a2b; }

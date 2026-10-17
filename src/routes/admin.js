@@ -229,6 +229,20 @@ function cakeOptionFields(body) {
     visual,
     available: bool(body.available) ? 1 : 0,
     sort_order: sortOrder(body.sort_order),
+    ...sizeRules(group.key, body),
+  };
+}
+
+// Sizes carry a price multiplier for add-ons and extra days of notice; other choices say
+// whether their price grows with the size.
+function sizeRules(type, body) {
+  if (type !== 'size') return { price_scale: 1, lead_days: 0, scales: bool(body.scales) ? 1 : 0 };
+  const scale = Number(body.price_scale ?? 1);
+  if (!Number.isFinite(scale) || scale < 0.25 || scale > 10) throw bad('Add-on price multiplier must be between 0.25 and 10, like 1.5.');
+  return {
+    price_scale: Math.round(scale * 100) / 100,
+    lead_days: body.lead_days === undefined || body.lead_days === '' ? 0 : int(body.lead_days, 'Extra days of notice', { max: 60 }),
+    scales: 1,
   };
 }
 
@@ -242,9 +256,9 @@ router.get('/cake-options', (req, res) => {
 router.post('/cake-options', (req, res) => {
   const f = cakeOptionFields(req.body ?? {});
   const { lastInsertRowid } = db.prepare(`
-    INSERT INTO cake_options (type, name, description, price_cents, color, visual, available, sort_order)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(f.type, f.name, f.description, f.price_cents, f.color, f.visual, f.available, f.sort_order);
+    INSERT INTO cake_options (type, name, description, price_cents, color, visual, available, sort_order, price_scale, scales, lead_days)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(f.type, f.name, f.description, f.price_cents, f.color, f.visual, f.available, f.sort_order, f.price_scale, f.scales, f.lead_days);
   res.status(201).json(db.prepare('SELECT * FROM cake_options WHERE id = ?').get(lastInsertRowid));
 });
 
@@ -253,9 +267,10 @@ router.put('/cake-options/:id', (req, res) => {
   const f = cakeOptionFields(req.body ?? {});
   const { changes } = db.prepare(`
     UPDATE cake_options SET type = ?, name = ?, description = ?, price_cents = ?, color = ?, visual = ?, available = ?,
-                            sort_order = ?
+                            sort_order = ?, price_scale = ?, scales = ?, lead_days = ?
     WHERE id = ?
-  `).run(f.type, f.name, f.description, f.price_cents, f.color, f.visual, f.available, f.sort_order, id);
+  `).run(f.type, f.name, f.description, f.price_cents, f.color, f.visual, f.available, f.sort_order,
+    f.price_scale, f.scales, f.lead_days, id);
   if (!changes) throw new HttpError(404, 'Option not found.');
   res.json(db.prepare('SELECT * FROM cake_options WHERE id = ?').get(id));
 });
@@ -397,7 +412,7 @@ router.delete('/messages/:id', (req, res) => {
 router.put('/settings', (req, res) => {
   const body = req.body ?? {};
   const limits = {
-    shop_name: 80, hero_title: 120, tagline: 200, about: 2000, about_story: 5000,
+    shop_name: 80, hero_title: 120, slogan: 120, tagline: 200, about: 2000, about_story: 5000,
     phone: 40, address: 300, hours: 500, delivery_area: 300,
   };
   const labels = {

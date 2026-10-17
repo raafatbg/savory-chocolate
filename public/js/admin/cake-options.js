@@ -23,6 +23,15 @@ export async function load() {
   render();
 }
 
+function sizeNote(o) {
+  if (o.type === 'size') {
+    const parts = [`Add-ons ×${Number(o.price_scale)}`];
+    if (o.lead_days) parts.push(`+${o.lead_days} day${o.lead_days === 1 ? '' : 's'} notice`);
+    return `<span class="pill">${parts.join(' · ')}</span>`;
+  }
+  return o.price_cents && !o.scales ? '<span class="pill">Same price on every size</span>' : '';
+}
+
 function priceLabel(o) {
   if (o.type === 'size') return money(o.price_cents);
   return o.price_cents ? `+ ${money(o.price_cents)}` : '<span class="muted">Included</span>';
@@ -52,6 +61,7 @@ function render() {
                 ${esc(o.name)}
                 ${o.available ? '' : '<span class="pill">Hidden</span>'}
                 ${o.visual && VISUAL_LABELS[o.visual] && g.visuals ? `<span class="pill cake">3D: ${esc(VISUAL_LABELS[o.visual])}</span>` : ''}
+                ${sizeNote(o)}
               </div>
               ${o.description ? `<div class="desc">${esc(o.description)}</div>` : ''}
             </div>
@@ -93,6 +103,12 @@ function open(type, option = null) {
   $('#o-no-color').checked = Boolean(g.color && option && !option.color);
   $('#o-color').disabled = $('#o-no-color').checked;
 
+  $('#o-size-fields').hidden = type !== 'size';
+  $('#o-scales-field').hidden = type === 'size';
+  $('#o-scale').value = option?.price_scale ?? 1;
+  $('#o-lead').value = option?.lead_days ?? 0;
+  $('#o-scales').checked = option ? Boolean(option.scales) : type !== 'extras';
+
   $('#o-visual-field').hidden = !g.visuals;
   $('#o-visual').innerHTML = (g.visuals || []).map((v) => `<option value="${v}">${esc(VISUAL_LABELS[v] || v)}</option>`).join('');
   $('#o-visual').value = option?.visual ?? (g.visuals?.[0] || '');
@@ -111,6 +127,9 @@ function body(o, overrides = {}) {
     visual: o.visual,
     sort_order: o.sort_order,
     available: Boolean(o.available),
+    price_scale: o.price_scale,
+    lead_days: o.lead_days,
+    scales: Boolean(o.scales),
     ...overrides,
   };
 }
@@ -120,6 +139,7 @@ form.addEventListener('submit', async (e) => {
   formError(form, '');
   const data = Object.fromEntries(new FormData(form));
   data.available = $('#o-available').checked;
+  data.scales = $('#o-scales').checked;
   const g = groups.find((x) => x.key === data.type);
   data.color = g.color && !$('#o-no-color').checked ? $('#o-color').value : '';
   if (!g.visuals) data.visual = '';

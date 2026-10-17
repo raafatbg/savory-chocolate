@@ -12,7 +12,7 @@
     <section class="hero">
       <div class="container">
         <div class="hero-copy" data-reveal>
-          <span class="script">Artisan patisserie</span>
+          {{#slogan}}<span class="script">{{slogan}}</span>{{/slogan}}
           <h1 id="hero-title">{{hero_title}}</h1>
           <p class="lead">{{tagline}}</p>
           <div class="hero-actions">
@@ -35,8 +35,8 @@
 
     <div class="marquee" aria-hidden="true">
       <div class="marquee-track">
-        <span>Fine chocolates</span><span>Custom cakes</span><span>Ice cream</span><span>Éclairs</span><span>Mixed nuts</span><span>Wedding favors</span><span>Ramadan &amp; Eid sweets</span>
-        <span>Fine chocolates</span><span>Custom cakes</span><span>Ice cream</span><span>Éclairs</span><span>Mixed nuts</span><span>Wedding favors</span><span>Ramadan &amp; Eid sweets</span>
+        <span>Fine chocolates</span><span>Custom cakes</span><span>Ice cream</span><span>Savory Flurry</span><span>Crepes</span><span>Shakes</span><span>Éclairs</span><span>Wedding favors</span><span>Ramadan &amp; Eid</span>
+        <span>Fine chocolates</span><span>Custom cakes</span><span>Ice cream</span><span>Savory Flurry</span><span>Crepes</span><span>Shakes</span><span>Éclairs</span><span>Wedding favors</span><span>Ramadan &amp; Eid</span>
       </div>
     </div>
 
@@ -168,6 +168,19 @@
         <p style="text-align: center; margin-top: 40px;"><a class="btn btn-outline" href="/gallery">View the gallery</a></p>
       </div>
     </section>
+
+    {{#instagram}}<section class="section" style="padding-top: 0;">
+      <div class="container">
+        <div class="card insta-card" data-reveal>
+          <div>
+            <span class="eyebrow left">#SavoryMoment</span>
+            <h2>Follow us on Instagram</h2>
+            <p class="muted">New flavors, fresh creations and moments from our kitchen.</p>
+          </div>
+          <a class="btn btn-gold btn-lg" href="{{instagram}}" target="_blank" rel="noopener">{{> instagram-icon}} @{{instagram_handle}}</a>
+        </div>
+      </div>
+    </section>{{/instagram}}
 
     <section class="section" style="padding-top: 0;">
       <div class="container visit">

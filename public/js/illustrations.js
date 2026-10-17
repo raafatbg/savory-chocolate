@@ -109,6 +109,21 @@ const ART = {
     <path d="M60 42 V100"/>
     <path d="M60 42 c-8 -14 -28 -14 -24 -2 c3 6 16 4 24 2 z M60 42 c8 -14 28 -14 24 -2 c-3 6 -16 4 -24 2 z"/>
     <path d="M30 66 h20 M30 74 h14" opacity=".45"/>`),
+  crepe: svg(`
+    <path ${SOFT} d="M14 92 L60 26 L106 92 Q60 100 14 92 Z"/>
+    <path d="M24 78 q10 -8 18 2 t18 -2 t18 2 t18 -2" opacity=".85"/>
+    <path d="M32 66 q8 -7 14 1 t14 -1 t14 1 t12 -1" opacity=".7"/>
+    <path d="M42 54 q6 -5 11 1 t11 -1 t10 1" opacity=".6"/>
+    <circle cx="52" cy="70" r="2" fill="currentColor" stroke="none"/><circle cx="70" cy="84" r="2" fill="currentColor" stroke="none"/><circle cx="64" cy="58" r="2" fill="currentColor" stroke="none"/>
+    <path d="M8 102 H112" opacity=".5"/>`),
+  shake: svg(`
+    <path ${SOFT} d="M36 44 H84 L78 104 H42 Z"/>
+    <path d="M38 60 H82" opacity=".5"/>
+    <path ${SOFT} d="M34 44 c0 -12 52 -12 52 0 Z"/>
+    <circle cx="60" cy="24" r="12" ${SOFT}/>
+    <g fill="currentColor" fill-opacity=".55" stroke="none"><circle cx="55" cy="21" r="1.8"/><circle cx="63" cy="27" r="1.8"/><circle cx="64" cy="18" r="1.5"/></g>
+    <path d="M70 10 L80 46" />
+    <path d="M44 74 q16 6 32 0 M46 88 q14 5 28 0" opacity=".45"/>`),
   crescent: svg(`
     <path ${SOFT} d="M70 18 a38 38 0 1 0 26 66 a30 30 0 1 1 -26 -66 Z"/>
     <path d="M84 34 l2.5 5.5 6 .8 -4.4 4.1 1.1 5.9 -5.2 -2.9 -5.2 2.9 1.1 -5.9 -4.4 -4.1 6 -.8 z" ${SOFT}/>
@@ -116,7 +131,11 @@ const ART = {
 };
 
 const RULES = [
-  [/\b(coffee|latte|tea|hot chocolate|cocoa|drinks?|juice|espresso|cappuccino|mocha|shakes?|smoothie|lemonade)\b/i, 'cup'],
+  [/\b(milkshakes?|shakes?|freakshakes?|frapp[eé]s?|smoothies?)\b/i, 'shake'],
+  [/\b(crepes?|crêpes?|pancakes?)\b/i, 'crepe'],
+  [/\bflurr(y|ies)\b/i, 'icecream'],
+  [/\bbark\b/i, 'chocolate'],
+  [/\b(coffee|latte|tea|hot chocolate|cocoa|drinks?|juice|espresso|cappuccino|mocha|lemonade)\b/i, 'cup'],
   [/\b(cupcakes?|muffins?)\b/i, 'cupcake'],
   [/\bmacarons?\b/i, 'macaron'],
   [/\b(donuts?|doughnuts?)\b/i, 'donut'],

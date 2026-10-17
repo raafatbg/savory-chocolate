@@ -20,6 +20,13 @@ export const CAKE_GROUPS = [
 
 export const CAKE_GROUP_KEYS = CAKE_GROUPS.map((g) => g.key);
 
+// An add-on's price for the chosen size: its base price times the size's multiplier, rounded to
+// the nearest 0.50. public/js/cakes.js uses the same formula to show prices, so keep them in sync.
+export function scaledPrice(cents, scale) {
+  if (!cents || scale === 1) return cents;
+  return Math.round((cents * scale) / 50) * 50;
+}
+
 // Starter options, added the first time a group is empty.
 export const CAKE_SEEDS = {
   shape: [

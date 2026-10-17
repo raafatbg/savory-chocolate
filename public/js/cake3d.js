@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeVertices, mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const finePointer = window.matchMedia('(pointer: fine)').matches;
@@ -47,7 +47,10 @@ export function createCakeStage(container, {
   } catch {
     return null;
   }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  let pixelRatio = Math.min(window.devicePixelRatio, 1.5);
+  renderer.setPixelRatio(pixelRatio);
+  // Shadows are redrawn only when something changes (see loop), not every frame.
+  renderer.shadowMap.autoUpdate = false;
   renderer.domElement.setAttribute('role', 'img');
   renderer.domElement.setAttribute('aria-label', 'A 3D preview of the cake');
   container.appendChild(renderer.domElement);
@@ -138,12 +141,31 @@ export function createCakeStage(container, {
   const clock = new THREE.Clock();
   let visible = true;
   let frame = 0;
+  let frames = 0;
+  let slowTime = 0;
+
+  // If the device can't keep up (under ~45 fps), render fewer pixels until it can.
+  function adaptQuality(dt) {
+    frames += 1;
+    slowTime += dt;
+    if (frames < 90) return;
+    if (slowTime / frames > 1 / 45 && pixelRatio > 1) {
+      pixelRatio = Math.max(1, pixelRatio - 0.25);
+      renderer.setPixelRatio(pixelRatio);
+      resize();
+    }
+    frames = 0;
+    slowTime = 0;
+  }
 
   function loop() {
     frame = 0;
     if (!visible || document.hidden) return;
     const dt = Math.min(clock.getDelta(), 0.05);
     const t = clock.elapsedTime;
+    adaptQuality(dt);
+    // Shadows move little as the cake turns: refresh them a few times a second, or every frame while animating.
+    if (intro >= 0 || pop < 1 || frames % 8 === 0) renderer.shadowMap.needsUpdate = true;
 
     view.distance += (targetView.distance - view.distance) * 0.08;
     view.target.lerp(targetView.target, 0.08);
@@ -176,6 +198,7 @@ export function createCakeStage(container, {
   function requestRender() {
     if (current) {
       placeCamera(view);
+      renderer.shadowMap.needsUpdate = true;
       renderer.render(scene, camera);
     }
     if (!frame && visible && !document.hidden) {
@@ -226,7 +249,7 @@ export function createCakeStage(container, {
 
 // Renders a cake to a still image (PNG data URL) with a shared offscreen renderer.
 let snapshotRig = null;
-export async function renderCakeSnapshot(config, { width = 720, height = 720 } = {}) {
+export async function renderCakeSnapshot(config, { width = 720, height = 720, type = 'image/png', quality } = {}) {
   if (!webglAvailable()) return null;
   if (document.fonts) await document.fonts.load('80px "Great Vibes"').catch(() => {});
   if (!snapshotRig) {
@@ -245,10 +268,19 @@ export async function renderCakeSnapshot(config, { width = 720, height = 720 } =
   camera.position.setFromSphericalCoords(distance, 1.2, 0.5).add(target);
   camera.lookAt(target);
   renderer.render(scene, camera);
-  const url = renderer.domElement.toDataURL('image/png');
+  const url = renderer.domElement.toDataURL(type, quality);
   scene.remove(cake.group);
   disposeTree(cake.group);
   return url;
+}
+
+// Frees the offscreen renderer (and its GPU memory) once no more snapshots are needed.
+export function releaseSnapshots() {
+  if (!snapshotRig) return;
+  disposeTree(snapshotRig.scene);
+  snapshotRig.renderer.dispose();
+  snapshotRig.renderer.forceContextLoss();
+  snapshotRig = null;
 }
 
 function createRenderer(options) {
@@ -337,18 +369,12 @@ const BEVEL = 0.09;
 const gold = () => new THREE.MeshStandardMaterial({ color: 0xd9b066, metalness: 1, roughness: 0.24 });
 
 function frostingMaterial(color) {
-  return new THREE.MeshPhysicalMaterial({
-    color,
-    roughness: 0.62,
-    sheen: 0.22,
-    sheenRoughness: 0.55,
-    sheenColor: lighten(color, 0.35),
-  });
+  return new THREE.MeshStandardMaterial({ color, roughness: 0.66 });
 }
 
 function dripMaterial(color, metallic) {
   if (metallic) return new THREE.MeshStandardMaterial({ color: 0xd4a75a, metalness: 1, roughness: 0.2 });
-  return new THREE.MeshPhysicalMaterial({ color, roughness: 0.16, clearcoat: 0.9, clearcoatRoughness: 0.12 });
+  return new THREE.MeshStandardMaterial({ color, roughness: 0.14, metalness: 0.05 });
 }
 
 function lighten(hex, amount) {
@@ -423,11 +449,13 @@ function buildCake(c) {
     extraHeight = Math.max(extraHeight, 1.1);
   }
 
+  tiers.forEach(flatten);
+  flatten(onTop);
+
+  // Everything casts a shadow; only the big surfaces receive one (receiving costs a lookup per pixel).
   group.traverse((o) => {
-    if (o.isMesh && !o.userData.noShadow) {
-      o.castShadow = true;
-      o.receiveShadow = true;
-    }
+    if (o.isMesh && !o.userData.noShadow) o.castShadow = true;
+    if (o.isMesh) o.receiveShadow = Boolean(o.userData.receive);
   });
 
   return {
@@ -519,14 +547,34 @@ function edgeSampler(shape, r) {
   };
 }
 
-function solid(shape, r, h, bevel = BEVEL, curveSegments = 72) {
+// Shared shapes for drips and their beads, scaled per instance. Never disposed.
+const UNIT_DRIP_RADIUS = 0.055;
+const UNIT_DRIP_HEIGHT = 0.3 + UNIT_DRIP_RADIUS * 2;
+const UNIT_DRIP = new THREE.CapsuleGeometry(UNIT_DRIP_RADIUS, 0.3, 4, 10);
+const UNIT_BEAD_RADIUS = 0.06;
+const UNIT_BEAD = new THREE.SphereGeometry(UNIT_BEAD_RADIUS, 12, 10);
+UNIT_DRIP.userData.shared = true;
+UNIT_BEAD.userData.shared = true;
+
+// Points per curve of each outline: a circle is one curve, a heart is six, a square's corners are four small ones.
+const CURVE_SEGMENTS = { round: 64, heart: 14, square: 8 };
+
+// Tier shapes are the slowest thing to build, and the same few are needed over and over
+// (a color or topping change keeps every tier the same shape), so they're cached.
+const solidCache = new Map();
+
+function solid(shape, r, h, bevel = BEVEL) {
+  const key = `${shape}|${r.toFixed(3)}|${h.toFixed(3)}|${bevel}`;
+  const cached = solidCache.get(key);
+  if (cached) return cached;
+
   let geo = new THREE.ExtrudeGeometry(outline(shape, r - bevel), {
     depth: Math.max(0.001, h - bevel * 2),
     bevelEnabled: true,
     bevelThickness: bevel,
     bevelSize: bevel,
-    bevelSegments: 6,
-    curveSegments,
+    bevelSegments: 4,
+    curveSegments: CURVE_SEGMENTS[shape] || 64,
   });
   geo.rotateX(-Math.PI / 2);
   geo.translate(0, bevel, 0);
@@ -535,12 +583,18 @@ function solid(shape, r, h, bevel = BEVEL, curveSegments = 72) {
   geo.deleteAttribute('uv');
   geo = mergeVertices(geo, 1e-4);
   geo.computeVertexNormals();
+  geo.userData.shared = true;
+
+  if (solidCache.size > 60) solidCache.delete(solidCache.keys().next().value);
+  solidCache.set(key, geo);
   return geo;
 }
 
 function buildTier(shape, r, h, color, drip) {
   const tier = new THREE.Group();
   const body = new THREE.Mesh(solid(shape, r, h), frostingMaterial(color));
+  body.userData.receive = true;
+  body.userData.keep = true;
   tier.add(body);
 
   const sampler = outline(shape, r);
@@ -558,26 +612,35 @@ function buildTier(shape, r, h, color, drip) {
 
   if (drip) {
     const mat = dripMaterial(drip.color, drip.metallic);
-    const cap = new THREE.Mesh(solid(shape, r + 0.018, 0.08, 0.035, 72), mat);
+    const cap = new THREE.Mesh(solid(shape, r + 0.018, 0.08, 0.035), mat);
     cap.position.y = h - 0.05;
     tier.add(cap);
 
+    // Every drip is the same unit capsule, stretched per instance; beads are one sphere, likewise.
     const count = Math.floor(perimeter / 0.16);
     const rng = random(31 + drip.seed * 17);
-    sampler.getSpacedPoints(count).slice(0, count).forEach((p) => {
+    const drips = new THREE.InstancedMesh(UNIT_DRIP, mat, count);
+    const beads = new THREE.InstancedMesh(UNIT_BEAD, mat, count);
+    const q = new THREE.Quaternion();
+    const pos = new THREE.Vector3();
+    const scale = new THREE.Vector3();
+    let beadCount = 0;
+    sampler.getSpacedPoints(count).slice(0, count).forEach((p, i) => {
       const len = (0.04 + rng() ** 1.6 * 0.5) * Math.min(1, h);
       const rad = 0.042 + rng() * 0.026;
-      const d = new THREE.Mesh(new THREE.CapsuleGeometry(rad, len, 4, 10), mat);
       const out = new THREE.Vector2(p.x, p.y).normalize().multiplyScalar(0.012);
-      d.position.set(p.x + out.x, h - len / 2 - 0.04, -(p.y + out.y));
-      tier.add(d);
+      pos.set(p.x + out.x, h - len / 2 - 0.04, -(p.y + out.y));
+      scale.set(rad / UNIT_DRIP_RADIUS, (len + rad * 2) / UNIT_DRIP_HEIGHT, rad / UNIT_DRIP_RADIUS);
+      drips.setMatrixAt(i, m.compose(pos, q, scale));
       // A slightly fatter bead where the drip has pooled at its tip.
       if (len > 0.12) {
-        const bead = new THREE.Mesh(new THREE.SphereGeometry(rad * 1.22, 12, 10), mat);
-        bead.position.set(d.position.x, h - len - 0.04, d.position.z);
-        tier.add(bead);
+        pos.y = h - len - 0.04;
+        scale.setScalar((rad * 1.22) / UNIT_BEAD_RADIUS);
+        beads.setMatrixAt(beadCount++, m.compose(pos, q, scale));
       }
     });
+    beads.count = beadCount;
+    tier.add(drips, beads);
   } else {
     // Without a drip, finish the top edge with smaller pearls.
     const n = Math.floor(perimeter / 0.11);
@@ -597,6 +660,7 @@ function buildStand(cakeRadius) {
   const mat = gold();
 
   const plate = new THREE.Mesh(new THREE.CylinderGeometry(R, R * 0.96, 0.08, 96), mat);
+  plate.userData.receive = true;
   plate.position.y = STAND_HEIGHT - 0.04;
   stand.add(plate);
   const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.035, 12, 120), mat);
@@ -623,7 +687,7 @@ function mesh(geo, mat, x, y, z) {
 function berries(top, rng) {
   const g = new THREE.Group();
   const rasp = new THREE.MeshStandardMaterial({ color: 0xb3203b, roughness: 0.55, flatShading: true });
-  const blue = new THREE.MeshPhysicalMaterial({ color: 0x2b3263, roughness: 0.35, clearcoat: 0.4 });
+  const blue = new THREE.MeshStandardMaterial({ color: 0x2b3263, roughness: 0.3 });
   const mint = new THREE.MeshStandardMaterial({ color: 0x4f8a3a, roughness: 0.5 });
   for (let i = 0; i < 16; i++) {
     const angle = -Math.PI * 1.05 + (i / 15) * Math.PI * 1.1 + (rng() - 0.5) * 0.15;
@@ -675,7 +739,7 @@ function macarons(top, gapAtFront) {
 
 function cherries(top, gapAtFront) {
   const g = new THREE.Group();
-  const red = new THREE.MeshPhysicalMaterial({ color: 0x8e0f22, roughness: 0.15, clearcoat: 1 });
+  const red = new THREE.MeshStandardMaterial({ color: 0x8e0f22, roughness: 0.12 });
   const stem = new THREE.MeshStandardMaterial({ color: 0x5b6b2a, roughness: 0.6 });
   const count = 8;
   for (let i = 0; i < count; i++) {
@@ -716,7 +780,7 @@ function flowers(top) {
 
 function shards(top, rng) {
   const g = new THREE.Group();
-  const choc = new THREE.MeshPhysicalMaterial({ color: 0x2a150c, roughness: 0.25, clearcoat: 0.6 });
+  const choc = new THREE.MeshStandardMaterial({ color: 0x2a150c, roughness: 0.22 });
   for (let i = 0; i < 5; i++) {
     const p = top.edge(-Math.PI / 2 + (i - 2) * 0.45, 0.32 + rng() * 0.15);
     const w = 0.35 + rng() * 0.25;
@@ -787,6 +851,7 @@ function candles(top) {
     candle.add(mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.55, 14), wax, 0, 0.275, 0));
     candle.add(mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.06, 6), new THREE.MeshBasicMaterial({ color: 0x222222 }), 0, 0.58, 0));
     const flame = mesh(new THREE.SphereGeometry(0.04, 12, 10), flameMat, 0, 0.66, 0);
+    flame.userData.keep = true; // animated, so it can't be merged
     flame.scale.set(1, 2.1, 1);
     flame.userData.noShadow = true;
     const glow = new THREE.Sprite(glowMat);
@@ -1038,9 +1103,48 @@ function easeOutBack(x) {
   return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2;
 }
 
+// Merges the many small meshes inside `root` (drips, beads, berries, gold flakes…) into one mesh
+// per material. A cake goes from several hundred draw calls to a few dozen.
+// Skips instanced meshes, textured or multi-material meshes, and anything marked userData.keep.
+function flatten(root) {
+  root.updateMatrixWorld(true);
+  const toLocal = new THREE.Matrix4().copy(root.matrixWorld).invert();
+  const buckets = new Map();
+  const merged = [];
+  root.traverse((o) => {
+    if (!o.isMesh || o.isInstancedMesh || o.userData.keep || Array.isArray(o.material) || o.material.map) return;
+    const key = `${o.material.uuid}:${o.userData.noShadow ? 0 : 1}`;
+    if (!buckets.has(key)) buckets.set(key, { material: o.material, noShadow: Boolean(o.userData.noShadow), geometries: [] });
+    const matrix = new THREE.Matrix4().multiplyMatrices(toLocal, o.matrixWorld);
+    buckets.get(key).geometries.push(o.geometry.clone().applyMatrix4(matrix));
+    merged.push(o);
+  });
+
+  for (const o of merged) {
+    o.parent.remove(o);
+    if (!o.geometry.userData.shared) o.geometry.dispose();
+  }
+
+  for (const { material, noShadow, geometries } of buckets.values()) {
+    let list = geometries;
+    if (list.some((g) => !g.index)) list = list.map((g) => (g.index ? g.toNonIndexed() : g));
+    const shared = Object.keys(list[0].attributes).filter((name) => list.every((g) => g.attributes[name]));
+    for (const g of list) {
+      for (const name of Object.keys(g.attributes)) if (!shared.includes(name)) g.deleteAttribute(name);
+      g.clearGroups();
+    }
+    const geometry = list.length === 1 ? list[0] : mergeGeometries(list, false);
+    if (!geometry) continue;
+    if (list.length > 1) list.forEach((g) => g.dispose());
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.userData.noShadow = noShadow;
+    root.add(mesh);
+  }
+}
+
 function disposeTree(root) {
   root.traverse((o) => {
-    o.geometry?.dispose();
+    if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose();
     const materials = Array.isArray(o.material) ? o.material : o.material ? [o.material] : [];
     for (const mat of materials) {
       if (mat.map && !mat.map.userData.shared) mat.map.dispose();

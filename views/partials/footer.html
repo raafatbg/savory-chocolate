@@ -2,7 +2,7 @@
   <div class="container">
     <div class="footer-top">
       <div class="footer-brand">
-        <a class="brand" href="/"><img src="/img/logo.svg" alt="" width="40" height="40"><span class="brand-name">{{shop_name}}</span></a>
+        <a class="brand" href="/" aria-label="{{shop_name}} home"><span class="wordmark"><span class="wm-script">{{brand_script}}</span>{{#brand_caps}}<span class="wm-caps">{{brand_caps}}</span>{{/brand_caps}}</span></a>
         <p>{{tagline}}</p>
         {{#has_social}}<div class="social">
           {{#instagram}}<a href="{{instagram}}" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 3.9 3.9 2.4 7.2 2.3 8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-2.4.1-3.5 1.2-3.6 3.6-.1 1.2-.1 1.6-.1 4.7s0 3.5.1 4.7c.1 2.4 1.2 3.5 3.6 3.6 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c2.4-.1 3.5-1.2 3.6-3.6.1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c-.1-2.4-1.2-3.5-3.6-3.6-1.2-.1-1.6-.1-4.7-.1zm0 3.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8zm0 8.1a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zm5.1-9.4a1.2 1.2 0 1 1 0 2.3 1.2 1.2 0 0 1 0-2.3z"/></svg></a>{{/instagram}}
@@ -33,8 +33,8 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>&copy; {{year}} {{shop_name}}. All rights reserved.</span>
-      <span>Pay on pickup or delivery &middot; Baked to order</span>
+      <span>&copy; {{year}} {{shop_name}}. All rights reserved. &middot; Pay on pickup or delivery</span>
+      <span class="credit">Website crafted by <span class="omvi">OMVI</span></span>
     </div>
     <div class="footer-wordmark" aria-hidden="true">{{shop_name}}</div>
   </div>
