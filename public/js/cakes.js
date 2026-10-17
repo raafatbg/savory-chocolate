@@ -1,5 +1,6 @@
 import {
-  api, esc, money, isoDate, friendlyDate, friendlyTime, loadSettings, setupFulfillment, deliveryFee, whatsappLink,
+  api, esc, money, isoDate, friendlyDate, loadSettings, setupFulfillment, deliveryFee,
+  setupBranches, orderConfirmation, openWhatsApp,
 } from '/js/common.js';
 import { createCakeStage, renderCakeSnapshot, releaseSnapshots } from '/js/cake3d.js';
 import { SIGNATURE_DESIGNS } from '/js/designs.js';
@@ -205,6 +206,48 @@ if (preset && groups.length) {
 }
 
 fulfillment = setupFulfillment(form, settings, () => update({ redraw: false }));
+const branchOf = await setupBranches(form, () => refreshStepper());
+
+// ---------- inspiration photo ----------
+
+const MAX_PHOTO = 8 * 1024 * 1024;
+const photoInput = document.getElementById('photo');
+const photoDrop = document.getElementById('photo-drop');
+let photoFile = null;
+
+function setPhoto(file) {
+  errorBox.hidden = true;
+  if (file && !file.type.startsWith('image/')) {
+    errorBox.textContent = 'Please choose a photo (JPG, PNG or HEIC).';
+    errorBox.hidden = false;
+    return;
+  }
+  if (file && file.size > MAX_PHOTO) {
+    errorBox.textContent = 'That photo is over 8 MB. Please choose a smaller one.';
+    errorBox.hidden = false;
+    return;
+  }
+  photoFile = file || null;
+  const preview = document.getElementById('photo-preview');
+  if (preview.src) URL.revokeObjectURL(preview.src);
+  preview.hidden = !photoFile;
+  preview.src = photoFile ? URL.createObjectURL(photoFile) : '';
+  document.getElementById('photo-empty').hidden = Boolean(photoFile);
+  document.getElementById('photo-actions').hidden = !photoFile;
+  document.getElementById('photo-name').textContent = photoFile ? photoFile.name : '';
+  if (!photoFile) photoInput.value = '';
+  refreshStepper();
+}
+
+photoInput.addEventListener('change', () => setPhoto(photoInput.files[0]));
+document.getElementById('photo-remove').addEventListener('click', () => setPhoto(null));
+photoDrop.addEventListener('dragover', (e) => { e.preventDefault(); photoDrop.classList.add('dragging'); });
+photoDrop.addEventListener('dragleave', () => photoDrop.classList.remove('dragging'));
+photoDrop.addEventListener('drop', (e) => {
+  e.preventDefault();
+  photoDrop.classList.remove('dragging');
+  setPhoto(e.dataTransfer.files[0]);
+});
 
 let messageTimer = 0;
 form.addEventListener('change', (e) => {
@@ -225,6 +268,8 @@ const sections = [...form.querySelectorAll('.builder-step')];
 stepper.innerHTML = sections.map((s, i) => `<a href="#${s.id}" data-for="${s.id}"><span class="dot">${i + 1}</span>${esc(s.dataset.step)}</a>`).join('');
 
 function stepDone(section) {
+  if (section.querySelector('input[name="branch"]') && !section.querySelector('input[name="branch"]:checked')) return false;
+  if (section.contains(photoDrop) && photoFile) return true;
   const groupsHere = [...section.querySelectorAll('[data-chosen]')].map((el) => byKey[el.dataset.chosen]).filter(Boolean);
   if (groupsHere.length) return groupsHere.every((g) => g.mode === 'multi' || selected(g.key).length > 0);
   if (section.id === 'summary-step') return false;
@@ -350,12 +395,18 @@ form.addEventListener('submit', async (event) => {
     data[group.key] = group.mode === 'single' ? ids[0] : ids;
   }
   data.fulfillment = fulfillment();
+  data.branch = branchOf()?.id;
+
+  const payload = new FormData();
+  payload.append('data', JSON.stringify(data));
+  if (photoFile) payload.append('photo', photoFile);
 
   submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span class="spinner" aria-hidden="true"></span> Placing your order…';
+  submitBtn.innerHTML = `<span class="spinner" aria-hidden="true"></span> ${photoFile ? 'Uploading your photo…' : 'Placing your order…'}`;
   try {
-    const order = await api('/api/orders/cake', { method: 'POST', body: data });
+    const order = await api('/api/orders/cake', { method: 'POST', form: payload });
     showConfirmation(order, data.customer_name);
+    openWhatsApp(order.whatsapp_url);
   } catch (err) {
     errorBox.textContent = err.message;
     errorBox.hidden = false;
@@ -365,25 +416,13 @@ form.addEventListener('submit', async (event) => {
 });
 
 function showConfirmation(order, name) {
-  const firstName = name.trim().split(/\s+/)[0];
-  const delivery = order.fulfillment === 'delivery';
   bar.remove();
   confetti();
-  document.getElementById('builder-col').innerHTML = `
-    <div class="card confirm" style="margin: 0;">
-      <span class="script" style="font-size: 2.4rem;">Thank you</span>
-      <h1 style="font-size: 2.6rem;">${esc(firstName)}, your cake is ordered!</h1>
-      <p class="muted">Your order number is</p>
-      <div class="order-code">${esc(order.code)}</div>
-      <p><strong>${delivery ? 'Delivery' : 'Pickup'}:</strong> ${esc(friendlyDate(order.pickup_date))} at ${esc(friendlyTime(order.pickup_time))}
-        ${delivery ? `<br><span class="muted">${esc(order.delivery_address)}</span>` : ''}<br>
-        <strong>Total due on ${delivery ? 'delivery' : 'pickup'}:</strong> ${money(order.total_cents)}</p>
-      <p class="muted">We'll be in touch if we have any questions about your design.</p>
-      ${whatsappLink(settings) ? `<p class="small">Questions? <a href="${esc(whatsappLink(settings, `Hello, it's about my order ${order.code}`))}" target="_blank" rel="noopener">Message us on WhatsApp</a></p>` : ''}
-      <div class="hero-actions" style="justify-content: center; margin-top: 24px;">
-        <a class="btn btn-gold" href="/">Back to home</a>
-        <a class="btn btn-outline" href="/menu">Browse the menu</a>
-      </div>
-    </div>`;
+  document.getElementById('builder-col').innerHTML = orderConfirmation(order, {
+    name,
+    title: 'your cake is ordered!',
+    shopName: settings.shop_name,
+    links: '<a class="btn btn-outline" href="/">Back to home</a><a class="btn btn-outline" href="/menu">Browse the menu</a>',
+  });
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }

@@ -3,6 +3,8 @@ import { Router } from 'express';
 import { db, getSettings, transaction } from '../db.js';
 import { CAKE_GROUPS, scaledPrice } from '../cake-groups.js';
 import { parseOptions, priceChoices } from '../menu-options.js';
+import { withImage } from '../uploads.js';
+import { orderMessage, whatsappLink } from '../whatsapp.js';
 import {
   HttpError, bad, text, int, customer, pickupDate, pickupTime, fulfillment, email,
 } from '../validate.js';
@@ -50,7 +52,43 @@ router.get('/faqs', (req, res) => {
   res.json(db.prepare('SELECT id, question, answer FROM faqs WHERE available = 1 ORDER BY sort_order, id').all());
 });
 
+router.get('/branches', (req, res) => {
+  res.json(db.prepare(`
+    SELECT id, name, address, phone, whatsapp, maps_link FROM branches WHERE available = 1 ORDER BY sort_order, id
+  `).all());
+});
+
 // ---------- Orders ----------
+
+// The branch the customer picked. With a single branch it's chosen automatically.
+function pickBranch(body) {
+  const branches = db.prepare('SELECT * FROM branches WHERE available = 1 ORDER BY sort_order, id').all();
+  if (!branches.length) return null;
+  const branch = branches.find((b) => b.id === Number(body.branch)) || (branches.length === 1 ? branches[0] : null);
+  if (!branch) throw bad('Please choose a branch.');
+  return branch;
+}
+
+// A light brake on scripted spam: at most 20 orders per visitor per hour.
+const recentOrders = new Map();
+function limitOrders(req) {
+  const hourAgo = Date.now() - 60 * 60 * 1000;
+  const times = (recentOrders.get(req.ip) || []).filter((t) => t > hourAgo);
+  if (times.length >= 20) throw new HttpError(429, 'You\'ve placed several orders already. Please call or message us instead.');
+  recentOrders.set(req.ip, [...times, Date.now()]);
+}
+
+// Sends the saved order back with a ready-made WhatsApp message to the branch.
+function respondWithOrder(req, res, { type, order, who, lines, notes, branch, photo, settings }) {
+  const photoUrl = photo ? `${req.protocol}://${req.get('host')}/uploads/${photo}` : '';
+  const text = orderMessage({ type, order, who, lines, notes, branch, photoUrl, currency: settings.currency });
+  res.status(201).json({
+    ...order,
+    currency: settings.currency,
+    branch: branch?.name || '',
+    whatsapp_url: whatsappLink(branch?.whatsapp || settings.whatsapp, text),
+  });
+}
 
 router.post('/orders/menu', (req, res) => {
   const settings = assertOrdersOpen();
@@ -72,13 +110,15 @@ router.post('/orders/menu', (req, res) => {
     return { name: item.name, unit_price_cents: item.price_cents + extra, quantity, details: summary };
   });
 
-  const order = saveOrder('menu', { who, date, time, notes, lines, settings, body });
-  res.status(201).json({ ...order, currency: settings.currency });
+  const branch = pickBranch(body);
+  limitOrders(req);
+  const order = saveOrder('menu', { who, date, time, notes, lines, settings, body, branch });
+  respondWithOrder(req, res, { type: 'menu', order, who, lines, notes, branch, settings });
 });
 
-router.post('/orders/cake', (req, res) => {
+router.post('/orders/cake', ...withImage((req, res) => {
   const settings = assertOrdersOpen();
-  const body = req.body ?? {};
+  const body = parseOrderBody(req);
   const who = customer(body);
   const notes = text(body.notes, 'Design notes', { max: 1000 });
   const message = text(body.message, 'Message on the cake', { max: 60 });
@@ -127,9 +167,21 @@ router.post('/orders/cake', (req, res) => {
   const title = [details.size, details.tiers].filter(Boolean).join(', ');
   const line = { name: `Custom cake${title ? ` (${title})` : ''}`, unit_price_cents: price, quantity: 1, details };
 
-  const order = saveOrder('cake', { who, date, time, notes, lines: [line], settings, body });
-  res.status(201).json({ ...order, currency: settings.currency });
-});
+  const branch = pickBranch(body);
+  limitOrders(req);
+  const photo = req.file?.filename || '';
+  const order = saveOrder('cake', { who, date, time, notes, lines: [line], settings, body, branch, photo });
+  respondWithOrder(req, res, { type: 'cake', order, who, lines: [line], notes, branch, photo, settings });
+}, 'photo'));
+
+function parseOrderBody(req) {
+  if (!req.is('multipart/form-data')) return req.body ?? {};
+  try {
+    return JSON.parse(req.body?.data || '{}');
+  } catch {
+    throw bad('The order could not be read. Please try again.');
+  }
+}
 
 function assertOrdersOpen() {
   const settings = getSettings();
@@ -139,7 +191,7 @@ function assertOrdersOpen() {
   return settings;
 }
 
-function saveOrder(type, { who, date, time, notes, lines, settings, body }) {
+function saveOrder(type, { who, date, time, notes, lines, settings, body, branch = null, photo = '' }) {
   const subtotal = lines.reduce((sum, l) => sum + l.unit_price_cents * l.quantity, 0);
   const delivery = fulfillment(body, settings, subtotal);
   const total = subtotal + delivery.fee_cents;
@@ -148,10 +200,10 @@ function saveOrder(type, { who, date, time, notes, lines, settings, body }) {
     const code = newOrderCode();
     const { lastInsertRowid: orderId } = db.prepare(`
       INSERT INTO orders (code, type, customer_name, customer_phone, customer_email, pickup_date, pickup_time, notes,
-                          total_cents, fulfillment, delivery_address, delivery_fee_cents)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                          total_cents, fulfillment, delivery_address, delivery_fee_cents, branch, reference_image)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(code, type, who.name, who.phone, who.email, date, time, notes,
-      total, delivery.fulfillment, delivery.address, delivery.fee_cents);
+      total, delivery.fulfillment, delivery.address, delivery.fee_cents, branch?.name || '', photo);
 
     const insertLine = db.prepare(`
       INSERT INTO order_items (order_id, name, unit_price_cents, quantity, details) VALUES (?, ?, ?, ?, ?)

@@ -1,16 +1,13 @@
-import crypto from 'node:crypto';
-import fs from 'node:fs';
-import path from 'node:path';
 import { Router } from 'express';
-import multer from 'multer';
-import { db, getSettings, DEFAULT_SETTINGS, UPLOAD_DIR } from '../db.js';
+import { db, getSettings, DEFAULT_SETTINGS } from '../db.js';
+import { withImage, removeImage } from '../uploads.js';
 import {
   hashPassword, verifyPassword, adminCount, createSession, destroySession, currentAdmin, requireAdmin,
   loginBlocked, recordLoginFailure, clearLoginFailures,
 } from '../auth.js';
 import { CAKE_GROUPS } from '../cake-groups.js';
 import { normalizeOptions, parseOptions } from '../menu-options.js';
-import { HttpError, bad, text, int, money, bool, hexColor, url, email } from '../validate.js';
+import { HttpError, bad, text, int, money, bool, hexColor, url, email, whatsappNumber } from '../validate.js';
 
 export const router = Router();
 
@@ -113,41 +110,7 @@ router.patch('/orders/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-// ---------- Image uploads (menu items and gallery) ----------
-
-const IMAGE_TYPES = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
-
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: UPLOAD_DIR,
-    filename: (req, file, cb) => cb(null, crypto.randomBytes(12).toString('hex') + IMAGE_TYPES[file.mimetype]),
-  }),
-  limits: { fileSize: 8 * 1024 * 1024, files: 1 },
-  fileFilter: (req, file, cb) => {
-    if (IMAGE_TYPES[file.mimetype]) cb(null, true);
-    else cb(bad('Image must be a JPG, PNG, WebP or GIF.'));
-  },
-});
-
-function removeImage(filename) {
-  if (filename && /^[a-f0-9]+\.(jpg|png|webp|gif)$/.test(filename)) {
-    fs.rm(path.join(UPLOAD_DIR, filename), { force: true }, () => {});
-  }
-}
-
-// Runs a handler that may have received an uploaded image, and deletes the
-// upload again if the handler rejects the request.
-const withImage = (handler) => [
-  upload.single('image'),
-  (req, res) => {
-    try {
-      handler(req, res);
-    } catch (err) {
-      removeImage(req.file?.filename);
-      throw err;
-    }
-  },
-];
+// Image uploads (menu items and gallery) use the shared helpers in src/uploads.js.
 
 const sortOrder = (value) => (value === undefined || value === '' ? 0 : int(value, 'Sort order', { max: 9999 }));
 
@@ -388,6 +351,49 @@ router.delete('/faqs/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ---------- Branches ----------
+
+function branchFields(body) {
+  return {
+    name: text(body.name, 'Branch name', { required: true, max: 60 }),
+    address: text(body.address, 'Address', { max: 300 }),
+    phone: text(body.phone, 'Phone', { max: 40 }),
+    whatsapp: whatsappNumber(body.whatsapp),
+    maps_link: url(body.maps_link, 'Google Maps link'),
+    available: bool(body.available) ? 1 : 0,
+    sort_order: sortOrder(body.sort_order),
+  };
+}
+
+router.get('/branches', (req, res) => {
+  res.json(db.prepare('SELECT * FROM branches ORDER BY sort_order, id').all());
+});
+
+router.post('/branches', (req, res) => {
+  const f = branchFields(req.body ?? {});
+  const { lastInsertRowid } = db.prepare(`
+    INSERT INTO branches (name, address, phone, whatsapp, maps_link, available, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(f.name, f.address, f.phone, f.whatsapp, f.maps_link, f.available, f.sort_order);
+  res.status(201).json(db.prepare('SELECT * FROM branches WHERE id = ?').get(lastInsertRowid));
+});
+
+router.put('/branches/:id', (req, res) => {
+  const id = int(req.params.id, 'Branch');
+  const f = branchFields(req.body ?? {});
+  const { changes } = db.prepare(`
+    UPDATE branches SET name = ?, address = ?, phone = ?, whatsapp = ?, maps_link = ?, available = ?, sort_order = ?
+    WHERE id = ?
+  `).run(f.name, f.address, f.phone, f.whatsapp, f.maps_link, f.available, f.sort_order, id);
+  if (!changes) throw new HttpError(404, 'Branch not found.');
+  res.json(db.prepare('SELECT * FROM branches WHERE id = ?').get(id));
+});
+
+router.delete('/branches/:id', (req, res) => {
+  const { changes } = db.prepare('DELETE FROM branches WHERE id = ?').run(int(req.params.id, 'Branch'));
+  if (!changes) throw new HttpError(404, 'Branch not found.');
+  res.json({ ok: true });
+});
+
 // ---------- Contact messages ----------
 
 router.get('/messages', (req, res) => {
@@ -427,14 +433,7 @@ router.put('/settings', (req, res) => {
   if ('instagram' in body) updates.instagram = url(body.instagram, 'Instagram link');
   if ('facebook' in body) updates.facebook = url(body.facebook, 'Facebook link');
   if ('maps_link' in body) updates.maps_link = url(body.maps_link, 'Google Maps link');
-  if ('whatsapp' in body) {
-    const whatsapp = text(body.whatsapp, 'WhatsApp number', { max: 30 });
-    const digits = whatsapp.replace(/\D/g, '');
-    if (whatsapp && (!whatsapp.startsWith('+') || digits.length < 8 || digits.length > 15)) {
-      throw bad('WhatsApp number must start with the country code, like +961 79 123 456.');
-    }
-    updates.whatsapp = whatsapp;
-  }
+  if ('whatsapp' in body) updates.whatsapp = whatsappNumber(body.whatsapp);
   if ('currency' in body) {
     const currency = text(body.currency, 'Currency', { required: true, max: 3 }).toUpperCase();
     try {

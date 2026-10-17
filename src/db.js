@@ -95,6 +95,7 @@ const MIGRATIONS = [
   null, // version 1 is the schema above
   migrateToVersion2,
   migrateToVersion3,
+  migrateToVersion4,
 ];
 const LATEST = MIGRATIONS.length;
 
@@ -115,6 +116,28 @@ function backup(fromVersion) {
     db.exec(`VACUUM INTO '${target.replace(/'/g, "''")}'`);
     console.log(`Backed up the database to ${target} before upgrading it.`);
   }
+}
+
+// Version 4: branches (customers pick one; each has its own WhatsApp) and inspiration photos on orders.
+function migrateToVersion4() {
+  db.exec(`
+    CREATE TABLE branches (
+      id         INTEGER PRIMARY KEY,
+      name       TEXT NOT NULL,
+      address    TEXT NOT NULL DEFAULT '',
+      phone      TEXT NOT NULL DEFAULT '',
+      whatsapp   TEXT NOT NULL DEFAULT '',
+      maps_link  TEXT NOT NULL DEFAULT '',
+      available  INTEGER NOT NULL DEFAULT 1,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    );
+    ALTER TABLE orders ADD COLUMN branch TEXT NOT NULL DEFAULT '';
+    ALTER TABLE orders ADD COLUMN reference_image TEXT NOT NULL DEFAULT '';
+  `);
+  // The two shops, from Savory's Instagram (Aley) and Facebook / Google Maps (Aramoun) listings.
+  const add = db.prepare('INSERT INTO branches (name, address, phone, whatsapp, maps_link, sort_order) VALUES (?, ?, ?, ?, ?, ?)');
+  add.run('Aley', 'Aley, Mount Lebanon', '70 548 208', '+961 70 548 208', '', 0);
+  add.run('Aramoun', 'Aramoun, Aley, Mount Lebanon', '05 411 405', '+961 79 167 464', 'https://maps.google.com/?cid=4880834083851702817', 1);
 }
 
 // Version 3: bigger cakes cost more to decorate and need more notice.

@@ -25,10 +25,7 @@
       <div>
         <h4>Visit</h4>
         <p class="pre-line">{{hours}}</p>
-        {{#address}}<p class="pre-line">{{address}}</p>{{/address}}
-        {{#maps_url}}<a href="{{maps_url}}" target="_blank" rel="noopener">Get directions →</a>{{/maps_url}}
-        {{#phone}}<a href="{{phone_href}}">Call {{phone}}</a>{{/phone}}
-        {{#whatsapp}}<a href="{{whatsapp_href}}" target="_blank" rel="noopener">WhatsApp {{whatsapp}}</a>{{/whatsapp}}
+        {{{footer_visit}}}
         {{#email}}<a href="mailto:{{email}}">{{email}}</a>{{/email}}
       </div>
     </div>
@@ -39,4 +36,4 @@
     <div class="footer-wordmark" aria-hidden="true">{{shop_name}}</div>
   </div>
 </footer>
-{{#whatsapp}}<a class="wa-float" href="{{whatsapp_href}}" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp" title="Chat with us on WhatsApp">{{> whatsapp-icon}}</a>{{/whatsapp}}
+{{{whatsapp_float}}}

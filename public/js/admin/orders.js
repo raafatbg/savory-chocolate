@@ -18,8 +18,24 @@ const DETAIL_LABELS = {
 };
 
 let filter = 'active';
+let branchFilter = '';
+let branchesLoaded = false;
+
+// Fills the branch filter once (only shown when there's more than one branch).
+async function loadBranchFilter() {
+  if (branchesLoaded) return;
+  branchesLoaded = true;
+  try {
+    const branches = await adminApi('/branches');
+    const select = $('#order-branch');
+    select.innerHTML = '<option value="">All branches</option>'
+      + branches.map((b) => `<option value="${esc(b.name)}">${esc(b.name)}</option>`).join('');
+    select.hidden = branches.length < 2;
+  } catch { /* filter stays hidden */ }
+}
 
 export async function load() {
+  loadBranchFilter();
   let data;
   try {
     data = await adminApi(`/orders?status=${filter}`);
@@ -27,7 +43,8 @@ export async function load() {
     if (err.status !== 401) $('#orders-list').innerHTML = errorBlock(err);
     return;
   }
-  const { orders, counts } = data;
+  const { counts } = data;
+  const orders = branchFilter ? data.orders.filter((o) => o.branch === branchFilter) : data.orders;
   const n = (s) => counts[s] || 0;
   const filterCounts = {
     ...counts,
@@ -79,6 +96,7 @@ function orderCard(o) {
         <div class="ids">
           <span class="order-code-sm">${esc(o.code)}</span>
           ${o.type === 'cake' ? '<span class="pill cake">🎂 Custom cake</span>' : '<span class="pill">Menu order</span>'}
+          ${o.branch ? `<span class="pill branch">📍 ${esc(o.branch)}</span>` : ''}
           ${delivery ? '<span class="pill delivery">🚚 Delivery</span>' : '<span class="pill">Pickup</span>'}
           ${dietary ? '<span class="pill warn">⚠ Dietary needs</span>' : ''}
           <span class="pill st-${o.status}">${STATUS_LABELS[o.status]}</span>
@@ -96,6 +114,7 @@ function orderCard(o) {
         <div>
           <ul class="order-items">${items}</ul>
           ${o.notes ? `<p class="order-notes"><strong>Notes:</strong> ${esc(o.notes)}</p>` : ''}
+          ${o.reference_image ? `<a class="ref-photo" href="/uploads/${esc(o.reference_image)}" target="_blank" rel="noopener"><img src="/uploads/${esc(o.reference_image)}" alt="Customer's inspiration photo" loading="lazy"><span>Inspiration photo · open full size</span></a>` : ''}
         </div>
       </div>
       <div class="order-foot">
@@ -151,3 +170,7 @@ $('#orders-list').addEventListener('change', (e) => {
 });
 
 $('#orders-refresh').addEventListener('click', () => load());
+$('#order-branch').addEventListener('change', (e) => {
+  branchFilter = e.target.value;
+  load();
+});

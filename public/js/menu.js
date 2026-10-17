@@ -1,6 +1,6 @@
 import {
-  api, esc, money, storage, isoDate, friendlyDate, friendlyTime, loadSettings, setupFulfillment, deliveryFee, reveal,
-  whatsappLink,
+  api, esc, money, storage, isoDate, loadSettings, setupFulfillment, deliveryFee, reveal,
+  setupBranches, orderConfirmation, openWhatsApp,
 } from '/js/common.js';
 import { illustrationFor } from '/js/illustrations.js';
 import { confetti } from '/js/confetti.js';
@@ -245,6 +245,7 @@ function renderCart() {
 }
 
 fulfillment = setupFulfillment(form, settings, renderCart);
+const branchOf = await setupBranches(form);
 renderMenu();
 renderCart();
 
@@ -338,6 +339,7 @@ form.addEventListener('submit', async (event) => {
 
   const data = Object.fromEntries(new FormData(form));
   data.fulfillment = fulfillment();
+  data.branch = branchOf()?.id;
   data.items = cart.map((l) => ({ id: l.id, quantity: l.quantity, choices: l.picks }));
 
   submitBtn.disabled = true;
@@ -347,6 +349,7 @@ form.addEventListener('submit', async (event) => {
     cart = [];
     saveCart();
     showConfirmation(order, data.customer_name);
+    openWhatsApp(order.whatsapp_url);
   } catch (err) {
     errorBox.textContent = err.message;
     errorBox.hidden = false;
@@ -356,25 +359,13 @@ form.addEventListener('submit', async (event) => {
 });
 
 function showConfirmation(order, name) {
-  const firstName = name.trim().split(/\s+/)[0];
-  const delivery = order.fulfillment === 'delivery';
   document.getElementById('cart-bar').remove();
   confetti();
-  document.getElementById('page').innerHTML = `
-    <div class="card confirm">
-      <span class="script" style="font-size: 2.4rem;">Thank you</span>
-      <h1 style="font-size: 2.6rem;">${esc(firstName)}, your order is in!</h1>
-      <p class="muted">Your order number is</p>
-      <div class="order-code">${esc(order.code)}</div>
-      <p><strong>${delivery ? 'Delivery' : 'Pickup'}:</strong> ${esc(friendlyDate(order.pickup_date))} at ${esc(friendlyTime(order.pickup_time))}
-        ${delivery ? `<br><span class="muted">${esc(order.delivery_address)}</span>` : ''}<br>
-        <strong>Total due on ${delivery ? 'delivery' : 'pickup'}:</strong> ${money(order.total_cents)}</p>
-      <p class="muted">${delivery ? 'We\'ll bring it to your door.' : 'Give us your order number when you arrive.'}</p>
-      ${whatsappLink(settings) ? `<p class="small">Questions? <a href="${esc(whatsappLink(settings, `Hello, it's about my order ${order.code}`))}" target="_blank" rel="noopener">Message us on WhatsApp</a></p>` : ''}
-      <div class="hero-actions" style="justify-content: center; margin-top: 24px;">
-        <a class="btn btn-gold" href="/">Back to home</a>
-        <a class="btn btn-outline" href="/cakes">Design a cake</a>
-      </div>
-    </div>`;
+  document.getElementById('page').innerHTML = orderConfirmation(order, {
+    name,
+    title: 'your order is in!',
+    shopName: settings.shop_name,
+    links: '<a class="btn btn-outline" href="/">Back to home</a><a class="btn btn-outline" href="/cakes">Design a cake</a>',
+  });
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }

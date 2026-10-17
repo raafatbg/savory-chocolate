@@ -112,6 +112,29 @@ export function setupFulfillment(root, settings, onChange = () => {}) {
   return current;
 }
 
+// Fills the branch picker inside `root` (from the fulfillment partial). With one branch it's chosen
+// automatically and the picker stays hidden. Returns a function giving the chosen branch (or null).
+export async function setupBranches(root, onChange = () => {}) {
+  const field = root.querySelector('[data-branch-field]');
+  const choices = root.querySelector('[data-branch-choices]');
+  let branches = [];
+  try {
+    branches = await api('/api/branches');
+  } catch { /* no picker: the order goes to the shop's main number */ }
+  const byId = new Map(branches.map((b) => [String(b.id), b]));
+  if (branches.length > 1) {
+    choices.innerHTML = branches.map((b) => `
+      <label class="choice">
+        <input type="radio" name="branch" value="${b.id}" required>
+        <span class="name">${esc(b.name)}</span>
+        ${b.address ? `<span class="meta">${esc(b.address)}</span>` : ''}
+      </label>`).join('');
+    field.hidden = false;
+    choices.addEventListener('change', () => onChange());
+  }
+  return () => (branches.length === 1 ? branches[0] : byId.get(root.querySelector('input[name="branch"]:checked')?.value) || null);
+}
+
 // wa.me chat link for the shop's WhatsApp number, with an optional pre-filled message.
 export function whatsappLink(settings, message = '') {
   const digits = (settings.whatsapp || '').replace(/\D/g, '');
@@ -190,3 +213,55 @@ export function reveal(root = document) {
 }
 
 reveal();
+
+// Floating WhatsApp button with a branch menu (when the shop has more than one branch).
+const waMenu = document.querySelector('[data-wa-menu]');
+if (waMenu) {
+  const button = waMenu.querySelector('.wa-float');
+  const menu = waMenu.querySelector('.wa-menu');
+  const setOpen = (open) => {
+    menu.hidden = !open;
+    button.setAttribute('aria-expanded', String(open));
+  };
+  button.addEventListener('click', () => setOpen(menu.hidden));
+  document.addEventListener('click', (e) => { if (!waMenu.contains(e.target)) setOpen(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+}
+
+const WA_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.65.07-.3-.15-1.25-.46-2.38-1.47-.88-.79-1.47-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.08c.15.2 2.09 3.2 5.08 4.48.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.75-.72 2-1.41.25-.69.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.04 21.5h-.01a9.45 9.45 0 0 1-4.82-1.32l-.35-.21-3.58.94.96-3.49-.23-.36a9.43 9.43 0 0 1-1.45-5.04c0-5.22 4.25-9.46 9.48-9.46a9.4 9.4 0 0 1 6.7 2.78 9.4 9.4 0 0 1 2.77 6.69c0 5.22-4.25 9.47-9.47 9.47zm8.06-17.53A11.33 11.33 0 0 0 12.04.62C5.76.62.65 5.73.65 12.01c0 2 .52 3.96 1.52 5.69L.55 23.6l6.03-1.58a11.36 11.36 0 0 0 5.45 1.39h.01c6.28 0 11.39-5.11 11.39-11.39 0-3.04-1.18-5.9-3.33-8.05z"/></svg>';
+
+// The screen after an order is placed. Its main action sends the order to the branch on WhatsApp
+// (the message is written by the server, with every detail of the order).
+export function orderConfirmation(order, { name, title, shopName, links = '' }) {
+  const firstName = name.trim().split(/\s+/)[0];
+  const delivery = order.fulfillment === 'delivery';
+  const to = [shopName, order.branch].filter(Boolean).join(' ');
+  return `
+    <div class="card confirm">
+      <span class="script" style="font-size: 2.4rem;">Thank you</span>
+      <h1 style="font-size: 2.4rem;">${esc(firstName)}, ${esc(title)}</h1>
+      ${order.whatsapp_url ? `
+        <div class="wa-step">
+          <span class="wa-step-label">Last step</span>
+          <p>Send your order to <strong>${esc(to || 'us')}</strong> on WhatsApp so we can confirm it. The message is already written for you.</p>
+          <a class="btn btn-lg btn-block wa-send" href="${esc(order.whatsapp_url)}" target="_blank" rel="noopener">${WA_SVG} Send order on WhatsApp</a>
+        </div>` : ''}
+      <p class="muted">Your order number is</p>
+      <div class="order-code">${esc(order.code)}</div>
+      <p>${order.branch ? `<strong>Branch:</strong> ${esc(order.branch)}<br>` : ''}
+        <strong>${delivery ? 'Delivery' : 'Pickup'}:</strong> ${esc(friendlyDate(order.pickup_date))} at ${esc(friendlyTime(order.pickup_time))}
+        ${delivery ? `<br><span class="muted">${esc(order.delivery_address)}</span>` : ''}<br>
+        <strong>Total due on ${delivery ? 'delivery' : 'pickup'}:</strong> ${money(order.total_cents)}</p>
+      <div class="hero-actions" style="justify-content: center; margin-top: 24px;">${links}</div>
+    </div>`;
+}
+
+// Opens the WhatsApp message straight away. Browsers may block this, which is why the
+// confirmation also has a big "Send order on WhatsApp" button.
+export function openWhatsApp(url) {
+  if (!url) return;
+  const tab = window.open(url, '_blank');
+  if (tab) {
+    try { tab.opener = null; } catch { /* cross-origin already */ }
+  }
+}

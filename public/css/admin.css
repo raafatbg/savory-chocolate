@@ -363,3 +363,13 @@ body.admin ::-webkit-scrollbar-thumb { background: #d6c3ad; border-color: var(--
 .auth-card .wm-script { color: #6b4a2b; background: none; -webkit-text-fill-color: currentColor; }
 .auth-card .wm-caps { color: #8a7364; }
 .auth-card .wm-caps::before { background: #6b4a2b; }
+
+/* Branches, branch filter and inspiration photos on orders */
+.branches-card { margin-bottom: 20px; }
+.branches-card .row { padding-left: 0; padding-right: 0; }
+.orders-tools { display: flex; gap: 8px; align-items: center; }
+.orders-tools select { width: auto; padding: 7px 10px; font-size: 0.88rem; }
+.pill.branch { background: #efe6d6; color: #6b4a2b; }
+.ref-photo { display: inline-flex; align-items: center; gap: 12px; margin-top: 12px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; }
+.ref-photo img { width: 76px; height: 76px; object-fit: cover; border-radius: 8px; }
+.ref-photo span { font-size: 0.86rem; font-weight: 600; }

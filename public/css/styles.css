@@ -1534,3 +1534,76 @@ html { scrollbar-color: #5a3f2a var(--bg); scrollbar-width: thin; }
 .insta-card p { margin: 0; }
 .ig-icon { width: 20px; height: 20px; fill: currentColor; }
 @media (max-width: 600px) { .insta-card { padding: 30px 22px; } .insta-card .btn { width: 100%; } }
+
+/* Branches */
+.branch-links { margin-top: 6px !important; display: flex; flex-wrap: wrap; gap: 4px 6px; }
+.branch-links .sep { color: var(--muted); }
+.footer-branch { margin-bottom: 14px; }
+.footer-branch strong { display: block; color: var(--text); font-weight: 700; margin-bottom: 2px; }
+.footer-branch p { margin: 0 0 2px; }
+.wa-btn { margin-top: 12px; }
+.wa-btn svg, .btn .wa-icon svg { width: 20px; height: 20px; fill: currentColor; }
+.contact-layout .wa-btn:first-of-type { margin-top: 28px; }
+
+/* Floating WhatsApp with a branch menu */
+.wa-float-wrap { position: fixed; right: 20px; bottom: 20px; z-index: 45; }
+.wa-float-wrap .wa-float { position: relative; right: auto; bottom: auto; border: 0; cursor: pointer; }
+.wa-menu {
+  position: absolute;
+  right: 0;
+  bottom: 72px;
+  min-width: 230px;
+  padding: 10px;
+  border-radius: 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
+  animation: dialog-in 0.25s var(--ease);
+}
+.wa-menu-title { display: block; padding: 4px 8px 8px; font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+.wa-menu a { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px; color: var(--text); text-decoration: none; }
+.wa-menu a:hover { background: rgba(211, 182, 130, 0.1); color: var(--text); }
+.wa-menu a svg { width: 26px; height: 26px; fill: #2fe07a; flex: none; }
+.wa-menu a span { display: flex; flex-direction: column; font-weight: 700; }
+.wa-menu small { font-weight: 500; color: var(--muted); font-size: 0.8rem; }
+@media (max-width: 960px) { body:has(.bottom-bar.show) .wa-float-wrap { bottom: 90px; } }
+@media (max-width: 600px) {
+  .wa-float-wrap { left: 14px; right: auto; bottom: 14px; }
+  .wa-menu { left: 0; right: auto; bottom: 64px; }
+}
+
+/* Inspiration photo */
+.photo-drop {
+  display: grid;
+  place-items: center;
+  min-height: 140px;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.photo-drop:hover, .photo-drop.dragging { border-color: var(--gold); background: rgba(211, 182, 130, 0.06); }
+.photo-drop:has(input:focus-visible) { outline: 2px solid var(--gold-light); outline-offset: 3px; }
+.photo-empty { display: flex; align-items: center; gap: 14px; padding: 20px; color: var(--text-soft); font-size: 0.92rem; }
+.photo-empty svg { width: 34px; height: 34px; color: var(--gold); flex: none; }
+.photo-empty strong { color: var(--gold-light); }
+.photo-drop img { width: 100%; max-height: 320px; object-fit: contain; background: #0d0704; }
+.photo-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.photo-actions .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Order confirmation: send on WhatsApp */
+.wa-step {
+  margin: 18px 0 26px;
+  padding: 22px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(47, 224, 122, 0.35);
+  background: linear-gradient(180deg, rgba(47, 224, 122, 0.08), rgba(47, 224, 122, 0.02));
+  text-align: center;
+}
+.wa-step-label { display: inline-block; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; color: #6fe3a0; margin-bottom: 6px; }
+.wa-step p { color: var(--text-soft); margin-bottom: 16px; }
+.wa-send { background: linear-gradient(145deg, #2fe07a, #1faa55); color: #fff; box-shadow: 0 14px 30px -12px rgba(31, 170, 85, 0.7); }
+.wa-send:hover { color: #fff; transform: translateY(-2px); }
+.wa-send svg { width: 22px; height: 22px; fill: currentColor; }

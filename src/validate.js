@@ -105,3 +105,12 @@ export function email(value, label = 'Email', { required = false } = {}) {
   if (s && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) throw bad(`${label} address is not valid.`);
   return s;
 }
+
+export function whatsappNumber(value, label = 'WhatsApp number') {
+  const s = text(value, label, { max: 30 });
+  const digits = s.replace(/\D/g, '');
+  if (s && (!s.startsWith('+') || digits.length < 8 || digits.length > 15)) {
+    throw bad(`${label} must start with the country code, like +961 79 123 456.`);
+  }
+  return s;
+}

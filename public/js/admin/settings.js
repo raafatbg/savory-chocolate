@@ -1,4 +1,5 @@
 import { $, adminApi, toast, formError, busy, cents, loadSettings } from './core.js';
+import { loadBranches } from './branches.js';
 
 const settingsForm = $('#settings-form');
 const passwordForm = $('#password-form');
@@ -7,6 +8,7 @@ let state = null;
 
 export function load(appState) {
   state = appState;
+  loadBranches();
   const s = state.settings;
   for (const el of settingsForm.elements) {
     if (!el.name || !(el.name in s)) continue;

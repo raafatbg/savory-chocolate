@@ -64,7 +64,11 @@
             <h1>Orders</h1>
             <p class="muted small" id="orders-updated"></p>
           </div>
-          <button type="button" class="btn btn-outline btn-sm" id="orders-refresh">Refresh</button>
+          <div class="orders-tools">
+            <label class="visually-hidden" for="order-branch">Branch</label>
+            <select id="order-branch"><option value="">All branches</option></select>
+            <button type="button" class="btn btn-outline btn-sm" id="orders-refresh">Refresh</button>
+          </div>
         </div>
         <div class="filters" id="order-filters"></div>
         <div id="orders-list"></div>
@@ -147,6 +151,16 @@
 
       <section data-panel="settings" hidden>
         <div class="panel-head"><h1>Settings</h1></div>
+        <div class="card form-card branches-card">
+          <div class="list-head" style="padding: 0 0 6px;">
+            <div>
+              <h2 style="border: 0; margin: 0; padding: 0;">Branches</h2>
+              <p class="muted small" style="margin: 4px 0 0;">Customers pick a branch when they order, and the order is sent to that branch's WhatsApp.</p>
+            </div>
+            <button type="button" class="btn btn-gold btn-sm" id="add-branch-btn">+ Add branch</button>
+          </div>
+          <div id="branches-list"></div>
+        </div>
         <div class="settings-grid">
           <form id="settings-form" class="card form-card">
             <h2>Shop details</h2>
@@ -305,6 +319,29 @@
       <div class="dialog-actions">
         <button type="button" class="btn btn-ghost" data-close>Cancel</button>
         <button type="submit" class="btn btn-gold">Save option</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Branch editor -->
+  <dialog id="branch-dialog" class="admin-dialog">
+    <form id="branch-form" class="dialog-body">
+      <h2 id="branch-dialog-title">Add branch</h2>
+      <div class="field"><label for="b-name">Branch name</label><input type="text" id="b-name" name="name" maxlength="60" required placeholder="e.g. Aley"></div>
+      <div class="field"><label for="b-address">Address</label><textarea id="b-address" name="address" maxlength="300" rows="2"></textarea></div>
+      <div class="field-row">
+        <div class="field"><label for="b-phone">Phone</label><input type="tel" id="b-phone" name="phone" maxlength="40"></div>
+        <div class="field"><label for="b-whatsapp">WhatsApp</label><input type="tel" id="b-whatsapp" name="whatsapp" maxlength="30" placeholder="+961 70 123 456"><span class="hint">With country code. Orders for this branch go here.</span></div>
+      </div>
+      <div class="field"><label for="b-maps">Google Maps link <span class="optional">(optional)</span></label><input type="url" id="b-maps" name="maps_link" maxlength="300" placeholder="https://maps.google.com/…"></div>
+      <div class="field-row">
+        <div class="field"><label for="b-sort">Sort order</label><input type="number" id="b-sort" name="sort_order" min="0" max="9999" value="0"></div>
+        <div class="field" style="justify-content: center;"><label class="checkbox"><input type="checkbox" name="available" id="b-available" checked> Customers can choose it</label></div>
+      </div>
+      <div class="form-error alert alert-error" role="alert" hidden></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-gold">Save branch</button>
       </div>
     </form>
   </dialog>

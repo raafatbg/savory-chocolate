@@ -73,6 +73,22 @@
                 <span class="char-count" id="message-count">0 / 60 · shown on a chocolate plaque</span>
               </div>
               <div class="field">
+                <span class="label">Inspiration photo <span class="optional">(optional)</span></span>
+                <label class="photo-drop" id="photo-drop">
+                  <input type="file" id="photo" accept="image/*" class="visually-hidden">
+                  <span class="photo-empty" id="photo-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                    <span><strong>Add a photo</strong> of a cake you love, a theme or colors.</span>
+                  </span>
+                  <img id="photo-preview" alt="Your inspiration photo" hidden>
+                </label>
+                <div class="photo-actions" id="photo-actions" hidden>
+                  <span class="muted small" id="photo-name"></span>
+                  <button type="button" class="btn btn-ghost btn-sm" id="photo-remove">Remove photo</button>
+                </div>
+                <span class="hint">JPG, PNG or HEIC, up to 8 MB. We'll use it as a reference for your design.</span>
+              </div>
+              <div class="field">
                 <label for="notes">Design notes <span class="optional">(optional)</span></label>
                 <textarea id="notes" name="notes" maxlength="1000" placeholder="Theme, colors, allergies, or anything else we should know."></textarea>
               </div>
