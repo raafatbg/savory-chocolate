@@ -35,8 +35,8 @@
 
     <div class="marquee" aria-hidden="true">
       <div class="marquee-track">
-        <span>Birthday cakes</span><span>Celebration tiers</span><span>Chocolate ganache</span><span>French macarons</span><span>Fresh berries</span><span>Gold leaf</span>
-        <span>Birthday cakes</span><span>Celebration tiers</span><span>Chocolate ganache</span><span>French macarons</span><span>Fresh berries</span><span>Gold leaf</span>
+        <span>Fine chocolates</span><span>Custom cakes</span><span>Ice cream</span><span>Éclairs</span><span>Mixed nuts</span><span>Wedding favors</span><span>Ramadan &amp; Eid sweets</span>
+        <span>Fine chocolates</span><span>Custom cakes</span><span>Ice cream</span><span>Éclairs</span><span>Mixed nuts</span><span>Wedding favors</span><span>Ramadan &amp; Eid sweets</span>
       </div>
     </div>
 
@@ -68,6 +68,17 @@
             </svg>
           </a>
         </div>
+      </div>
+    </section>
+
+    <section class="section" id="what-we-make" style="padding-top: 0;">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <span class="eyebrow">What we make</span>
+          <h2>Something for every <em class="gold-text">sweet tooth</em></h2>
+          <p>From fine chocolates to celebration cakes, all made in Aramoun.</p>
+        </div>
+        <div class="product-lines" id="product-lines"></div>
       </div>
     </section>
 
@@ -172,6 +183,7 @@
             <div><dt>Opening hours</dt><dd>{{hours}}</dd></div>
             {{#address}}<div><dt>Address</dt><dd>{{address}}</dd>{{#maps_url}}<dd style="margin-top: 6px;"><a href="{{maps_url}}" target="_blank" rel="noopener">Get directions →</a></dd>{{/maps_url}}</div>{{/address}}
             {{#phone}}<div><dt>Call</dt><dd><a href="{{phone_href}}">{{phone}}</a></dd></div>{{/phone}}
+            {{#whatsapp}}<div><dt>WhatsApp</dt><dd><a href="{{whatsapp_href}}" target="_blank" rel="noopener">{{whatsapp}}</a></dd></div>{{/whatsapp}}
             {{#email}}<div><dt>Email</dt><dd><a href="mailto:{{email}}">{{email}}</a></dd></div>{{/email}}
           </dl>
         </div>

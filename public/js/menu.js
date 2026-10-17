@@ -1,5 +1,6 @@
 import {
   api, esc, money, storage, isoDate, friendlyDate, friendlyTime, loadSettings, setupFulfillment, deliveryFee, reveal,
+  whatsappLink,
 } from '/js/common.js';
 import { illustrationFor } from '/js/illustrations.js';
 import { confetti } from '/js/confetti.js';
@@ -369,6 +370,7 @@ function showConfirmation(order, name) {
         ${delivery ? `<br><span class="muted">${esc(order.delivery_address)}</span>` : ''}<br>
         <strong>Total due on ${delivery ? 'delivery' : 'pickup'}:</strong> ${money(order.total_cents)}</p>
       <p class="muted">${delivery ? 'We\'ll bring it to your door.' : 'Give us your order number when you arrive.'}</p>
+      ${whatsappLink(settings) ? `<p class="small">Questions? <a href="${esc(whatsappLink(settings, `Hello, it's about my order ${order.code}`))}" target="_blank" rel="noopener">Message us on WhatsApp</a></p>` : ''}
       <div class="hero-actions" style="justify-content: center; margin-top: 24px;">
         <a class="btn btn-gold" href="/">Back to home</a>
         <a class="btn btn-outline" href="/cakes">Design a cake</a>

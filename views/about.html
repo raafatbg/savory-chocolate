@@ -59,6 +59,8 @@
           <h2>Come and say hello</h2>
           <dl class="info-list">
             <div><dt>Opening hours</dt><dd>{{hours}}</dd></div>
+            {{#phone}}<div><dt>Call</dt><dd><a href="{{phone_href}}">{{phone}}</a></dd></div>{{/phone}}
+            {{#whatsapp}}<div><dt>WhatsApp</dt><dd><a href="{{whatsapp_href}}" target="_blank" rel="noopener">{{whatsapp}}</a></dd></div>{{/whatsapp}}
             {{#address}}<div><dt>Address</dt><dd>{{address}}</dd>{{#maps_url}}<dd style="margin-top: 6px;"><a href="{{maps_url}}" target="_blank" rel="noopener">Get directions →</a></dd>{{/maps_url}}</div>{{/address}}
           </dl>
         </div>

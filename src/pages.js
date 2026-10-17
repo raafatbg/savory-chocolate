@@ -31,9 +31,12 @@ export function renderPage(name) {
     ...s,
     year: String(new Date().getFullYear()),
     phone_href: s.phone ? `tel:${s.phone.replace(/[^\d+]/g, '')}` : '',
-    maps_url: s.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address.replace(/\n/g, ', '))}` : '',
-    has_social: s.instagram || s.facebook ? '1' : '',
-    has_contact: s.phone || s.email || s.address ? '1' : '',
+    whatsapp_href: s.whatsapp
+      ? `https://wa.me/${s.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${s.shop_name}!`)}` : '',
+    maps_url: s.maps_link
+      || (s.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address.replace(/\n/g, ', '))}` : ''),
+    has_social: s.instagram || s.facebook || s.whatsapp ? '1' : '',
+    has_contact: s.phone || s.whatsapp || s.email || s.address ? '1' : '',
   };
 
   let html = read(`${name}.html`);

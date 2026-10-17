@@ -77,6 +77,42 @@ const ART = {
     <path d="M24 90 H96" opacity=".5"/>
     <circle cx="60" cy="40" r="4"/>
     <path d="M40 64 a24 24 0 0 1 14 -14" opacity=".55"/>`),
+  chocolate: svg(`
+    <path ${SOFT} d="M16 64 H104 V94 H16 Z"/>
+    <path d="M16 72 H104" opacity=".5"/>
+    <circle cx="36" cy="54" r="11" ${SOFT}/><circle cx="60" cy="51" r="12" ${SOFT}/><circle cx="84" cy="54" r="11" ${SOFT}/>
+    <path d="M30 51 q6 -5 12 0 M53 47 q7 -6 14 0 M78 51 q6 -5 12 0" opacity=".7"/>
+    <path d="M28 82 h12 M54 82 h12 M80 82 h12" opacity=".5"/>`),
+  icecream: svg(`
+    <path ${SOFT} d="M42 62 L60 106 L78 62 Z"/>
+    <path d="M47 72 L70 66 M51 82 L74 74 M55 92 L72 86" opacity=".5"/>
+    <circle cx="60" cy="50" r="19" ${SOFT}/>
+    <circle cx="60" cy="26" r="13" ${SOFT}/>
+    <path d="M42 58 q4 6 8 0 t8 0 t8 0 t8 0 t5 0" opacity=".8"/>
+    <circle cx="66" cy="14" r="3.5" ${SOFT}/>`),
+  eclair: svg(`
+    <rect x="14" y="56" width="92" height="28" rx="14" ${SOFT}/>
+    <path d="M18 64 q42 -12 84 0 q-6 8 -12 4 q-6 -4 -12 3 q-6 6 -12 0 q-6 -6 -12 1 q-6 6 -12 0 q-6 -5 -12 2 q-6 5 -12 -2 Z" ${SOFT}/>
+    <path d="M30 60 l6 -4 M50 57 l6 -4 M70 57 l6 -4" opacity=".6"/>
+    <path d="M8 96 H112" opacity=".5"/>`),
+  nuts: svg(`
+    <path ${SOFT} d="M16 62 H104 Q100 104 60 104 Q20 104 16 62 Z"/>
+    <path d="M16 62 H104"/>
+    <ellipse cx="38" cy="52" rx="10" ry="7" transform="rotate(-20 38 52)" ${SOFT}/>
+    <ellipse cx="60" cy="48" rx="11" ry="8" ${SOFT}/>
+    <ellipse cx="82" cy="52" rx="10" ry="7" transform="rotate(20 82 52)" ${SOFT}/>
+    <path d="M55 48 q5 -3 10 0" opacity=".6"/>
+    <path d="M48 40 q4 -6 10 -4" opacity=".5"/>`),
+  gift: svg(`
+    <path ${SOFT} d="M24 56 H96 V100 H24 Z"/>
+    <path ${SOFT} d="M18 42 H102 V56 H18 Z"/>
+    <path d="M60 42 V100"/>
+    <path d="M60 42 c-8 -14 -28 -14 -24 -2 c3 6 16 4 24 2 z M60 42 c8 -14 28 -14 24 -2 c-3 6 -16 4 -24 2 z"/>
+    <path d="M30 66 h20 M30 74 h14" opacity=".45"/>`),
+  crescent: svg(`
+    <path ${SOFT} d="M70 18 a38 38 0 1 0 26 66 a30 30 0 1 1 -26 -66 Z"/>
+    <path d="M84 34 l2.5 5.5 6 .8 -4.4 4.1 1.1 5.9 -5.2 -2.9 -5.2 2.9 1.1 -5.9 -4.4 -4.1 6 -.8 z" ${SOFT}/>
+    <path d="M28 104 h48" opacity=".5"/>`),
 };
 
 const RULES = [
@@ -84,13 +120,22 @@ const RULES = [
   [/\b(cupcakes?|muffins?)\b/i, 'cupcake'],
   [/\bmacarons?\b/i, 'macaron'],
   [/\b(donuts?|doughnuts?)\b/i, 'donut'],
+  [/[ée]clairs?/i, 'eclair'],
   [/\b(croissants?|pastry|pastries|danish|pain au)\b/i, 'croissant'],
   [/\b(cookies?|biscuits?)\b/i, 'cookie'],
   [/\bslices?\b/i, 'slice'],
   [/\b(brownies?|blondies?|fudge|bars?|bakes?)\b/i, 'brownie'],
   [/\b(tarts?|pies?|tartlets?)\b/i, 'tart'],
-  [/\b(cakes?|gateau|torte)\b/i, 'cake'],
+  [/\b(ice ?creams?|gelato|sorbet)\b/i, 'icecream'],
+  [/\b(nuts|almonds?|pistachios?|cashews?|hazelnuts?)\b/i, 'nuts'],
+  [/\b(favou?rs?|gifts?|weddings?|baby)\b/i, 'gift'],
+  [/\b(ramadan|eid|ma'?amoul|baklava|arabic)\b/i, 'crescent'],
+  [/\b(cakes?|gateaux?|torte)\b/i, 'cake'],
+  [/\b(chocolates?|pralines?|truffles?|bonbons?)\b/i, 'chocolate'],
 ];
+
+// A drawing by name, e.g. art('icecream').
+export const art = (name) => ART[name] || ART.cloche;
 
 export function illustrationFor(item) {
   for (const text of [item.name, item.category]) {

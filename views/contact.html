@@ -24,8 +24,10 @@
           <div><dt>Opening hours</dt><dd>{{hours}}</dd></div>
           {{#address}}<div><dt>Address</dt><dd>{{address}}</dd>{{#maps_url}}<dd style="margin-top: 6px;"><a href="{{maps_url}}" target="_blank" rel="noopener">Get directions →</a></dd>{{/maps_url}}</div>{{/address}}
           {{#phone}}<div><dt>Call</dt><dd><a href="{{phone_href}}">{{phone}}</a></dd></div>{{/phone}}
+            {{#whatsapp}}<div><dt>WhatsApp</dt><dd><a href="{{whatsapp_href}}" target="_blank" rel="noopener">{{whatsapp}}</a></dd></div>{{/whatsapp}}
           {{#email}}<div><dt>Email</dt><dd><a href="mailto:{{email}}">{{email}}</a></dd></div>{{/email}}
         </dl>
+        {{#whatsapp}}<a class="btn btn-gold btn-block" href="{{whatsapp_href}}" target="_blank" rel="noopener" style="margin-top: 28px;">Chat with us on WhatsApp</a>{{/whatsapp}}
       </div>
 
       <div class="card" data-reveal style="--delay: 0.1s">

@@ -1,5 +1,5 @@
 import {
-  api, esc, money, isoDate, friendlyDate, friendlyTime, loadSettings, setupFulfillment, deliveryFee,
+  api, esc, money, isoDate, friendlyDate, friendlyTime, loadSettings, setupFulfillment, deliveryFee, whatsappLink,
 } from '/js/common.js';
 import { createCakeStage, renderCakeSnapshot } from '/js/cake3d.js';
 import { SIGNATURE_DESIGNS } from '/js/designs.js';
@@ -350,6 +350,7 @@ function showConfirmation(order, name) {
         ${delivery ? `<br><span class="muted">${esc(order.delivery_address)}</span>` : ''}<br>
         <strong>Total due on ${delivery ? 'delivery' : 'pickup'}:</strong> ${money(order.total_cents)}</p>
       <p class="muted">We'll be in touch if we have any questions about your design.</p>
+      ${whatsappLink(settings) ? `<p class="small">Questions? <a href="${esc(whatsappLink(settings, `Hello, it's about my order ${order.code}`))}" target="_blank" rel="noopener">Message us on WhatsApp</a></p>` : ''}
       <div class="hero-actions" style="justify-content: center; margin-top: 24px;">
         <a class="btn btn-gold" href="/">Back to home</a>
         <a class="btn btn-outline" href="/menu">Browse the menu</a>

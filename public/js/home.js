@@ -1,7 +1,28 @@
 import { api, esc, money, loadSettings, reveal, splitHeadline } from '/js/common.js';
 import { createCakeStage, renderCakeSnapshot } from '/js/cake3d.js';
 import { SIGNATURE_DESIGNS } from '/js/designs.js';
-import { illustrationFor } from '/js/illustrations.js';
+import { illustrationFor, art } from '/js/illustrations.js';
+
+// What the shop makes (from its public listings and customer reviews).
+const PRODUCT_LINES = [
+  { art: 'chocolate', name: 'Fine chocolates', text: 'Chocolates for gifting, sharing and celebrating.', href: '/menu', go: 'See the menu' },
+  { art: 'cake', name: 'Cakes & gateaux', text: 'Classic gateaux and custom designs, made to order.', href: '/cakes', go: 'Design a cake' },
+  { art: 'icecream', name: 'Ice cream', text: 'Made in-house. Ask us about today\'s flavors.', href: '/menu', go: 'See the menu' },
+  { art: 'eclair', name: 'Éclairs & pastries', text: 'Éclairs and sweet pastries, fresh from our kitchen.', href: '/menu', go: 'See the menu' },
+  { art: 'nuts', name: 'Mixed nuts', text: 'Smoked almonds, pistachios, cashews, hazelnuts and more.', href: '/menu', go: 'See the menu' },
+  { art: 'gift', name: 'Wedding & baby favors', text: 'Wrapped chocolates for weddings, baby showers and every celebration.', href: '/contact', go: 'Plan your favors' },
+  { art: 'crescent', name: 'Ramadan & Eid', text: 'Arabic sweets alongside our chocolates for the holidays.', href: '/contact', go: 'Order for Eid' },
+  { art: 'cloche', name: 'Custom orders', text: 'Have something special in mind? Tell us and we\'ll make it.', href: '/contact', go: 'Get in touch' },
+];
+
+const linesEl = document.getElementById('product-lines');
+linesEl.innerHTML = PRODUCT_LINES.map((p, i) => `
+  <a class="card spotlight product-line" href="${p.href}" data-reveal style="--delay: ${(i % 4) * 0.07}s">
+    <span class="pl-icon">${art(p.art)}</span>
+    <h3>${esc(p.name)}</h3>
+    <p>${esc(p.text)}</p>
+    <span class="go">${esc(p.go)} <span class="arrow" aria-hidden="true">→</span></span>
+  </a>`).join('');
 
 const HERO_CAKE = {
   shape: 'round',
@@ -30,6 +51,7 @@ designsEl.innerHTML = SIGNATURE_DESIGNS.map((d, i) => `
     </div>
   </a>`).join('');
 reveal(designsEl);
+reveal(linesEl);
 
 const renderDesigns = async () => {
   for (const d of SIGNATURE_DESIGNS) {

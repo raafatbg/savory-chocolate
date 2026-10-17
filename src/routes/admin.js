@@ -154,7 +154,7 @@ const sortOrder = (value) => (value === undefined || value === '' ? 0 : int(valu
 // ---------- Menu items ----------
 
 function menuItemFields(body) {
-  return {
+  const f = {
     name: text(body.name, 'Name', { required: true, max: 100 }),
     description: text(body.description, 'Description', { max: 500 }),
     category: text(body.category, 'Category', { max: 60 }) || 'Other',
@@ -163,6 +163,9 @@ function menuItemFields(body) {
     sort_order: sortOrder(body.sort_order),
     options: JSON.stringify(normalizeOptions(body.options ?? '[]')),
   };
+  // Draft items start at 0.00; don't let one go live without a real price.
+  if (f.available && f.price_cents === 0) throw bad(`Set a price for "${f.name}" before showing it on the menu.`);
+  return f;
 }
 
 const withParsedOptions = (item) => item && { ...item, options: parseOptions(item.options) };
@@ -408,6 +411,15 @@ router.put('/settings', (req, res) => {
   if ('email' in body) updates.email = email(body.email);
   if ('instagram' in body) updates.instagram = url(body.instagram, 'Instagram link');
   if ('facebook' in body) updates.facebook = url(body.facebook, 'Facebook link');
+  if ('maps_link' in body) updates.maps_link = url(body.maps_link, 'Google Maps link');
+  if ('whatsapp' in body) {
+    const whatsapp = text(body.whatsapp, 'WhatsApp number', { max: 30 });
+    const digits = whatsapp.replace(/\D/g, '');
+    if (whatsapp && (!whatsapp.startsWith('+') || digits.length < 8 || digits.length > 15)) {
+      throw bad('WhatsApp number must start with the country code, like +961 79 123 456.');
+    }
+    updates.whatsapp = whatsapp;
+  }
   if ('currency' in body) {
     const currency = text(body.currency, 'Currency', { required: true, max: 3 }).toUpperCase();
     try {

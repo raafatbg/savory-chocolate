@@ -242,25 +242,29 @@ function seedVersion1() {
 
 // ---------- Settings ----------
 
+// Defaults describe the real shop (from its public Facebook and Google Maps listings).
+// Everything here can be changed in Admin → Settings.
 export const DEFAULT_SETTINGS = {
   shop_name: 'Savory Chocolate',
   hero_title: 'Cakes as beautiful as your moments',
-  tagline: 'Handmade cakes and chocolate treats, baked to order.',
-  about: 'We are a small bakery making everything from scratch with real butter, good chocolate and a lot of care. Order a custom cake for your next celebration, or pick something from today\'s menu.',
-  about_story: 'Savory Chocolate started with a simple idea: celebrations deserve cakes that taste as good as they look.\n\nEvery cake is baked to order in small batches, with real butter, fresh cream and good chocolate. No shortcuts, no premixes.\n\nWhether it\'s a birthday, a wedding or just a Tuesday that needs something sweet, we\'d love to bake for you.',
-  phone: '',
+  tagline: 'Chocolates, cakes and ice cream, made in Aramoun, Aley.',
+  about: 'Savory Chocolate is a chocolate and sweets maker in Aramoun, Aley. We make chocolates, cakes, éclairs and ice cream, carry a wide selection of mixed nuts, and prepare chocolate favors for weddings and new arrivals.',
+  about_story: 'Savory Chocolate is a chocolate and sweets maker in Aramoun, in the Aley district of Mount Lebanon.\n\nWe make chocolates, ice cream, éclairs and cakes, from classic gateaux to custom designs. Tell us your idea, or leave the design to our chef.\n\nFor weddings, baby showers and every kind of celebration we prepare wrapped chocolate favors, and during Ramadan and Eid you\'ll find Arabic sweets alongside our chocolates.\n\nCome and visit us in Aramoun, or send us a message on WhatsApp.',
+  phone: '05 411 405',
+  whatsapp: '+961 79 167 464',
   email: '',
-  address: '',
-  hours: 'Tue–Sat 9am–6pm\nSun 10am–3pm\nClosed Mondays',
+  address: 'Aramoun, Aley\nMount Lebanon, Lebanon',
+  maps_link: 'https://maps.google.com/?cid=4880834083851702817',
+  hours: 'Call or WhatsApp us for today\'s opening hours.',
   instagram: '',
-  facebook: '',
+  facebook: 'https://www.facebook.com/SavoryChocolate/',
   currency: 'USD',
   cake_lead_days: '2',
   orders_open: '1',
   delivery_enabled: '1',
   delivery_fee: '500',
   delivery_min: '0',
-  delivery_area: 'We deliver within 10 km of the shop.',
+  delivery_area: 'Delivery is available in our local area. Message us on WhatsApp to check yours.',
 };
 
 for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {

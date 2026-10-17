@@ -112,6 +112,13 @@ export function setupFulfillment(root, settings, onChange = () => {}) {
   return current;
 }
 
+// wa.me chat link for the shop's WhatsApp number, with an optional pre-filled message.
+export function whatsappLink(settings, message = '') {
+  const digits = (settings.whatsapp || '').replace(/\D/g, '');
+  if (!digits) return '';
+  return `https://wa.me/${digits}${message ? `?text=${encodeURIComponent(message)}` : ''}`;
+}
+
 export function deliveryFee(settings, fulfillment) {
   return fulfillment === 'delivery' ? Number(settings.delivery_fee) || 0 : 0;
 }
