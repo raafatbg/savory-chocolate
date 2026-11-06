@@ -11,7 +11,7 @@
   <!-- Log in / first-time setup -->
   <main id="auth-view" class="auth-wrap" hidden>
     <div class="card auth-card">
-      <a class="brand" href="/"><span class="wordmark"><span class="wm-script">{{brand_script}}</span>{{#brand_caps}}<span class="wm-caps">{{brand_caps}}</span>{{/brand_caps}}</span></a>
+      <a class="brand brand-stacked" href="/">{{> brand-logo}}</a>
       <h1 id="auth-title">Admin login</h1>
       <p id="auth-intro" class="muted"></p>
       <form id="auth-form">
@@ -38,9 +38,10 @@
   <div id="dash-view" hidden>
     <header class="admin-header">
       <div class="container admin-bar">
-        <a class="brand" href="/admin"><span class="wordmark"><span class="wm-script">{{brand_script}}</span>{{#brand_caps}}<span class="wm-caps">{{brand_caps}}</span>{{/brand_caps}}</span><span class="admin-pill">Admin</span></a>
+        <a class="brand" href="/admin">{{> brand-logo}}<span class="admin-pill">Admin</span></a>
         <div class="admin-actions">
-          <a class="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener">View site ↗</a>
+          <a class="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener">🍰 Cake Studio ↗</a>
+          <a class="btn btn-ghost btn-sm" href="/menu" target="_blank" rel="noopener">🍫 Menu Site ↗</a>
           <button type="button" class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
         </div>
       </div>

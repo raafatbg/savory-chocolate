@@ -2,7 +2,7 @@ import {
   api, esc, money, isoDate, friendlyDate, loadSettings, setupFulfillment, deliveryFee,
   setupBranches, orderConfirmation, openWhatsApp,
 } from '/js/common.js';
-import { createCakeStage, renderCakeSnapshot, releaseSnapshots } from '/js/cake3d.js';
+import { createCakeStage, renderCakeSnapshot, releaseSnapshots, drawSavoryPod } from '/js/cake3d.js';
 import { SIGNATURE_DESIGNS } from '/js/designs.js';
 import { confetti } from '/js/confetti.js';
 
@@ -16,6 +16,32 @@ const TIER_ICONS = {
   2: '<svg class="icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="22" width="28" height="11" rx="2"/><rect x="11" y="12" width="18" height="10" rx="2"/></svg>',
   3: '<svg class="icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="25" width="30" height="9" rx="2"/><rect x="10" y="16" width="20" height="9" rx="2"/><rect x="14" y="7" width="12" height="9" rx="2"/></svg>',
 };
+
+// Realistic interior sponge & filling colors for the 3D "Cut a slice" cross-section
+function inferSpongeColor(option) {
+  if (option?.color) return option.color;
+  const n = (option?.name || '').toLowerCase();
+  if (n.includes('red velvet')) return '#8f1d28';
+  if (n.includes('pistachio')) return '#a9c77e';
+  if (n.includes('lemon')) return '#f5e290';
+  if (n.includes('strawberry') || n.includes('berry')) return '#efb4bd';
+  if (n.includes('lotus') || n.includes('caramel') || n.includes('speculoos')) return '#c28346';
+  if (n.includes('vanilla') || n.includes('funfetti') || n.includes('almond')) return '#f3dfba';
+  if (n.includes('marble')) return '#6e4226';
+  return '#3d1e10'; // Rich dark chocolate sponge default
+}
+
+function inferFillingColor(option) {
+  if (option?.color) return option.color;
+  const n = (option?.name || '').toLowerCase();
+  if (n.includes('pistachio')) return '#96bc61';
+  if (n.includes('berry') || n.includes('raspberry') || n.includes('strawberry') || n.includes('cherry')) return '#8c1832';
+  if (n.includes('caramel') || n.includes('lotus') || n.includes('biscoff')) return '#c67d2d';
+  if (n.includes('cream cheese') || n.includes('vanilla') || n.includes('white')) return '#faf2e3';
+  if (n.includes('lemon') || n.includes('passion')) return '#f2cf5b';
+  if (n.includes('nutella') || n.includes('hazelnut') || n.includes('praline')) return '#4b220e';
+  return '#241008'; // Dark chocolate ganache default
+}
 
 const form = document.getElementById('cake-form');
 const submitBtn = document.getElementById('submit-btn');
@@ -45,6 +71,7 @@ const optionById = new Map(groups.flatMap((g) => g.options.map((o) => [String(o.
 // ---------- render the choices ----------
 
 let sizeScale = 1;
+let isSliced = false;
 
 function priceOf(o) {
   if (o.type === 'size' || !o.scales || !o.price_cents || sizeScale === 1) return o.price_cents;
@@ -102,6 +129,63 @@ if (!ordersOpen) {
   submitBtn.disabled = true;
 }
 
+// ---------- Portion & Event Calculator ----------
+
+const portionSlider = document.getElementById('portion-slider');
+const portionGuests = document.getElementById('portion-guests');
+const portionRec = document.getElementById('portion-rec');
+const portionApply = document.getElementById('portion-apply');
+
+function getPortionRecommendation(guests) {
+  const sizes = byKey.size?.options || [];
+  const tiers = byKey.tiers?.options || [];
+  let sizeIdx = 0;
+  let tierVal = '1';
+  let slices = '8–12';
+
+  if (guests <= 10) {
+    sizeIdx = 0; tierVal = '1'; slices = '8–10';
+  } else if (guests <= 18) {
+    sizeIdx = Math.min(1, Math.max(0, sizes.length - 1)); tierVal = '1'; slices = '14–18';
+  } else if (guests <= 26) {
+    sizeIdx = Math.min(2, Math.max(0, sizes.length - 1)); tierVal = '1'; slices = '22–26';
+  } else if (guests <= 38) {
+    sizeIdx = Math.min(1, Math.max(0, sizes.length - 1)); tierVal = '2'; slices = '28–38';
+  } else if (guests <= 48) {
+    sizeIdx = Math.min(2, Math.max(0, sizes.length - 1)); tierVal = '2'; slices = '40–48';
+  } else {
+    sizeIdx = Math.min(2, Math.max(0, sizes.length - 1)); tierVal = '3'; slices = '50–65';
+  }
+
+  const sizeOpt = sizes[sizeIdx] || sizes[0];
+  const tierOpt = tiers.find((t) => String(t.visual) === tierVal) || tiers[tiers.length - 1];
+  return { sizeOpt, tierOpt, slices };
+}
+
+function updatePortionUI() {
+  const guests = Number(portionSlider.value);
+  portionGuests.textContent = `${guests} guests`;
+  const { sizeOpt, tierOpt, slices } = getPortionRecommendation(guests);
+  const label = [sizeOpt?.name, tierOpt?.name].filter(Boolean).join(' · ') || 'Standard';
+  portionRec.innerHTML = `Recommended: <strong>${esc(label)}</strong> (${slices} generous slices)`;
+}
+
+portionSlider?.addEventListener('input', updatePortionUI);
+portionApply?.addEventListener('click', () => {
+  const { sizeOpt, tierOpt } = getPortionRecommendation(Number(portionSlider.value));
+  if (sizeOpt) {
+    const inp = form.querySelector(`input[name="size"][value="${sizeOpt.id}"]`);
+    if (inp) inp.checked = true;
+  }
+  if (tierOpt) {
+    const inp = form.querySelector(`input[name="tiers"][value="${tierOpt.id}"]`);
+    if (inp) inp.checked = true;
+  }
+  update();
+  refreshStepper();
+});
+if (portionSlider) updatePortionUI();
+
 // ---------- state → 3D cake, summary and price ----------
 
 function selected(key) {
@@ -113,11 +197,16 @@ function cakeConfig() {
   const one = (key) => selected(key)[0];
   const sizes = byKey.size?.options || [];
   const sizeIndex = Math.max(0, sizes.indexOf(one('size')));
+  const spongeOpt = one('flavor');
+  const fillingOpt = one('filling');
   return {
     shape: one('shape')?.visual || 'round',
     tiers: Number(one('tiers')?.visual) || 1,
     size: sizes.length > 1 ? 0.85 + (sizeIndex / (sizes.length - 1)) * 0.35 : 1,
     color: one('color')?.color || '#f3e6d3',
+    spongeColor: inferSpongeColor(spongeOpt),
+    fillingColor: inferFillingColor(fillingOpt),
+    sliced: isSliced,
     drip: one('drip')?.color || '',
     dripMetallic: one('drip')?.visual === 'metallic',
     toppings: selected('toppings').map((o) => o.visual).filter(Boolean),
@@ -126,10 +215,33 @@ function cakeConfig() {
   };
 }
 
+function updateSliceLegend() {
+  const legend = document.getElementById('slice-legend');
+  if (!legend) return;
+  if (!isSliced) {
+    legend.hidden = true;
+    return;
+  }
+  const spongeOpt = selected('flavor')[0];
+  const fillingOpt = selected('filling')[0];
+  const frostOpt = selected('frosting')[0];
+  const colorOpt = selected('color')[0];
+  const sCol = inferSpongeColor(spongeOpt);
+  const fCol = inferFillingColor(fillingOpt);
+  const cCol = colorOpt?.color || '#f3e6d3';
+  legend.hidden = false;
+  legend.innerHTML = `
+    <span class="legend-item"><i style="background:${esc(sCol)}"></i>Sponge: <strong>${esc(spongeOpt?.name || 'Chocolate')}</strong></span>
+    <span class="legend-item"><i style="background:${esc(fCol)}"></i>Filling: <strong>${esc(fillingOpt?.name || 'Ganache')}</strong></span>
+    <span class="legend-item"><i style="background:${esc(cCol)}"></i>Frosting: <strong>${esc(frostOpt?.name || 'Buttercream')}</strong></span>
+  `;
+}
+
 let fulfillment = () => 'pickup';
 
 function update({ redraw = true, intro = false } = {}) {
   if (redraw) stage?.setCake(cakeConfig(), { intro });
+  updateSliceLegend();
   document.getElementById('message-count').textContent = `${messageInput.value.length} / 60 · shown on a chocolate plaque`;
 
   const size = selected('size')[0];
@@ -178,7 +290,7 @@ function update({ redraw = true, intro = false } = {}) {
     .filter(Boolean).join(' · ') || 'Custom cake';
 }
 
-// ---------- signature designs (/cakes?design=classic) ----------
+// ---------- signature designs (/cakes?design=classic) & shared 3D links (/cakes?custom=...) ----------
 
 // Matches a design's picks to the admin's options by 3D look or color, so renamed options still match.
 function applyDesign(design) {
@@ -196,13 +308,38 @@ function applyDesign(design) {
   }
 }
 
-const preset = SIGNATURE_DESIGNS.find((d) => d.id === new URLSearchParams(location.search).get('design'));
+const params = new URLSearchParams(location.search);
+const preset = SIGNATURE_DESIGNS.find((d) => d.id === params.get('design'));
 if (preset && groups.length) {
   applyDesign(preset);
   const note = document.createElement('div');
   note.className = 'alert alert-info';
   note.innerHTML = `You're customizing <strong>${esc(preset.name)}</strong>. Change anything you like.`;
   document.getElementById('stepper').before(note);
+}
+
+const sharedCustom = params.get('custom');
+if (sharedCustom && groups.length) {
+  try {
+    const decoded = JSON.parse(atob(sharedCustom));
+    for (const group of groups) {
+      const val = decoded[group.key];
+      if (val === undefined) continue;
+      const ids = Array.isArray(val) ? val.map(String) : [String(val)];
+      form.querySelectorAll(`input[name="${group.key}"]`).forEach((inp) => {
+        inp.checked = ids.includes(inp.value);
+      });
+    }
+    if (typeof decoded.msg === 'string') {
+      messageInput.value = decoded.msg.slice(0, 60);
+    }
+    const note = document.createElement('div');
+    note.className = 'alert alert-info';
+    note.innerHTML = 'Viewing a shared 3D cake design. Spin the cake, cut a slice, or customize it below!';
+    document.getElementById('stepper').before(note);
+  } catch {
+    // Ignore malformed custom parameter
+  }
 }
 
 fulfillment = setupFulfillment(form, settings, () => update({ redraw: false }));
@@ -303,7 +440,26 @@ form.addEventListener('input', refreshStepper);
 form.addEventListener('change', refreshStepper);
 refreshStepper();
 
-// ---------- surprise me & save image ----------
+// ---------- stage tools: Cut a slice, Make a wish, Surprise me, Share 3D link, Save image ----------
+
+const sliceBtn = document.getElementById('slice-btn');
+sliceBtn?.addEventListener('click', () => {
+  isSliced = !isSliced;
+  sliceBtn.setAttribute('aria-pressed', String(isSliced));
+  sliceBtn.classList.toggle('active', isSliced);
+  sliceBtn.querySelector('span').textContent = isSliced ? 'Whole cake' : 'Cut a slice';
+  update();
+});
+
+const wishBtn = document.getElementById('wish-btn');
+wishBtn?.addEventListener('click', () => {
+  const next = !stage?.getWishMode();
+  stage?.setWishMode(next);
+  wishBtn.setAttribute('aria-pressed', String(next));
+  wishBtn.classList.toggle('active', next);
+  wishBtn.querySelector('span').textContent = next ? 'Lights on' : 'Make a wish';
+  update();
+});
 
 document.getElementById('surprise-btn').addEventListener('click', () => {
   const inputsOf = (key) => [...form.querySelectorAll(`input[name="${key}"]`)];
@@ -319,6 +475,35 @@ document.getElementById('surprise-btn').addEventListener('click', () => {
   }
   update();
   refreshStepper();
+});
+
+document.getElementById('share-btn')?.addEventListener('click', async () => {
+  const state = {};
+  for (const group of groups) {
+    const ids = selected(group.key).map((o) => o.id);
+    if (ids.length) state[group.key] = group.mode === 'single' ? ids[0] : ids;
+  }
+  if (messageInput.value.trim()) state.msg = messageInput.value.trim();
+  const encoded = btoa(JSON.stringify(state));
+  const url = `${location.origin}/cakes?custom=${encodeURIComponent(encoded)}`;
+  const labelEl = document.getElementById('share-label');
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: `${settings.shop_name || 'SAVORY'} · Custom 3D Cake`, url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      if (labelEl) {
+        labelEl.textContent = 'Link copied!';
+        setTimeout(() => { labelEl.textContent = 'Share 3D link'; }, 2200);
+      }
+    }
+  } catch {
+    await navigator.clipboard?.writeText(url).catch(() => {});
+    if (labelEl) {
+      labelEl.textContent = 'Link copied!';
+      setTimeout(() => { labelEl.textContent = 'Share 3D link'; }, 2200);
+    }
+  }
 });
 
 document.getElementById('save-btn').addEventListener('click', async (e) => {
@@ -354,24 +539,27 @@ async function cakeCard() {
   c.height = 1350;
   const ctx = c.getContext('2d');
   const bg = ctx.createRadialGradient(540, 820, 60, 540, 700, 900);
-  bg.addColorStop(0, '#3a2516');
-  bg.addColorStop(0.55, '#1a0f09');
-  bg.addColorStop(1, '#0e0704');
+  bg.addColorStop(0, '#FFFDF3');
+  bg.addColorStop(0.55, '#F7F7D3');
+  bg.addColorStop(1, '#E8E4B5');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, c.width, c.height);
-  ctx.drawImage(img, 40, 190, 1000, 1000);
+  ctx.drawImage(img, 40, 210, 1000, 1000);
+
+  // SAVORY cocoa-pod emblem at the top of the share card
+  drawSavoryPod(ctx, 540, 72, 76, '#4C2007');
 
   const gold = ctx.createLinearGradient(300, 0, 780, 0);
-  gold.addColorStop(0, '#b0843f');
-  gold.addColorStop(0.5, '#f6e1a8');
-  gold.addColorStop(1, '#b0843f');
+  gold.addColorStop(0, '#4C2007');
+  gold.addColorStop(0.5, '#7A3912');
+  gold.addColorStop(1, '#4C2007');
   ctx.textAlign = 'center';
   ctx.fillStyle = gold;
-  ctx.font = '600 72px "Cormorant Garamond", serif';
-  ctx.fillText(settings.shop_name || 'Savory Chocolate', 540, 130);
+  ctx.font = '700 58px Manrope, sans-serif';
+  ctx.fillText(settings.shop_name || 'SAVORY', 540, 165);
   ctx.font = '60px "Great Vibes", cursive';
   ctx.fillText('Designed by you', 540, 1250);
-  ctx.fillStyle = '#bba48f';
+  ctx.fillStyle = '#6E462C';
   ctx.font = '500 30px Manrope, sans-serif';
   ctx.fillText(document.getElementById('preview-title').textContent, 540, 1300);
   return c.toDataURL('image/png');
@@ -422,7 +610,7 @@ function showConfirmation(order, name) {
     name,
     title: 'your cake is ordered!',
     shopName: settings.shop_name,
-    links: '<a class="btn btn-outline" href="/">Back to home</a><a class="btn btn-outline" href="/menu">Browse the menu</a>',
+    links: `<a class="btn btn-gold" href="/track?code=${encodeURIComponent(order.order_code)}">Track order live</a><a class="btn btn-outline" href="/cakes">Design another cake</a>`,
   });
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }

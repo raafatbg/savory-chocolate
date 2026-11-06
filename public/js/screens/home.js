@@ -1,28 +1,6 @@
-import { api, esc, money, storage, loadSettings, reveal, splitHeadline } from '/js/common.js';
+import { api, esc, storage, loadSettings, reveal, splitHeadline } from '/js/common.js';
 import { createCakeStage, renderCakeSnapshot, releaseSnapshots } from '/js/cake3d.js';
 import { SIGNATURE_DESIGNS } from '/js/designs.js';
-import { illustrationFor, art } from '/js/illustrations.js';
-
-// What the shop makes (from its public listings and customer reviews).
-const PRODUCT_LINES = [
-  { art: 'chocolate', name: 'Chocolates & bark', text: 'Fine chocolates and loaded chocolate bark, for gifting or sharing.', href: '/menu', go: 'See the menu' },
-  { art: 'cake', name: 'Cakes & gateaux', text: 'Classic gateaux and custom designs, made to order.', href: '/cakes', go: 'Design a cake' },
-  { art: 'icecream', name: 'Ice cream & Flurry', text: 'Scoops, soft serve and Savory Flurry cups piled with toppings.', href: '/menu', go: 'See the menu' },
-  { art: 'crepe', name: 'Crepes', text: 'Warm crepes drizzled with chocolate, pistachio and more.', href: '/menu', go: 'See the menu' },
-  { art: 'shake', name: 'Shakes', text: 'Thick shakes crowned with cookies and chocolate.', href: '/menu', go: 'See the menu' },
-  { art: 'eclair', name: 'Éclairs & pastries', text: 'Éclairs and sweet pastries, fresh from our kitchen.', href: '/menu', go: 'See the menu' },
-  { art: 'nuts', name: 'Mixed nuts', text: 'Smoked almonds, pistachios, cashews, hazelnuts and more.', href: '/menu', go: 'See the menu' },
-  { art: 'gift', name: 'Occasions & holidays', text: 'Chocolate favors for weddings and baby showers, and sweets for Ramadan & Eid.', href: '/contact', go: 'Plan your order' },
-];
-
-const linesEl = document.getElementById('product-lines');
-linesEl.innerHTML = PRODUCT_LINES.map((p, i) => `
-  <a class="card spotlight product-line" href="${p.href}" data-reveal style="--delay: ${(i % 4) * 0.07}s">
-    <span class="pl-icon">${art(p.art)}</span>
-    <h3>${esc(p.name)}</h3>
-    <p>${esc(p.text)}</p>
-    <span class="go">${esc(p.go)} <span class="arrow" aria-hidden="true">→</span></span>
-  </a>`).join('');
 
 const HERO_CAKE = {
   shape: 'round',
@@ -51,10 +29,8 @@ designsEl.innerHTML = SIGNATURE_DESIGNS.map((d, i) => `
     </div>
   </a>`).join('');
 reveal(designsEl);
-reveal(linesEl);
 
 // Renders are cached in the browser, so returning visitors don't pay for them again.
-// Bump the version whenever the designs or the 3D look change.
 const RENDER_CACHE = 'sc_design_render_v2_';
 const renderDesigns = async () => {
   let rendered = false;
@@ -87,9 +63,8 @@ if (days > 0) {
   document.getElementById('lead-note').textContent = `Please order at least ${days} day${days === 1 ? '' : 's'} ahead.`;
 }
 
-const [cake, menu, reviews, gallery] = await Promise.all([
+const [cake, reviews, gallery] = await Promise.all([
   api('/api/cake-options').catch(() => ({ groups: [] })),
-  api('/api/menu').catch(() => []),
   api('/api/reviews').catch(() => []),
   api('/api/gallery').catch(() => []),
 ]);
@@ -106,21 +81,6 @@ chipGroup('Drips', groups.drip?.filter((o) => o.color), (o) => `<span class="chi
 chipGroup('Toppings', groups.toppings, (o) => `<span class="chip">${esc(o.name)}</span>`);
 chipGroup('Flavors', groups.flavor, (o) => `<span class="chip">${esc(o.name)}</span>`);
 document.getElementById('option-cloud').innerHTML = cloud.join('') || '<p class="muted">Design your own cake, layer by layer.</p>';
-
-if (menu.length) {
-  document.getElementById('favorites-grid').innerHTML = menu.slice(0, 4).map((item, i) => `
-    <a class="card spotlight menu-card" href="/menu" style="text-decoration: none; color: inherit; --delay: ${i * 0.08}s" data-reveal>
-      <div class="thumb ${item.image ? '' : 'illus'}">${item.image
-        ? `<img src="/uploads/${esc(item.image)}" alt="" loading="lazy">`
-        : illustrationFor(item)}</div>
-      <div class="body">
-        <h3>${esc(item.name)}</h3>
-        <p class="desc">${esc(item.description)}</p>
-        <span class="price">${money(item.price_cents)}</span>
-      </div>
-    </a>`).join('');
-  document.getElementById('favorites').hidden = false;
-}
 
 if (reviews.length) {
   document.getElementById('reviews').innerHTML = reviews.slice(0, 6).map((r, i) => `

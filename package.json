@@ -2,7 +2,7 @@
   "name": "savory-chocolate",
   "version": "1.0.0",
   "private": true,
-  "description": "Savory Chocolate bakery website: home page, custom cake ordering, menu ordering and an admin dashboard.",
+  "description": "SAVORY bakery website: home page, custom cake ordering, menu ordering and an admin dashboard.",
   "type": "module",
   "main": "server.js",
   "scripts": {

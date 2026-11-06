@@ -27,9 +27,13 @@
               <img class="fallback" src="/img/cake.svg" alt="Cake illustration">
               <span class="stage-hint"><span class="drag">Drag to turn &middot; </span>Live preview</span>
               <div class="stage-tools">
-                <button type="button" class="tool-btn" id="surprise-btn" title="Pick a random design"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.6L12 15l-1.8-4.4L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>Surprise me</button>
-                <button type="button" class="tool-btn" id="save-btn" title="Download a picture of your cake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/></svg>Save image</button>
+                <button type="button" class="tool-btn" id="slice-btn" aria-pressed="false" title="Cut a slice to peek inside your sponge and filling layers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17L21 7v10H3z"/><path d="M3 13l18-6"/></svg><span>Cut a slice</span></button>
+                <button type="button" class="tool-btn" id="wish-btn" aria-pressed="false" title="Dim the lights and light birthday candles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c1.8 2.4 2.5 4.2 1.2 6-1 1.3-2.6 1.2-3.4-.2-.9-1.6.2-3.8 2.2-5.8z"/><rect x="9" y="10" width="6" height="11" rx="1.5"/></svg><span>Make a wish</span></button>
+                <button type="button" class="tool-btn" id="surprise-btn" title="Pick a random design"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.6L12 15l-1.8-4.4L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg><span>Surprise me</span></button>
+                <button type="button" class="tool-btn" id="share-btn" title="Copy a shareable 3D link to this cake design"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg><span id="share-label">Share 3D link</span></button>
+                <button type="button" class="tool-btn" id="save-btn" title="Download a picture of your cake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/></svg><span>Save card</span></button>
               </div>
+              <div class="slice-legend" id="slice-legend" hidden></div>
             </div>
             <div class="preview-meta">
               <div>
@@ -46,6 +50,20 @@
           <form id="cake-form" autocomplete="on">
             <section class="card spotlight builder-step" id="step-01" data-step="Shape">
               <div class="step-head"><span class="n">01</span><h2>Shape &amp; size</h2></div>
+              <div class="portion-calc" id="portion-calc">
+                <div class="portion-calc-top">
+                  <div>
+                    <span class="portion-badge">Portion guide</span>
+                    <strong>How many guests are you celebrating with?</strong>
+                  </div>
+                  <span class="portion-guests" id="portion-guests">16 guests</span>
+                </div>
+                <input type="range" id="portion-slider" min="6" max="60" step="2" value="16" aria-label="Number of guests">
+                <div class="portion-calc-foot">
+                  <span id="portion-rec">Recommended: <strong>8&quot; · Single tier</strong> (14–18 generous slices)</span>
+                  <button type="button" class="btn btn-outline btn-sm" id="portion-apply">Apply recommendation</button>
+                </div>
+              </div>
               <div data-groups="shape,size,tiers"><p class="loading">Loading options…</p></div>
             </section>
 
@@ -122,6 +140,6 @@
   <a class="btn btn-gold bottom-bar" href="#summary-step" id="bottom-bar"><span>Review &amp; order</span><span id="bar-total"></span></a>
 
   {{> footer}}
-  <script type="module" src="/js/cakes.js"></script>
+  <script type="module" src="/js/screens/cakes.js"></script>
 </body>
 </html>

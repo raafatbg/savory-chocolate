@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>{{shop_name}} · Menu, Chocolates &amp; Cafe</title>
+  <meta name="description" content="Order fine chocolates, luxury gift boxes, crepes, Savory Flurry, ice cream, shakes and bakes ahead for pickup or delivery.">
+  {{> head}}
+</head>
+<body>
+  {{> header-menu}}
+
+  <main id="main">
+    <section class="page-hero" style="padding-bottom: 36px;">
+      <div class="container" data-reveal>
+        <span class="eyebrow">Chocolatier &amp; Patisserie Menu</span>
+        <h1>Fresh from our <em class="gold-text">counter</em></h1>
+        <p>Handcrafted chocolates, warm crepes, Savory Flurry, shakes and daily bakes — order ahead for pickup or delivery.</p>
+      </div>
+    </section>
+
+    <div class="marquee" aria-hidden="true" style="margin-bottom: 44px;">
+      <div class="marquee-track">
+        <span>Fine Chocolates</span><span>Luxury Gift Boxes</span><span>Ice Cream</span><span>Savory Flurry</span><span>Warm Crepes</span><span>Thick Shakes</span><span>Éclairs &amp; Pastries</span><span>Smoked &amp; Roasted Nuts</span>
+        <span>Fine Chocolates</span><span>Luxury Gift Boxes</span><span>Ice Cream</span><span>Savory Flurry</span><span>Warm Crepes</span><span>Thick Shakes</span><span>Éclairs &amp; Pastries</span><span>Smoked &amp; Roasted Nuts</span>
+      </div>
+    </div>
+
+    <div class="container" id="page">
+      <div id="closed-notice" class="alert alert-info" hidden>We're not taking online orders right now. Please give us a call instead.</div>
+
+      <div class="order-layout">
+        <div>
+          <section class="card spotlight box-banner" id="box-banner" data-reveal>
+            <div class="box-banner-copy">
+              <span class="eyebrow left">Signature Gifting</span>
+              <h2>Build Your Own <em class="gold-text">SAVORY</em> Chocolate Box</h2>
+              <p class="muted">Curate a 9, 16, or 25-piece luxury gift box filled with handmade pralines, pistachio kunafa truffles, and dark ganaches, tied with a satin ribbon.</p>
+              <button type="button" class="btn btn-gold" id="open-box-builder">Curate a gift box <span class="arrow" aria-hidden="true">→</span></button>
+            </div>
+            <div class="box-banner-art" aria-hidden="true">
+              <div class="mini-box-grid">
+                <span style="background:#4C2007"></span>
+                <span style="background:#96bc61"></span>
+                <span style="background:#c67d2d"></span>
+                <span style="background:#d9b066"></span>
+                <span style="background:#8c1832"></span>
+                <span style="background:#6e4226"></span>
+                <span style="background:#f3dfba"></span>
+                <span style="background:#4b220e"></span>
+                <span style="background:#4C2007"></span>
+              </div>
+            </div>
+          </section>
+
+          <nav class="category-nav" id="category-nav" aria-label="Menu categories"></nav>
+          <div id="menu"><p class="loading">Loading the menu…</p></div>
+        </div>
+
+        <aside class="sticky-panel" id="cart">
+          <div class="card panel">
+            <h2>Your order</h2>
+            <div id="cart-empty" class="empty-state">
+              <div class="icon" aria-hidden="true">🍫</div>
+              <p>Your order is empty.<br>Add something delicious from the menu.</p>
+            </div>
+            <form id="checkout-form" autocomplete="on" hidden>
+              <ul class="cart-lines" id="cart-lines"></ul>
+              <div class="sum-rows" id="sum-rows"></div>
+              <div class="total-row"><span>Total</span><span class="amount" id="cart-total"></span></div>
+
+              {{> fulfillment}}
+              {{> customer}}
+              <div class="field">
+                <label for="notes">Notes <span class="optional">(optional)</span></label>
+                <textarea id="notes" name="notes" maxlength="1000" rows="2" placeholder="Allergies, special requests…"></textarea>
+              </div>
+              <div id="form-error" class="alert alert-error" role="alert" hidden></div>
+              <button type="submit" class="btn btn-gold btn-lg btn-block" id="submit-btn">Place order</button>
+              <p class="pay-note">Nothing to pay now. Pay on pickup or delivery.</p>
+            </form>
+          </div>
+        </aside>
+      </div>
+
+      <section class="section" id="what-we-make" style="padding-top: 0;">
+        <div class="section-head" data-reveal>
+          <span class="eyebrow">What we make</span>
+          <h2>Something for every <em class="gold-text">sweet tooth</em></h2>
+          <p>From fine chocolates to crepes, shakes and Savory Flurry, handcrafted in Aramoun.</p>
+        </div>
+        <div class="product-lines" id="product-lines"></div>
+      </section>
+
+      <section class="section" id="visit-section" style="padding-top: 0;">
+        <div class="visit">
+          <div class="card" data-reveal>
+            <span class="eyebrow left">Chocolatier &amp; Cafe</span>
+            <h2>Made fresh every day</h2>
+            <p class="muted pre-line">{{about}}</p>
+          </div>
+          <div class="card" data-reveal style="--delay: 0.1s">
+            <span class="eyebrow left">Visit our branches</span>
+            <dl class="info-list">
+              <div><dt>Opening hours</dt><dd>{{hours}}</dd></div>
+              {{{visit_rows}}}
+              {{#email}}<div><dt>Email</dt><dd><a href="mailto:{{email}}">{{email}}</a></dd></div>{{/email}}
+            </dl>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <a href="#cart" class="btn btn-gold bottom-bar" id="cart-bar">
+    <span id="cart-bar-count"></span>
+    <span id="cart-bar-total"></span>
+  </a>
+
+  <dialog id="item-dialog" aria-labelledby="d-name">
+    <form class="dialog-body" id="item-form">
+      <div class="dialog-head">
+        <div>
+          <h2 id="d-name"></h2>
+          <p class="muted" id="d-desc" style="margin: 0;"></p>
+        </div>
+        <button type="button" class="dialog-close" data-close aria-label="Close">✕</button>
+      </div>
+      <div id="d-groups"></div>
+      <div id="d-error" class="alert alert-error" role="alert" hidden style="margin-top: 16px;"></div>
+      <div class="dialog-actions">
+        <span class="qty">
+          <button type="button" id="d-dec" aria-label="One fewer">−</button>
+          <span id="d-qty" aria-live="polite">1</span>
+          <button type="button" id="d-inc" aria-label="One more">+</button>
+        </span>
+        <button type="submit" class="btn btn-gold" id="d-add">Add to order</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="box-dialog" class="box-dialog" aria-labelledby="box-title">
+    <form class="dialog-body" id="box-form">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow left" style="margin-bottom:4px">SAVORY Chocolatier</span>
+          <h2 id="box-title">Build Your Gift Box</h2>
+          <p class="muted small" style="margin:0">Tap truffles below to fill your box, or let our chef fill the remaining slots.</p>
+        </div>
+        <button type="button" class="dialog-close" data-box-close aria-label="Close">✕</button>
+      </div>
+
+      <div class="box-size-tabs" role="radiogroup" aria-label="Box size">
+        <button type="button" class="box-size-tab active" data-box-size="9"><strong>9 Pieces</strong><span>$18.00 · 3×3</span></button>
+        <button type="button" class="box-size-tab" data-box-size="16"><strong>16 Pieces</strong><span>$30.00 · 4×4</span></button>
+        <button type="button" class="box-size-tab" data-box-size="25"><strong>25 Pieces</strong><span>$45.00 · 5×5</span></button>
+      </div>
+
+      <div class="box-stage-wrap">
+        <div class="box-tray" id="box-tray" data-cols="3"></div>
+        <div class="box-tray-actions">
+          <span class="muted small" id="box-progress">0 / 9 pieces selected</span>
+          <div>
+            <button type="button" class="btn btn-ghost btn-sm" id="box-autofill">✦ Chef's assortment</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="box-clear">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="box-flavors-label">Tap a chocolate to add it to your box:</div>
+      <div class="box-flavors" id="box-flavors"></div>
+
+      <div class="field-row" style="margin-top:16px">
+        <div class="field">
+          <label for="box-ribbon">Satin ribbon</label>
+          <select id="box-ribbon">
+            <option value="Deep Cocoa Satin">Deep Cocoa Satin (#4C2007)</option>
+            <option value="Champagne Gold">Champagne Gold</option>
+            <option value="Butter Cream Silk">Butter Cream Silk (#F7F7D3)</option>
+            <option value="Berry Velvet">Berry Velvet</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="box-note">Gift card note <span class="optional">(optional)</span></label>
+          <input type="text" id="box-note" maxlength="100" placeholder="Eid Mubarak / Happy Birthday!">
+        </div>
+      </div>
+
+      <div id="box-error" class="alert alert-error" role="alert" hidden></div>
+      <div class="dialog-actions">
+        <span class="price" id="box-price-label" style="font-size:1.3rem">$18.00</span>
+        <button type="submit" class="btn btn-gold" id="box-submit">Add gift box to order</button>
+      </div>
+    </form>
+  </dialog>
+
+  {{> footer-menu}}
+  <script type="module" src="/js/screens/menu.js"></script>
+</body>
+</html>

@@ -30,7 +30,7 @@ const mapsHref = (b) => b.maps_link
 const WA_ICON = () => read('partials/whatsapp-icon.html');
 
 export function pageExists(name) {
-  return fs.existsSync(path.join(VIEWS, `${name}.html`));
+  return fs.existsSync(path.join(VIEWS, 'screens', `${name}.html`));
 }
 
 // Where to find the shop: its branches, or (if none are set up) the address and numbers from Settings.
@@ -126,7 +126,7 @@ export function renderPage(name) {
     contact_buttons: places.filter((b) => b.whatsapp).map((b) => `<a class="btn btn-gold btn-block wa-btn" href="${esc(waHref(b.whatsapp, s.shop_name))}" target="_blank" rel="noopener">${WA_ICON()} WhatsApp ${esc(b.name || s.shop_name)}</a>`).join(''),
   };
 
-  let html = read(`${name}.html`);
+  let html = read(`screens/${name}.html`);
   // Partials can contain other partials, so expand a few levels deep.
   for (let i = 0; i < 3 && html.includes('{{>'); i++) {
     html = html.replace(/{{>\s*([\w-]+)\s*}}/g, (_, partial) => read(`partials/${partial}.html`));

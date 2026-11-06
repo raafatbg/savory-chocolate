@@ -292,12 +292,12 @@ function seedVersion1() {
 // Defaults describe the real shop (from its public Facebook and Google Maps listings).
 // Everything here can be changed in Admin → Settings.
 export const DEFAULT_SETTINGS = {
-  shop_name: 'Savory Chocolate',
+  shop_name: 'SAVORY',
   hero_title: 'Cakes as beautiful as your moments',
   slogan: 'Where every bite is a Savory moment',
   tagline: 'Chocolates, cakes and ice cream, made in Aramoun, Aley.',
-  about: 'Savory Chocolate is a chocolate and sweets maker in Aramoun, Aley. We make chocolates, cakes, éclairs and ice cream, carry a wide selection of mixed nuts, and prepare chocolate favors for weddings and new arrivals.',
-  about_story: 'Savory Chocolate is a chocolate and sweets maker in Aramoun, in the Aley district of Mount Lebanon.\n\nWe make chocolates, ice cream, éclairs and cakes, from classic gateaux to custom designs. Tell us your idea, or leave the design to our chef.\n\nFor weddings, baby showers and every kind of celebration we prepare wrapped chocolate favors, and during Ramadan and Eid you\'ll find Arabic sweets alongside our chocolates.\n\nCome and visit us in Aramoun, or send us a message on WhatsApp.',
+  about: 'SAVORY is a chocolate and sweets maker in Aramoun, Aley. We make chocolates, cakes, éclairs and ice cream, carry a wide selection of mixed nuts, and prepare chocolate favors for weddings and new arrivals.',
+  about_story: 'SAVORY is a chocolate and sweets maker in Aramoun, in the Aley district of Mount Lebanon.\n\nWe make chocolates, ice cream, éclairs and cakes, from classic gateaux to custom designs. Tell us your idea, or leave the design to our chef.\n\nFor weddings, baby showers and every kind of celebration we prepare wrapped chocolate favors, and during Ramadan and Eid you\'ll find Arabic sweets alongside our chocolates.\n\nCome and visit us in Aramoun, or send us a message on WhatsApp.',
   phone: '05 411 405',
   whatsapp: '+961 79 167 464',
   email: '',
@@ -320,6 +320,9 @@ for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
 }
 
 export function getSettings() {
+  db.prepare("UPDATE settings SET value = 'SAVORY' WHERE key = 'shop_name' AND value = 'Savory Chocolate'").run();
+  db.prepare("UPDATE settings SET value = ? WHERE key = 'about' AND value LIKE 'Savory Chocolate is a chocolate%'").run(DEFAULT_SETTINGS.about);
+  db.prepare("UPDATE settings SET value = ? WHERE key = 'about_story' AND value LIKE 'Savory Chocolate is a chocolate%'").run(DEFAULT_SETTINGS.about_story);
   const rows = db.prepare('SELECT key, value FROM settings').all();
   return Object.fromEntries(rows.map((r) => [r.key, r.value]));
 }

@@ -14,7 +14,7 @@ export function confetti({ count = 180, duration = 3200 } = {}) {
   canvas.height = h * dpr;
   ctx.scale(dpr, dpr);
 
-  const colors = ['#f6e1a8', '#d9b066', '#b0843f', '#f5ebde', '#e8a9a6', '#fff4d6'];
+  const colors = ['#4C2007', '#7A3912', '#C89B52', '#D9B066', '#E58A86', '#9E5424'];
   const pieces = Array.from({ length: count }, (_, i) => {
     const left = i % 2 === 0;
     const angle = (left ? -60 : -120) * (Math.PI / 180) + (Math.random() - 0.5) * 0.7;

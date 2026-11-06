@@ -11,6 +11,12 @@ import {
 
 export const router = Router();
 
+const BOX_TIERS = {
+  9: { name: 'SAVORY 9-Piece Assorted Gift Box', price_cents: 1800 },
+  16: { name: 'SAVORY 16-Piece Luxury Gift Box', price_cents: 3000 },
+  25: { name: 'SAVORY 25-Piece Grand Selection Box', price_cents: 4500 },
+};
+
 router.get('/settings', (req, res) => {
   res.json(getSettings());
 });
@@ -58,6 +64,46 @@ router.get('/branches', (req, res) => {
   `).all());
 });
 
+// ---------- Live Order Status Tracker ----------
+
+router.get('/orders/track/:code', (req, res) => {
+  const raw = String(req.params.code || '').trim().toUpperCase();
+  if (!raw || raw.length > 24) throw bad('Please enter a valid order code.');
+  const order = db.prepare(`
+    SELECT id, code, type, status, customer_name, pickup_date, pickup_time,
+           total_cents, fulfillment, delivery_fee_cents, branch, created_at
+    FROM orders WHERE UPPER(code) = ?
+  `).get(raw);
+  if (!order) throw new HttpError(404, 'No order found with that code. Please double-check your code.');
+
+  const items = db.prepare(`
+    SELECT name, unit_price_cents, quantity, details
+    FROM order_items WHERE order_id = ? ORDER BY id
+  `).all(order.id).map((it) => {
+    let details = {};
+    try { details = JSON.parse(it.details || '{}'); } catch { details = {}; }
+    return { name: it.name, unit_price_cents: it.unit_price_cents, quantity: it.quantity, details };
+  });
+
+  const firstName = String(order.customer_name || '').trim().split(/\s+/)[0] || 'Guest';
+  const settings = getSettings();
+  res.json({
+    code: order.code,
+    type: order.type,
+    status: order.status,
+    customer_first_name: firstName,
+    pickup_date: order.pickup_date,
+    pickup_time: order.pickup_time,
+    total_cents: order.total_cents,
+    delivery_fee_cents: order.delivery_fee_cents,
+    fulfillment: order.fulfillment,
+    branch: order.branch,
+    created_at: order.created_at,
+    currency: settings.currency || 'USD',
+    items,
+  });
+});
+
 // ---------- Orders ----------
 
 // The branch the customer picked. With a single branch it's chosen automatically.
@@ -84,6 +130,7 @@ function respondWithOrder(req, res, { type, order, who, lines, notes, branch, ph
   const text = orderMessage({ type, order, who, lines, notes, branch, photoUrl, currency: settings.currency });
   res.status(201).json({
     ...order,
+    order_code: order.code,
     currency: settings.currency,
     branch: branch?.name || '',
     whatsapp_url: whatsappLink(branch?.whatsapp || settings.whatsapp, text),
@@ -103,9 +150,25 @@ router.post('/orders/menu', (req, res) => {
 
   const find = db.prepare('SELECT id, name, price_cents, options FROM menu_items WHERE id = ? AND available = 1');
   const lines = body.items.map((line) => {
+    const quantity = int(line?.quantity, 'Quantity', { min: 1, max: 99 });
+    if (line?.custom_box && typeof line.custom_box === 'object') {
+      const box = line.custom_box;
+      const tier = BOX_TIERS[Number(box.size)];
+      if (!tier) throw bad('Invalid gift box size.');
+      const pieces = Array.isArray(box.pieces) ? box.pieces.slice(0, 25).map((p) => text(p, 'Chocolate piece', { max: 60 })).filter(Boolean) : [];
+      if (!pieces.length) throw bad('Please choose the chocolates for your gift box.');
+      const counts = new Map();
+      for (const p of pieces) counts.set(p, (counts.get(p) || 0) + 1);
+      const assortment = [...counts.entries()].map(([name, n]) => `${n}× ${name}`).join(', ');
+      const ribbon = text(box.ribbon, 'Ribbon', { max: 40 });
+      const giftNote = text(box.note, 'Gift card note', { max: 120 });
+      const details = { Assortment: assortment };
+      if (ribbon) details.Ribbon = ribbon;
+      if (giftNote) details['Gift card'] = `“${giftNote}”`;
+      return { name: tier.name, unit_price_cents: tier.price_cents, quantity, details };
+    }
     const item = find.get(int(line?.id, 'Item'));
     if (!item) throw bad('One of the items in your order is no longer available. Please refresh the menu.');
-    const quantity = int(line.quantity, 'Quantity', { min: 1, max: 99 });
     const { extra, summary } = priceChoices(item.name, parseOptions(item.options), line.choices);
     return { name: item.name, unit_price_cents: item.price_cents + extra, quantity, details: summary };
   });
@@ -222,13 +285,13 @@ function saveOrder(type, { who, date, time, notes, lines, settings, body, branch
   });
 }
 
-// Short, readable codes customers can say over the phone, e.g. SC-7KX3QM.
+// Short, readable codes customers can say over the phone, e.g. SAV-7KX3QM.
 function newOrderCode() {
   const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   const exists = db.prepare('SELECT 1 FROM orders WHERE code = ?');
   for (;;) {
     const bytes = crypto.randomBytes(6);
-    const code = 'SC-' + Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
+    const code = 'SAV-' + Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
     if (!exists.get(code)) return code;
   }
 }

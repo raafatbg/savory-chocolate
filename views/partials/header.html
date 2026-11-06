@@ -1,19 +1,22 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header" id="site-header">
   <div class="container header-inner">
-    <a class="brand" href="/" aria-label="{{shop_name}} home">
-      <span class="wordmark"><span class="wm-script">{{brand_script}}</span>{{#brand_caps}}<span class="wm-caps">{{brand_caps}}</span>{{/brand_caps}}</span>
+    <a class="brand" href="/" aria-label="{{shop_name}} cake studio home">
+      {{> brand-logo}}
     </a>
     <nav class="site-nav" id="site-nav" aria-label="Main">
-      <a href="/" data-page="home">Home</a>
-      <a href="/cakes" data-page="cakes">Custom Cakes</a>
-      <a href="/menu" data-page="menu">Menu</a>
-      <a href="/gallery" data-page="gallery">Gallery</a>
-      <a href="/about" data-page="about">About</a>
-      <a href="/faq" data-page="faq">FAQ</a>
-      <a href="/contact" data-page="contact">Contact</a>
+      <a href="/" data-page="home" data-i18n="nav_home">Cake Studio</a>
+      <a href="/cakes" data-page="cakes" data-i18n="nav_cakes">3D Cake Builder</a>
+      <a href="/gallery" data-page="gallery" data-i18n="nav_gallery">Gallery</a>
+      <a href="/track" data-page="track" data-i18n="nav_track">Track Order</a>
+      <a href="/about" data-page="about" data-i18n="nav_about">About</a>
+      <a href="/faq" data-page="faq" data-i18n="nav_faq">FAQ</a>
+      <a href="/contact" data-page="contact" data-i18n="nav_contact">Contact</a>
     </nav>
-    <a class="btn btn-gold btn-sm header-cta" href="/cakes">Design a cake</a>
+    <div class="header-actions">
+      <button type="button" class="lang-toggle" id="lang-toggle" aria-label="Switch language / تغيير اللغة" title="Switch language / تغيير اللغة">عربي</button>
+      <a class="btn btn-gold btn-sm header-cta" href="/cakes" data-i18n="cta_design">Design a cake</a>
+    </div>
     <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
       <span></span><span></span><span></span>
     </button>

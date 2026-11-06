@@ -40,10 +40,14 @@ const PAGES = {
   '/about': 'about',
   '/faq': 'faq',
   '/contact': 'contact',
+  '/track': 'track',
   '/admin': 'admin',
 };
 for (const [route, page] of Object.entries(PAGES)) {
   app.get(route, (req, res) => res.type('html').send(renderPage(page)));
+}
+app.get('/track/:code', (req, res) => res.type('html').send(renderPage('track')));
+{
 }
 
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d' }));
@@ -69,6 +73,6 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Savory Chocolate is running at http://localhost:${PORT}`);
+  console.log(`SAVORY is running at http://localhost:${PORT}`);
   console.log(`Admin dashboard: http://localhost:${PORT}/admin`);
 });

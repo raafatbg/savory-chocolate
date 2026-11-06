@@ -78,14 +78,14 @@ router.get('/counts', (req, res) => {
 
 // ---------- Orders ----------
 
-const STATUSES = ['new', 'confirmed', 'ready', 'completed', 'cancelled'];
+const STATUSES = ['new', 'confirmed', 'baking', 'ready', 'completed', 'cancelled'];
 
 router.get('/orders', (req, res) => {
   const filter = String(req.query.status || 'active');
   let orders;
   if (filter === 'active') {
     orders = db.prepare(`
-      SELECT * FROM orders WHERE status IN ('new', 'confirmed', 'ready') ORDER BY pickup_date, pickup_time LIMIT 300
+      SELECT * FROM orders WHERE status IN ('new', 'confirmed', 'baking', 'ready') ORDER BY pickup_date, pickup_time LIMIT 300
     `).all();
   } else if (STATUSES.includes(filter)) {
     orders = db.prepare('SELECT * FROM orders WHERE status = ? ORDER BY created_at DESC LIMIT 300').all(filter);

@@ -1,5 +1,5 @@
 // Helpers shared by every public page. Importing this module also wires up the
-// header (scroll state + mobile menu) and the scroll-reveal animations.
+// header (scroll state + mobile menu + bilingual AR/EN switcher) and scroll-reveal animations.
 
 export async function api(path, { method = 'GET', body, form } = {}) {
   const options = { method, headers: {} };
@@ -145,6 +145,118 @@ export function whatsappLink(settings, message = '') {
 export function deliveryFee(settings, fulfillment) {
   return fulfillment === 'delivery' ? Number(settings.delivery_fee) || 0 : 0;
 }
+
+// ---------- Bilingual Arabic / English (AR / EN) + RTL ----------
+
+const I18N = {
+  en: {
+    nav_home: 'Cake Studio',
+    nav_cakes: '3D Cake Builder',
+    nav_menu: 'Menu',
+    nav_boxes: 'Gift Boxes',
+    nav_specialties: 'Specialties',
+    nav_gallery: 'Gallery',
+    nav_track: 'Track Order',
+    nav_about: 'About',
+    nav_faq: 'FAQ',
+    nav_contact: 'Contact',
+    cta_design: 'Design a cake',
+    cta_order: 'Your order',
+    foot_order: 'Order',
+    foot_bakery: 'Bakery',
+    foot_visit: 'Visit',
+  },
+  ar: {
+    nav_home: 'استوديو الكيك',
+    nav_cakes: 'صمّم قالبك 3D',
+    nav_menu: 'القائمة',
+    nav_boxes: 'علب الهدايا',
+    nav_specialties: 'أصنافنا',
+    nav_gallery: 'المعرض',
+    nav_track: 'تتبّع طلبك',
+    nav_about: 'قصتنا',
+    nav_faq: 'الأسئلة الشائعة',
+    nav_contact: 'تواصل معنا',
+    cta_design: 'صمّم قالبك',
+    cta_order: 'سلّة الطلب',
+    foot_order: 'الطلب',
+    foot_bakery: 'المتجر',
+    foot_visit: 'فروعنا',
+  },
+};
+
+const PHRASE_AR = new Map([
+  ['Made from scratch', 'محضّر يدوياً بعناية'],
+  ['Baked to order', 'يُخبز طازجاً عند الطلب'],
+  ['Pickup or delivery', 'استلام من الفرع أو توصيل'],
+  ['Order from the menu', 'اطلب من القائمة'],
+  ['Two ways to order', 'طريقتان للطلب'],
+  ['Custom cakes', 'قوالب الكيك المخصّصة'],
+  ["Today's menu", 'قائمة اليوم'],
+  ['What we make', 'ماذا نُحضّر'],
+  ['Signature designs', 'تصاميمنا المميزة'],
+  ['Made your way', 'على ذوقك'],
+  ['Design every detail', 'صمّم كل تفصيل'],
+  ['How it works', 'كيف تطلب'],
+  ['Ordering is a piece of cake', 'الطلب ولا أسهل'],
+  ['Kind words', 'آراء زبائننا'],
+  ['Loved by our customers', 'ثقة ومحبة زبائننا'],
+  ['From our kitchen', 'من مطبخنا'],
+  ['Recent creations', 'أحدث إبداعاتنا'],
+  ['Follow us on Instagram', 'تابعنا على إنستغرام'],
+  ['Our story', 'قصتنا'],
+  ['Visit us', 'تفضّل بزيارتنا'],
+  ['Opening hours', 'ساعات العمل'],
+  ['Cut a slice', 'اقطع شريحة'],
+  ['Whole cake', 'القالب كاملاً'],
+  ['Make a wish', 'تمنَّ أمنية'],
+  ['Lights on', 'إضاءة كاملة'],
+  ['Surprise me', 'فاجئني بتصميم'],
+  ['Share 3D link', 'مشاركة الرابط'],
+  ['Save card', 'حفظ الصورة'],
+  ['Place cake order', 'تأكيد طلب الكيك'],
+  ['Place order', 'تأكيد الطلب'],
+  ['Your order', 'طلبك'],
+  ['Track order', 'تتبّع الطلب'],
+  ['Curate a gift box →', 'صمّم علبة هدايا ←'],
+]);
+
+const origTextMap = new WeakMap();
+
+function applyLanguage(lang) {
+  const isAr = lang === 'ar';
+  document.documentElement.lang = isAr ? 'ar' : 'en';
+  document.documentElement.dir = isAr ? 'rtl' : 'ltr';
+  const langBtn = document.getElementById('lang-toggle');
+  if (langBtn) langBtn.textContent = isAr ? 'EN' : 'عربي';
+
+  const dict = I18N[isAr ? 'ar' : 'en'];
+  document.querySelectorAll('[data-i18n]').forEach((el) => {
+    const k = el.dataset.i18n;
+    if (dict[k]) el.textContent = dict[k];
+  });
+
+  // Translate matching standalone phrases cleanly and reversibly
+  document.querySelectorAll('.eyebrow, .trust span, .step h3, .section-head h2, .card h2, .card h3, .btn, dt, .tool-btn span').forEach((el) => {
+    if (el.hasAttribute('data-i18n') || el.children.length > 0) return;
+    if (!origTextMap.has(el)) origTextMap.set(el, el.textContent.trim());
+    const orig = origTextMap.get(el);
+    if (isAr && PHRASE_AR.has(orig)) {
+      el.textContent = PHRASE_AR.get(orig);
+    } else if (!isAr && orig) {
+      el.textContent = orig;
+    }
+  });
+}
+
+let activeLang = storage.get('sc_lang', 'en');
+applyLanguage(activeLang);
+
+document.getElementById('lang-toggle')?.addEventListener('click', () => {
+  activeLang = activeLang === 'ar' ? 'en' : 'ar';
+  storage.set('sc_lang', activeLang);
+  applyLanguage(activeLang);
+});
 
 // ---------- Page chrome ----------
 

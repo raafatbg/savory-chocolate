@@ -61,15 +61,15 @@ body.admin a { color: var(--gold-light); }
 /* ---------- Header & tabs ---------- */
 
 .admin-header {
-  background: #1a100b;
-  color: var(--cream, #f5ebde);
+  background: #4C2007;
+  color: #F7F7D3;
   position: sticky;
   top: 0;
   z-index: 20;
   box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.4);
 }
 
-.admin-header .brand { color: #f5ebde; }
+.admin-header .brand { color: #F7F7D3; }
 .admin-header .brand-name { font-size: 1.35rem; }
 
 .admin-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 62px; }
@@ -83,8 +83,8 @@ body.admin a { color: var(--gold-light); }
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  background: var(--gold-grad);
-  color: #1a0f08;
+  background: #F7F7D3;
+  color: #4C2007;
   padding: 3px 9px;
   border-radius: 999px;
 }
@@ -108,7 +108,7 @@ body.admin a { color: var(--gold-light); }
 }
 
 .tabs button:hover { color: #f5ebde; }
-.tabs button[aria-selected='true'] { color: #f1d79c; border-bottom-color: #d6ad63; }
+.tabs button[aria-selected='true'] { color: #F7F7D3; border-bottom-color: #F7F7D3; }
 
 .badge {
   background: var(--berry);
@@ -373,3 +373,9 @@ body.admin ::-webkit-scrollbar-thumb { background: #d6c3ad; border-color: var(--
 .ref-photo { display: inline-flex; align-items: center; gap: 12px; margin-top: 12px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; }
 .ref-photo img { width: 76px; height: 76px; object-fit: cover; border-radius: 8px; }
 .ref-photo span { font-size: 0.86rem; font-weight: 600; }
+
+.auth-card .brand-stacked { align-items: center; width: 100%; }
+.auth-card .brand-stacked .brand-mark { margin-left: 0; }
+
+.pill.st-baking { background: rgba(181, 84, 26, 0.14); color: #9c4110; border-color: rgba(181, 84, 26, 0.35); }
+.order-card.st-baking { border-left: 3px solid #b5541a; }

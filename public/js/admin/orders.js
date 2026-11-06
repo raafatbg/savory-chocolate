@@ -1,15 +1,16 @@
 import { $, esc, money, isoDate, friendlyTime, adminApi, toast, errorBlock, emptyCard } from './core.js';
 
 const FILTERS = [
-  ['active', 'Active'], ['new', 'New'], ['confirmed', 'Confirmed'], ['ready', 'Ready'],
+  ['active', 'Active'], ['new', 'New'], ['confirmed', 'Confirmed'], ['baking', 'In kitchen'], ['ready', 'Ready'],
   ['completed', 'Completed'], ['cancelled', 'Cancelled'], ['all', 'All'],
 ];
 const STATUS_LABELS = {
-  new: 'New', confirmed: 'Confirmed', ready: 'Ready', completed: 'Completed', cancelled: 'Cancelled',
+  new: 'New', confirmed: 'Confirmed', baking: 'In kitchen', ready: 'Ready', completed: 'Completed', cancelled: 'Cancelled',
 };
 const NEXT_STEP = {
   new: ['confirmed', 'Confirm order'],
-  confirmed: ['ready', 'Mark ready'],
+  confirmed: ['baking', 'Start baking'],
+  baking: ['ready', 'Mark ready'],
   ready: ['completed', 'Mark completed'],
 };
 const DETAIL_LABELS = {
@@ -20,6 +21,7 @@ const DETAIL_LABELS = {
 let filter = 'active';
 let branchFilter = '';
 let branchesLoaded = false;
+let currentOrders = [];
 
 // Fills the branch filter once (only shown when there's more than one branch).
 async function loadBranchFilter() {
@@ -45,10 +47,11 @@ export async function load() {
   }
   const { counts } = data;
   const orders = branchFilter ? data.orders.filter((o) => o.branch === branchFilter) : data.orders;
+  currentOrders = orders;
   const n = (s) => counts[s] || 0;
   const filterCounts = {
     ...counts,
-    active: n('new') + n('confirmed') + n('ready'),
+    active: n('new') + n('confirmed') + n('baking') + n('ready'),
     all: Object.values(counts).reduce((a, b) => a + b, 0),
   };
 
@@ -65,9 +68,93 @@ export async function load() {
   $('#orders-updated').textContent = `Updated ${new Date().toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })} · checks for new orders every 30 seconds`;
 }
 
+function buildCustomerWhatsAppHref(o) {
+  const digits = String(o.customer_phone || '').replace(/\D/g, '');
+  if (!digits) return '';
+  const cleanDigits = digits.startsWith('0') ? `961${digits.slice(1)}` : digits.length <= 8 ? `961${digits}` : digits;
+  const firstName = String(o.customer_name || '').trim().split(/\s+/)[0] || 'there';
+  const trackUrl = `${location.origin}/track?code=${encodeURIComponent(o.code)}`;
+  const statusMsg = {
+    new: `Hi ${firstName}! Thank you for your SAVORY order (${o.code}). We have received it and will confirm shortly.`,
+    confirmed: `Hi ${firstName}! Your SAVORY order (${o.code}) is confirmed for ${o.pickup_date} at ${friendlyTime(o.pickup_time)}. Track live: ${trackUrl}`,
+    baking: `Hi ${firstName}! Great news — our pastry chefs are preparing your SAVORY order (${o.code}) in the kitchen right now! Track live: ${trackUrl}`,
+    ready: o.fulfillment === 'delivery'
+      ? `Hi ${firstName}! Your SAVORY order (${o.code}) is freshly boxed and ready for delivery! Total due: ${money(o.total_cents)}.`
+      : `Hi ${firstName}! Your SAVORY order (${o.code}) is ready for pickup${o.branch ? ` at our ${o.branch} branch` : ''}! Total due: ${money(o.total_cents)}.`,
+    completed: `Hi ${firstName}! Thank you for celebrating with SAVORY (${o.code}). We hope you love every bite!`,
+  }[o.status] || `Hi ${firstName}! Regarding your SAVORY order (${o.code}):`;
+  return `https://wa.me/${cleanDigits}?text=${encodeURIComponent(statusMsg)}`;
+}
+
+function printKitchenSheet(o) {
+  const delivery = o.fulfillment === 'delivery';
+  const [y, m, d] = o.pickup_date.split('-').map(Number);
+  const day = new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  const win = window.open('', '_blank', 'width=720,height=860');
+  if (!win) return;
+  const itemsHtml = o.items.map((i) => {
+    const details = Object.entries(i.details || {}).filter(([, v]) => v);
+    return `
+      <div class="ticket-item">
+        <div class="ticket-line"><strong>${i.quantity} × ${esc(i.name)}</strong><span>${money(i.unit_price_cents * i.quantity)}</span></div>
+        ${details.length ? `<table class="ticket-specs">${details.map(([k, v]) => `
+          <tr><th>${esc(DETAIL_LABELS[k] || k)}</th><td>${k === 'message' ? `“${esc(v)}”` : esc(v)}</td></tr>`).join('')}</table>` : ''}
+      </div>`;
+  }).join('');
+
+  win.document.write(`<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Kitchen Prep Sheet · ${esc(o.code)}</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; color: #2b1205; background: #fff; margin: 24px; line-height: 1.45; }
+    .head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #4C2007; padding-bottom: 14px; margin-bottom: 18px; }
+    h1 { margin: 0; font-size: 26px; letter-spacing: 0.08em; color: #4C2007; }
+    .code { font-family: monospace; font-size: 24px; font-weight: 800; border: 2px solid #4C2007; padding: 4px 12px; border-radius: 6px; }
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; background: #F7F7D3; padding: 14px 18px; border-radius: 8px; margin-bottom: 18px; }
+    .meta strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: #6E462C; }
+    .ticket-item { border: 1px solid #d8cfa8; border-radius: 8px; padding: 14px; margin-bottom: 12px; }
+    .ticket-line { display: flex; justify-content: space-between; font-size: 17px; margin-bottom: 8px; }
+    .ticket-specs { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .ticket-specs th, .ticket-specs td { text-align: left; padding: 5px 8px; border-top: 1px solid #eee7c8; }
+    .ticket-specs th { width: 32%; color: #6E462C; font-weight: 600; }
+    .notes { background: #fff4e5; border-left: 4px solid #b5541a; padding: 10px 14px; margin-top: 14px; }
+    .foot { display: flex; justify-content: space-between; border-top: 2px solid #4C2007; padding-top: 12px; margin-top: 18px; font-size: 18px; font-weight: 700; }
+    @media print { .no-print { display: none; } body { margin: 0; } }
+  </style>
+</head>
+<body>
+  <div class="head">
+    <div>
+      <h1>SAVORY · KITCHEN PREP SHEET</h1>
+      <div>${o.type === 'cake' ? '3D Custom Cake Order' : 'Patisserie Menu Order'}${o.branch ? ` · ${esc(o.branch)} Branch` : ''}</div>
+    </div>
+    <div class="code">${esc(o.code)}</div>
+  </div>
+  <div class="meta">
+    <div><strong>${delivery ? 'Delivery schedule' : 'Pickup schedule'}</strong>${esc(day)} at ${esc(friendlyTime(o.pickup_time))}</div>
+    <div><strong>Customer</strong>${esc(o.customer_name)} · ${esc(o.customer_phone)}</div>
+    ${delivery ? `<div style="grid-column: 1 / -1"><strong>Delivery address</strong>${esc(o.delivery_address)}</div>` : ''}
+  </div>
+  ${itemsHtml}
+  ${o.notes ? `<div class="notes"><strong>Special / Allergy Notes:</strong> ${esc(o.notes)}</div>` : ''}
+  <div class="foot">
+    <span>Status: ${esc(STATUS_LABELS[o.status] || o.status)}</span>
+    <span>Total Due: ${money(o.total_cents)}</span>
+  </div>
+  <p class="no-print" style="margin-top:20px;text-align:right">
+    <button onclick="window.print()" style="padding:8px 18px;font-weight:700;background:#4C2007;color:#F7F7D3;border:0;border-radius:6px;cursor:pointer">Print Sheet</button>
+  </p>
+  <script>setTimeout(() => window.print(), 250);</script>
+</body>
+</html>`);
+  win.document.close();
+}
+
 function orderCard(o) {
   const today = isoDate(0);
-  const active = ['new', 'confirmed', 'ready'].includes(o.status);
+  const active = ['new', 'confirmed', 'baking', 'ready'].includes(o.status);
   const delivery = o.fulfillment === 'delivery';
   const [y, m, d] = o.pickup_date.split('-').map(Number);
   const day = new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
@@ -89,6 +176,7 @@ function orderCard(o) {
 
   const next = NEXT_STEP[o.status];
   const phoneHref = o.customer_phone.replace(/[^\d+]/g, '');
+  const waHref = buildCustomerWhatsAppHref(o);
 
   return `
     <article class="card order-card st-${o.status}">
@@ -99,7 +187,7 @@ function orderCard(o) {
           ${o.branch ? `<span class="pill branch">📍 ${esc(o.branch)}</span>` : ''}
           ${delivery ? '<span class="pill delivery">🚚 Delivery</span>' : '<span class="pill">Pickup</span>'}
           ${dietary ? '<span class="pill warn">⚠ Dietary needs</span>' : ''}
-          <span class="pill st-${o.status}">${STATUS_LABELS[o.status]}</span>
+          <span class="pill st-${o.status}">${STATUS_LABELS[o.status] || o.status}</span>
         </div>
         <div class="when">${flag} ${delivery ? 'Deliver' : 'Pickup'} ${esc(day)} · ${esc(friendlyTime(o.pickup_time))}</div>
       </div>
@@ -121,6 +209,8 @@ function orderCard(o) {
         <span class="total">Total ${money(o.total_cents)}
           <span class="muted small">${o.delivery_fee_cents ? `incl. ${money(o.delivery_fee_cents)} delivery · ` : ''}pay on ${delivery ? 'delivery' : 'pickup'}</span></span>
         <div class="controls">
+          <button type="button" class="btn btn-outline btn-sm" data-print-order="${o.id}" title="Print kitchen preparation sheet">🖨 Prep sheet</button>
+          ${waHref ? `<a class="btn btn-outline btn-sm" href="${esc(waHref)}" target="_blank" rel="noopener" title="Message customer on WhatsApp with current status">💬 WhatsApp customer</a>` : ''}
           ${next ? `<button type="button" class="btn btn-gold btn-sm" data-order="${o.id}" data-set-status="${next[0]}">${next[1]}</button>` : ''}
           <label class="visually-hidden" for="status-${o.id}">Status</label>
           <select id="status-${o.id}" data-order="${o.id}" data-status-select>
@@ -144,7 +234,7 @@ function timeAgo(sqliteUtc) {
 async function setStatus(id, status) {
   try {
     await adminApi(`/orders/${id}`, { method: 'PATCH', body: { status } });
-    toast(`Order marked as ${STATUS_LABELS[status].toLowerCase()}.`);
+    toast(`Order marked as ${(STATUS_LABELS[status] || status).toLowerCase()}.`);
     document.dispatchEvent(new Event('admin:changed'));
   } catch (err) {
     toast(err.message, true);
@@ -160,6 +250,12 @@ $('#order-filters').addEventListener('click', (e) => {
 });
 
 $('#orders-list').addEventListener('click', (e) => {
+  const printBtn = e.target.closest('[data-print-order]');
+  if (printBtn) {
+    const order = currentOrders.find((o) => String(o.id) === String(printBtn.dataset.printOrder));
+    if (order) printKitchenSheet(order);
+    return;
+  }
   const button = e.target.closest('[data-set-status]');
   if (button) setStatus(button.dataset.order, button.dataset.setStatus);
 });

@@ -99,7 +99,7 @@ export async function refreshCounts() {
     const set = (id, n) => { const el = $(id); el.hidden = !n; el.textContent = n; };
     set('#badge-orders', newOrders);
     set('#badge-messages', unreadMessages);
-    document.title = `${newOrders ? `(${newOrders}) ` : ''}Admin · ${state.settings.shop_name || 'Savory Chocolate'}`;
+    document.title = `${newOrders ? `(${newOrders}) ` : ''}Admin · ${state.settings.shop_name || 'SAVORY'}`;
   } catch { /* the next poll will try again */ }
 }
 

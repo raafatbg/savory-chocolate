@@ -2,10 +2,27 @@ import {
   api, esc, money, storage, isoDate, loadSettings, setupFulfillment, deliveryFee, reveal,
   setupBranches, orderConfirmation, openWhatsApp,
 } from '/js/common.js';
-import { illustrationFor } from '/js/illustrations.js';
+import { illustrationFor, art } from '/js/illustrations.js';
 import { confetti } from '/js/confetti.js';
 
 const CART_KEY = 'sc_cart_v2';
+
+const BOX_TIERS = {
+  9: { size: 9, cols: 3, name: 'SAVORY 9-Piece Assorted Gift Box', price_cents: 1800 },
+  16: { size: 16, cols: 4, name: 'SAVORY 16-Piece Luxury Gift Box', price_cents: 3000 },
+  25: { size: 25, cols: 5, name: 'SAVORY 25-Piece Grand Selection Box', price_cents: 4500 },
+};
+
+const TRUFFLES = [
+  { id: 'pistachio', name: 'Pistachio Kunafa', color: '#96bc61', accent: '#d9b066', shape: 'dome' },
+  { id: 'hazelnut', name: 'Hazelnut Praline', color: '#5c2c12', accent: '#e3c184', shape: 'round' },
+  { id: 'caramel', name: 'Salted Caramel', color: '#c67d2d', accent: '#4C2007', shape: 'swirl' },
+  { id: 'dark70', name: '70% Dark Ganache', color: '#2b1206', accent: '#d9b066', shape: 'square' },
+  { id: 'lotus', name: 'Lotus Speculoos', color: '#b56e33', accent: '#f6ead8', shape: 'round' },
+  { id: 'raspberry', name: 'Raspberry Velvet', color: '#8c1832', accent: '#f4b6c2', shape: 'heart' },
+  { id: 'espresso', name: 'Arabic Coffee Roast', color: '#3b1c0c', accent: '#c9a063', shape: 'dome' },
+  { id: 'white', name: 'Almond Blanc', color: '#f3dfba', accent: '#7A3912', shape: 'swirl' },
+];
 
 const menuEl = document.getElementById('menu');
 const form = document.getElementById('checkout-form');
@@ -61,14 +78,39 @@ function fromPrice(item) {
 
 // ---------- cart ----------
 
-const lineKey = (id, picks) => `${id}:${JSON.stringify(picks)}`;
+const lineKey = (id, picks, customBox = null) => (customBox ? `box:${JSON.stringify(customBox)}` : `${id}:${JSON.stringify(picks)}`);
 
 let cart = storage.get(CART_KEY, [])
-  .filter((l) => itemsById.has(l.id) && l.quantity > 0 && picksValid(itemsById.get(l.id), l.picks))
-  .map((l) => ({ ...l, key: lineKey(l.id, l.picks) }));
+  .filter((l) => {
+    if (l.custom_box) return Boolean(BOX_TIERS[Number(l.custom_box.size)]) && l.quantity > 0;
+    return itemsById.has(l.id) && l.quantity > 0 && picksValid(itemsById.get(l.id), l.picks);
+  })
+  .map((l) => ({ ...l, key: lineKey(l.id, l.picks, l.custom_box) }));
 
 function saveCart() {
-  storage.set(CART_KEY, cart.map(({ id, quantity, picks }) => ({ id, quantity, picks })));
+  storage.set(CART_KEY, cart.map(({ id, quantity, picks, custom_box }) => (
+    custom_box ? { quantity, custom_box } : { id, quantity, picks }
+  )));
+}
+
+function lineUnitPrice(line) {
+  if (line.custom_box) return BOX_TIERS[Number(line.custom_box.size)]?.price_cents || 1800;
+  return unitPrice(itemsById.get(line.id), line.picks);
+}
+
+function lineDisplay(line) {
+  if (line.custom_box) {
+    const tier = BOX_TIERS[Number(line.custom_box.size)] || BOX_TIERS[9];
+    const counts = new Map();
+    for (const p of line.custom_box.pieces || []) counts.set(p, (counts.get(p) || 0) + 1);
+    const summary = [...counts.entries()].map(([n, c]) => `${c}× ${n}`).join(', ');
+    const parts = [summary];
+    if (line.custom_box.ribbon) parts.push(`Ribbon: ${line.custom_box.ribbon}`);
+    if (line.custom_box.note) parts.push(`Card: “${line.custom_box.note}”`);
+    return { name: tier.name, extras: parts.filter(Boolean).join(' · ') };
+  }
+  const item = itemsById.get(line.id);
+  return { name: item.name, extras: picksText(item, line.picks) };
 }
 
 // A little gold dot arcs from the button to the order panel (or the bottom bar on phones).
@@ -99,11 +141,11 @@ function flyToCart(from) {
   setTimeout(() => dot.remove(), 1500);
 }
 
-function addToCart(id, picks, quantity, from = null) {
-  const key = lineKey(id, picks);
+function addToCart(id, picks, quantity, from = null, customBox = null) {
+  const key = lineKey(id, picks, customBox);
   const line = cart.find((l) => l.key === key);
   if (line) line.quantity = Math.min(99, line.quantity + quantity);
-  else cart.push({ key, id, picks, quantity });
+  else cart.push({ key, id, picks, quantity, custom_box: customBox });
   saveCart();
   renderControls();
   renderCart();
@@ -119,6 +161,127 @@ function changeLine(key, delta) {
   renderControls();
   renderCart();
 }
+
+// ---------- Interactive Gift Box Builder ----------
+
+const boxDialog = document.getElementById('box-dialog');
+const boxTray = document.getElementById('box-tray');
+const boxFlavors = document.getElementById('box-flavors');
+const boxProgress = document.getElementById('box-progress');
+const boxPriceLabel = document.getElementById('box-price-label');
+const boxError = document.getElementById('box-error');
+let activeBoxSize = 9;
+let boxSlots = [];
+
+function renderBoxFlavors() {
+  if (!boxFlavors) return;
+  boxFlavors.innerHTML = TRUFFLES.map((t) => `
+    <button type="button" class="truffle-pick" data-truffle="${esc(t.id)}">
+      <span class="truffle-dot" style="background:${esc(t.color)};box-shadow:inset 0 0 0 2px ${esc(t.accent)}"></span>
+      <span class="truffle-name">${esc(t.name)}</span>
+      <span class="truffle-add">+</span>
+    </button>
+  `).join('');
+}
+
+function renderBoxTray() {
+  if (!boxTray) return;
+  const tier = BOX_TIERS[activeBoxSize];
+  boxTray.dataset.cols = String(tier.cols);
+  boxTray.innerHTML = Array.from({ length: activeBoxSize }, (_, i) => {
+    const t = boxSlots[i];
+    if (!t) {
+      return `<button type="button" class="box-slot empty" data-slot="${i}" aria-label="Empty slot ${i + 1}"><span>+</span></button>`;
+    }
+    return `
+      <button type="button" class="box-slot filled" data-slot="${i}" title="${esc(t.name)} (tap to remove)" aria-label="Remove ${esc(t.name)}">
+        <span class="bonbon" style="background:${esc(t.color)};border-color:${esc(t.accent)}"></span>
+      </button>`;
+  }).join('');
+  boxProgress.textContent = `${boxSlots.length} / ${activeBoxSize} pieces selected`;
+  boxPriceLabel.textContent = money(tier.price_cents);
+}
+
+renderBoxFlavors();
+renderBoxTray();
+
+document.getElementById('open-box-builder')?.addEventListener('click', () => {
+  boxError.hidden = true;
+  if (boxSlots.length === 0) {
+    // Pre-fill a welcoming signature assortment so the user sees it alive immediately
+    boxSlots = Array.from({ length: activeBoxSize }, (_, i) => TRUFFLES[i % TRUFFLES.length]);
+    renderBoxTray();
+  }
+  boxDialog?.showModal();
+});
+
+boxDialog?.querySelectorAll('[data-box-size]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    activeBoxSize = Number(btn.dataset.boxSize);
+    boxDialog.querySelectorAll('[data-box-size]').forEach((b) => b.classList.toggle('active', b === btn));
+    if (boxSlots.length > activeBoxSize) boxSlots = boxSlots.slice(0, activeBoxSize);
+    renderBoxTray();
+  });
+});
+
+boxFlavors?.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-truffle]');
+  if (!btn) return;
+  const truffle = TRUFFLES.find((t) => t.id === btn.dataset.truffle);
+  if (!truffle) return;
+  if (boxSlots.length < activeBoxSize) {
+    boxSlots.push(truffle);
+  } else {
+    // Replace the last slot if already full
+    boxSlots[activeBoxSize - 1] = truffle;
+  }
+  boxError.hidden = true;
+  renderBoxTray();
+});
+
+boxTray?.addEventListener('click', (e) => {
+  const slot = e.target.closest('[data-slot]');
+  if (!slot) return;
+  const idx = Number(slot.dataset.slot);
+  if (idx >= 0 && idx < boxSlots.length) {
+    boxSlots.splice(idx, 1);
+    renderBoxTray();
+  }
+});
+
+document.getElementById('box-autofill')?.addEventListener('click', () => {
+  while (boxSlots.length < activeBoxSize) {
+    boxSlots.push(TRUFFLES[boxSlots.length % TRUFFLES.length]);
+  }
+  boxError.hidden = true;
+  renderBoxTray();
+});
+
+document.getElementById('box-clear')?.addEventListener('click', () => {
+  boxSlots = [];
+  renderBoxTray();
+});
+
+boxDialog?.querySelector('[data-box-close]')?.addEventListener('click', () => boxDialog.close());
+boxDialog?.addEventListener('click', (e) => { if (e.target === boxDialog) boxDialog.close(); });
+
+document.getElementById('box-form')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (boxSlots.length < activeBoxSize) {
+    // Automatically top up any remaining slots or let the user know
+    while (boxSlots.length < activeBoxSize) {
+      boxSlots.push(TRUFFLES[boxSlots.length % TRUFFLES.length]);
+    }
+  }
+  const customBox = {
+    size: activeBoxSize,
+    pieces: boxSlots.map((t) => t.name),
+    ribbon: document.getElementById('box-ribbon').value,
+    note: document.getElementById('box-note').value.trim(),
+  };
+  boxDialog.close();
+  addToCart(0, [], 1, document.getElementById('open-box-builder'), customBox);
+});
 
 // ---------- menu ----------
 
@@ -188,7 +351,7 @@ function renderControls() {
     if (!slot) continue;
     const disabled = ordersOpen ? '' : 'disabled';
     if (item.options.length) {
-      const count = cart.filter((l) => l.id === item.id).reduce((n, l) => n + l.quantity, 0);
+      const count = cart.filter((l) => !l.custom_box && l.id === item.id).reduce((n, l) => n + l.quantity, 0);
       slot.innerHTML = `<button type="button" class="btn btn-gold btn-sm" data-choose="${item.id}" ${disabled}>${count ? `Add more (${count})` : 'Choose'}</button>`;
     } else {
       const line = cart.find((l) => l.key === lineKey(item.id, []));
@@ -214,21 +377,20 @@ let fulfillment = () => 'pickup';
 
 function renderCart() {
   const count = cart.reduce((n, l) => n + l.quantity, 0);
-  const subtotal = cart.reduce((sum, l) => sum + l.quantity * unitPrice(itemsById.get(l.id), l.picks), 0);
+  const subtotal = cart.reduce((sum, l) => sum + l.quantity * lineUnitPrice(l), 0);
   const fee = deliveryFee(settings, fulfillment());
 
   document.getElementById('cart-empty').hidden = count > 0;
   form.hidden = count === 0;
 
   document.getElementById('cart-lines').innerHTML = cart.map((l) => {
-    const item = itemsById.get(l.id);
-    const extras = picksText(item, l.picks);
+    const { name, extras } = lineDisplay(l);
     return `
       <li>
-        <span class="name">${esc(item.name)}</span>
-        <span class="line-total">${money(unitPrice(item, l.picks) * l.quantity)}</span>
+        <span class="name">${esc(name)}</span>
+        <span class="line-total">${money(lineUnitPrice(l) * l.quantity)}</span>
         ${extras ? `<span class="choices">${esc(extras)}</span>` : ''}
-        ${stepper(l.key, l.quantity, item.name)}
+        ${stepper(l.key, l.quantity, name)}
       </li>`;
   }).join('');
 
@@ -340,7 +502,11 @@ form.addEventListener('submit', async (event) => {
   const data = Object.fromEntries(new FormData(form));
   data.fulfillment = fulfillment();
   data.branch = branchOf()?.id;
-  data.items = cart.map((l) => ({ id: l.id, quantity: l.quantity, choices: l.picks }));
+  data.items = cart.map((l) => (
+    l.custom_box
+      ? { quantity: l.quantity, custom_box: l.custom_box }
+      : { id: l.id, quantity: l.quantity, choices: l.picks }
+  ));
 
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<span class="spinner" aria-hidden="true"></span> Placing your order…';
@@ -365,7 +531,33 @@ function showConfirmation(order, name) {
     name,
     title: 'your order is in!',
     shopName: settings.shop_name,
-    links: '<a class="btn btn-outline" href="/">Back to home</a><a class="btn btn-outline" href="/cakes">Design a cake</a>',
+    links: `<a class="btn btn-gold" href="/track?site=menu&code=${encodeURIComponent(order.order_code || order.code)}">Track order live</a><a class="btn btn-outline" href="/menu">Order more from menu</a>`,
   });
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+
+// ---------- What we make (Menu & Chocolatier specialties) ----------
+
+const PRODUCT_LINES = [
+  { art: 'chocolate', name: 'Chocolates & bark', text: 'Fine chocolates and loaded chocolate bark, for gifting or sharing.', href: '#menu', go: 'Browse chocolates' },
+  { art: 'gift', name: 'Luxury gift boxes', text: 'Curate a 9, 16, or 25-piece SAVORY chocolate box with a satin ribbon.', href: '#box-banner', go: 'Build a box' },
+  { art: 'icecream', name: 'Ice cream & Flurry', text: 'Scoops, soft serve and Savory Flurry cups piled with toppings.', href: '#menu', go: 'See the menu' },
+  { art: 'crepe', name: 'Warm crepes', text: 'Warm crepes drizzled with chocolate, pistachio and more.', href: '#menu', go: 'See the menu' },
+  { art: 'shake', name: 'Thick shakes', text: 'Thick shakes crowned with cookies and chocolate.', href: '#menu', go: 'See the menu' },
+  { art: 'eclair', name: 'Éclairs & pastries', text: 'Éclairs and sweet pastries, fresh from our kitchen.', href: '#menu', go: 'See the menu' },
+  { art: 'nuts', name: 'Mixed nuts', text: 'Smoked almonds, pistachios, cashews, hazelnuts and more.', href: '#menu', go: 'See the menu' },
+  { art: 'cake', name: 'Gateaux slices', text: 'Individual slices and daily counter bakes ready to enjoy.', href: '#menu', go: 'See the menu' },
+];
+
+const linesEl = document.getElementById('product-lines');
+if (linesEl) {
+  linesEl.innerHTML = PRODUCT_LINES.map((p, i) => `
+    <a class="card spotlight product-line" href="${p.href}" data-reveal style="--delay: ${(i % 4) * 0.07}s">
+      <span class="pl-icon">${art(p.art)}</span>
+      <h3>${esc(p.name)}</h3>
+      <p>${esc(p.text)}</p>
+      <span class="go">${esc(p.go)} <span class="arrow" aria-hidden="true">→</span></span>
+    </a>`).join('');
+  reveal(linesEl);
 }

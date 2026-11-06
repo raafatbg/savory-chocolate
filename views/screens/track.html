@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Track your order · {{shop_name}}</title>
+  <meta name="description" content="Track your custom cake or patisserie order from {{shop_name}} in real time.">
+  {{> head}}
+</head>
+<body>
+  {{> header}}
+
+  <main id="main">
+    <section class="page-hero" style="padding-bottom: 28px;">
+      <div class="container" data-reveal>
+        <span class="eyebrow">Live kitchen tracker</span>
+        <h1>Track your <em class="gold-text">order</em></h1>
+        <p>Enter your order code (e.g. <strong>SAV-7KX3QM</strong>) to see real-time progress from our kitchen.</p>
+      </div>
+    </section>
+
+    <div class="container" style="padding-bottom: 96px; max-width: 780px;">
+      <div class="card" style="padding: 32px;" data-reveal>
+        <form id="track-form" class="track-search">
+          <input type="text" id="track-input" placeholder="Enter order code (e.g. SAV-7KX3QM)" maxlength="24" required autocomplete="off">
+          <button type="submit" class="btn btn-gold" id="track-btn">Track order</button>
+        </form>
+        <div id="track-error" class="alert alert-error" role="alert" hidden style="margin-top: 16px;"></div>
+      </div>
+
+      <div id="track-result" class="card track-card" hidden style="margin-top: 24px; padding: 36px;">
+        <div class="track-header">
+          <div>
+            <span class="eyebrow left" id="t-type">Custom Order</span>
+            <h2 id="t-greeting" style="margin: 0;">Order</h2>
+            <p class="muted small" id="t-schedule" style="margin: 4px 0 0;"></p>
+          </div>
+          <span class="order-code" id="t-code" style="margin: 0; font-size: 1.2rem; padding: 8px 16px;"></span>
+        </div>
+
+        <div class="track-steps" id="t-steps" aria-label="Order progress"></div>
+        <div class="track-status-banner" id="t-banner"></div>
+
+        <h3 style="font-size: 1.25rem; margin: 28px 0 12px;">Order summary</h3>
+        <ul class="summary-list" id="t-items"></ul>
+        <div class="total-row" style="margin-bottom: 0; padding-bottom: 0;">
+          <span>Total</span>
+          <span class="amount" id="t-total"></span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {{> footer}}
+  <script type="module" src="/js/screens/track.js"></script>
+</body>
+</html>

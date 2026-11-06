@@ -18,12 +18,27 @@ export const DEFAULT_CAKE = {
   size: 1, // footprint scale, roughly 0.85–1.2
   color: '#f3e6d3', // frosting color
   tierColors: null, // optional per-tier colors, bottom first
+  spongeColor: '#4a2512', // inner sponge color when sliced
+  fillingColor: '#2a1208', // inner filling layer color when sliced
+  sliced: false, // whether a wedge slice is pulled out to show inside layers
   drip: '', // drip color, '' for none
   dripMetallic: false,
   toppings: [], // berries | macarons | shards | goldleaf | sprinkles | flowers | cherries
   extras: [], // candles | topper | sparklers
   message: '', // written on a chocolate plaque
 };
+
+// Draws the vectorized SAVORY cocoa-pod emblem centered at (cx, cy) with height `h`.
+export function drawSavoryPod(ctx, cx, cy, h, color = '#c9a063') {
+  ctx.save();
+  const s = h / 280;
+  ctx.translate(cx - 90.5 * s, cy - 140 * s);
+  ctx.scale(s, s);
+  ctx.fillStyle = color;
+  const p = new Path2D('M 90.5 0 C 96 0.6 105.7 7.9 111.7 13 C 141.4 36.1 163.3 63.3 175.3 99.7 C 181 120.7 181.9 138.9 180 160.5 C 176.2 195.8 164.4 222.7 140.5 249.2 C 131.6 258.5 110.2 276 103.5 276 C 95.3 276 92.4 268.2 98.7 262 C 140.4 227.6 155.1 200.7 161 146.5 C 163.7 95.9 144.3 53.7 101.5 20.8 C 96.4 17.5 92.9 17.7 89.2 22.8 C 75.7 39.2 66.8 60.5 64 81.5 C 60.4 114.2 69.2 135.7 78.6 165.5 C 88.2 201.9 88.4 239.8 77.7 276.2 C 74.7 282.5 70.6 279.6 64.5 277.3 C 23.4 252.9 2.6 205.5 0.5 158.5 C -2.8 100.1 17.1 45.7 63.5 10.7 C 66.5 9.1 71 10.6 72 14 C 72 19 67.3 21.8 64.1 24.8 C 30.8 54.6 15.8 89.6 14 134 C 12.1 182.9 23.5 227.6 66 259.2 C 70.1 260.4 69.8 259.6 70.2 256 C 72.1 244.4 72 232.3 71.9 220.5 C 71.1 190 59.1 165.4 51.4 136.5 C 40.9 88.9 51 39.4 84.5 3.7 C 86.2 1.9 87.9 0 90.5 0 Z M 102 35 C 106.7 35.4 109.9 40.9 112.7 44.3 C 142.3 87.1 146.5 151.1 129.3 200 C 125.9 208.1 124.2 213.6 116.5 213 C 110.2 209.6 115.6 200.4 117.3 195 C 132.4 150.2 129.3 90.1 100.8 50.8 C 98 45.6 95.3 39.5 102 35 Z M 35 123 C 42 124.3 40 137.1 40.6 142.5 C 44.1 174.1 51.3 204.2 69.1 231 C 74.1 239.4 66.8 245.5 59.5 239.3 C 39.6 211.7 31.6 178.9 29.1 145 C 29.2 139.8 27.6 124.2 35 123 Z');
+  ctx.fill(p, 'evenodd');
+  ctx.restore();
+}
 
 export function webglAvailable() {
   try {
@@ -98,9 +113,10 @@ export function createCakeStage(container, {
   let current = null;
   let pop = 1;
   let intro = -1;
+  let wishMode = false;
 
   function setCake(config, { intro: withIntro = false } = {}) {
-    const next = buildCake({ ...DEFAULT_CAKE, ...config });
+    const next = buildCake({ ...DEFAULT_CAKE, ...config, wishMode });
     const first = !current;
     if (current) {
       turntable.remove(current.group);
@@ -115,12 +131,31 @@ export function createCakeStage(container, {
       playIntro(next, 0);
     }
 
+    // When slicing the cake, gently rotate turntable so the cut slice faces the viewer.
+    if (config?.sliced && controls) {
+      turntable.rotation.y = -0.35;
+    }
+
     Object.assign(targetView, framing(next, camera));
     if (first) {
       view.distance = targetView.distance;
       view.target.copy(targetView.target);
       placeCamera(view);
     }
+    requestRender();
+  }
+
+  function setWishMode(active) {
+    wishMode = Boolean(active);
+    const lights = scene.userData.lights;
+    if (lights) {
+      lights.hemi.intensity = wishMode ? 0.14 : 0.4;
+      lights.key.intensity = wishMode ? 0.48 : 2.3;
+      lights.rim.intensity = wishMode ? 0.75 : 2.2;
+      lights.fill.intensity = wishMode ? 0.18 : 0.6;
+      scene.environmentIntensity = wishMode ? 0.2 : 0.55;
+    }
+    container.classList.toggle('wish-mode', wishMode);
     requestRender();
   }
 
@@ -233,6 +268,8 @@ export function createCakeStage(container, {
 
   return {
     setCake,
+    setWishMode,
+    getWishMode: () => wishMode,
     dispose() {
       cancelAnimationFrame(frame);
       resizeObserver.disconnect();
@@ -300,7 +337,8 @@ function setupScene(renderer) {
   scene.environmentIntensity = 0.55;
   pmrem.dispose();
 
-  scene.add(new THREE.HemisphereLight(0xfff1e0, 0x2a160c, 0.4));
+  const hemi = new THREE.HemisphereLight(0xfff1e0, 0x2a160c, 0.4);
+  scene.add(hemi);
   const key = new THREE.DirectionalLight(0xfff0dc, 2.3);
   key.position.set(4, 9, 6);
   key.castShadow = true;
@@ -316,6 +354,8 @@ function setupScene(renderer) {
   const fill = new THREE.DirectionalLight(0xffe4c8, 0.6);
   fill.position.set(-5, 2, 6);
   scene.add(fill);
+
+  scene.userData.lights = { hemi, key, rim, fill };
 
   const pool = new THREE.Mesh(
     new THREE.CircleGeometry(3.1, 64),
@@ -390,7 +430,7 @@ function buildCake(c) {
   const radii = [[base * 1.04], [base, base * 0.7], [base, base * 0.73, base * 0.48]][tierCount - 1];
   const heights = [[1.2], [1.05, 0.95], [1.0, 0.9, 0.8]][tierCount - 1];
 
-  const stand = buildStand(radii[0]);
+  const stand = buildStand(radii[0], c.sliced);
   group.add(stand);
 
   let y = STAND_HEIGHT;
@@ -406,6 +446,22 @@ function buildCake(c) {
     y += h;
     return tier;
   });
+
+  // When "Cut a slice" is active, display a pulled-out wedge slice showing the 3 sponge layers & 2 filling layers.
+  if (c.sliced) {
+    const sliceSet = buildPulledSlice({
+      r: radii[0],
+      h: heights[0],
+      frostingColor: c.tierColors?.[0] || c.color,
+      spongeColor: c.spongeColor || '#4a2512',
+      fillingColor: c.fillingColor || '#2a1208',
+      dripColor: c.drip,
+      dripMetallic: c.dripMetallic,
+    });
+    sliceSet.group.position.y = STAND_HEIGHT;
+    group.add(sliceSet.group);
+    animations.push(sliceSet.animate);
+  }
 
   // A drip leaves a glaze layer on top; decorations sit on that, not under it.
   if (c.drip) top.y += 0.035;
@@ -435,8 +491,8 @@ function buildCake(c) {
 
   if (hasMessage) onTop.add(plaque(top, c.message.trim(), c.shape));
 
-  if (extras.has('candles')) {
-    const candleSet = candles(top);
+  if (extras.has('candles') || c.wishMode) {
+    const candleSet = candles(top, c.wishMode);
     onTop.add(candleSet.group);
     animations.push(candleSet.animate);
     extraHeight = Math.max(extraHeight, 0.85);
@@ -464,8 +520,141 @@ function buildCake(c) {
     tiers,
     decor,
     height: top.y + extraHeight,
-    width: radii[0] * 2.7,
+    width: radii[0] * (c.sliced ? 3.1 : 2.7),
     animate: animations.length ? (t, dt) => animations.forEach((fn) => fn(t, dt)) : null,
+  };
+}
+
+// Builds a pulled-out cake wedge and matching inner cut recess showing sponge + filling layers.
+function buildPulledSlice({ r, h, frostingColor, spongeColor, fillingColor, dripColor, dripMetallic }) {
+  const group = new THREE.Group();
+  const wedgeAngle = 0.52; // ~30 degrees
+  const startAngle = Math.PI * 0.22; // front-right direction
+  const midAngle = startAngle + wedgeAngle / 2;
+
+  const spongeMat = new THREE.MeshStandardMaterial({ color: spongeColor, roughness: 0.88 });
+  const fillingMat = new THREE.MeshStandardMaterial({ color: fillingColor, roughness: 0.35, metalness: 0.04 });
+  const frostMat = frostingMaterial(frostingColor);
+  const darkRecessMat = new THREE.MeshStandardMaterial({ color: 0x1a0c06, roughness: 0.95 });
+
+  // Recess panels slightly protruding on the bottom tier to show the interior cut on the main cake
+  const recess = new THREE.Group();
+  const panelLen = r * 0.96;
+  const panelH = h * 0.94;
+  [startAngle, startAngle + wedgeAngle].forEach((ang, idx) => {
+    const sideGroup = new THREE.Group();
+    sideGroup.rotation.y = -ang;
+    // Frosting backing
+    const back = new THREE.Mesh(new THREE.BoxGeometry(panelLen, panelH, 0.04), darkRecessMat);
+    back.position.set(panelLen / 2 + 0.02, panelH / 2 + 0.02, 0);
+    sideGroup.add(back);
+    recess.add(sideGroup);
+  });
+  group.add(recess);
+
+  // The pulled-out wedge slice resting forward on the stand
+  const slice = new THREE.Group();
+  const sliceR = r * 0.95;
+  const wallT = 0.06;
+  const innerH = h - wallT;
+
+  // Outer frosting arc + top cap
+  const outerShape = new THREE.Shape();
+  outerShape.moveTo(0, 0);
+  outerShape.absarc(0, 0, sliceR, -wedgeAngle / 2, wedgeAngle / 2, false);
+  outerShape.lineTo(0, 0);
+
+  const outerGeo = new THREE.ExtrudeGeometry(outerShape, {
+    depth: h,
+    bevelEnabled: true,
+    bevelThickness: 0.02,
+    bevelSize: 0.02,
+    bevelSegments: 2,
+    curveSegments: 24,
+  });
+  outerGeo.rotateX(-Math.PI / 2);
+  const outerMesh = new THREE.Mesh(outerGeo, frostMat);
+  outerMesh.userData.keep = true;
+  slice.add(outerMesh);
+
+  // Inner layered sponge & filling visible on both cut faces of the wedge
+  const layerShape = new THREE.Shape();
+  layerShape.moveTo(0.03, 0);
+  layerShape.absarc(0, 0, sliceR - wallT, -wedgeAngle / 2 - 0.012, wedgeAngle / 2 + 0.012, false);
+  layerShape.lineTo(0.03, 0);
+
+  // 3 sponge layers + 2 filling bands
+  const spongeH = (innerH * 0.72) / 3;
+  const fillH = (innerH * 0.28) / 2;
+  const bands = [
+    { h: spongeH, mat: spongeMat },
+    { h: fillH, mat: fillingMat },
+    { h: spongeH, mat: spongeMat },
+    { h: fillH, mat: fillingMat },
+    { h: spongeH, mat: spongeMat },
+  ];
+
+  let curY = 0.02;
+  for (const band of bands) {
+    const bGeo = new THREE.ExtrudeGeometry(layerShape, {
+      depth: band.h,
+      bevelEnabled: false,
+      curveSegments: 18,
+    });
+    bGeo.rotateX(-Math.PI / 2);
+    const bMesh = new THREE.Mesh(bGeo, band.mat);
+    bMesh.position.y = curY;
+    bMesh.userData.keep = true;
+    slice.add(bMesh);
+    curY += band.h;
+  }
+
+  // Optional drip glaze on top of the slice
+  if (dripColor) {
+    const dMat = dripMaterial(dripColor, dripMetallic);
+    const dGeo = new THREE.ExtrudeGeometry(outerShape, {
+      depth: 0.04,
+      bevelEnabled: true,
+      bevelThickness: 0.015,
+      bevelSize: 0.015,
+      bevelSegments: 2,
+      curveSegments: 20,
+    });
+    dGeo.rotateX(-Math.PI / 2);
+    const dMesh = new THREE.Mesh(dGeo, dMat);
+    dMesh.position.y = h - 0.01;
+    dMesh.userData.keep = true;
+    slice.add(dMesh);
+  }
+
+  // Piped cream dollop on top of the slice
+  const dollop = new THREE.Mesh(
+    new THREE.SphereGeometry(0.085, 14, 10),
+    frostingMaterial(lighten(frostingColor, 0.16)),
+  );
+  dollop.scale.set(1, 1.25, 1);
+  dollop.position.set(sliceR * 0.62, h + 0.06, 0);
+  dollop.userData.keep = true;
+  slice.add(dollop);
+
+  slice.rotation.y = -midAngle;
+  const pullDist = r * 0.56;
+  const dirX = Math.cos(midAngle);
+  const dirZ = Math.sin(midAngle);
+  slice.position.set(dirX * pullDist, 0.01, dirZ * pullDist);
+  group.add(slice);
+
+  let slideProgress = reduceMotion ? 1 : 0;
+  return {
+    group,
+    animate(t, dt) {
+      if (slideProgress < 1) {
+        slideProgress = Math.min(1, slideProgress + dt * 2.6);
+        const ease = 1 - (1 - slideProgress) ** 3;
+        const d = pullDist * ease;
+        slice.position.set(dirX * d, 0.01, dirZ * d);
+      }
+    },
   };
 }
 
@@ -654,9 +843,9 @@ function buildTier(shape, r, h, color, drip) {
   return tier;
 }
 
-function buildStand(cakeRadius) {
+function buildStand(cakeRadius, wide = false) {
   const stand = new THREE.Group();
-  const R = cakeRadius * 1.24 + 0.15;
+  const R = cakeRadius * (wide ? 1.52 : 1.24) + 0.15;
   const mat = gold();
 
   const plate = new THREE.Mesh(new THREE.CylinderGeometry(R, R * 0.96, 0.08, 96), mat);
@@ -836,13 +1025,15 @@ function sprinkles(top, rng) {
 
 // ---------------------------------------------------------------- extras
 
-function candles(top) {
+function candles(top, wishMode = false) {
   const group = new THREE.Group();
   const colors = [0xf7d9e3, 0xfdf3dc, 0xd7e8f5, 0xf3e1b5];
   const flameMat = new THREE.MeshBasicMaterial({ color: 0xffd17a, toneMapped: false });
   const glowMat = new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffb35a, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
   const flames = [];
   const n = 5;
+  const baseGlow = wishMode ? 0.62 : 0.42;
+  const baseLight = wishMode ? 4.8 : 2.5;
   for (let i = 0; i < n; i++) {
     const angle = -Math.PI / 2 + (i - (n - 1) / 2) * 0.55;
     const p = top.edge(angle, 0.42);
@@ -855,14 +1046,14 @@ function candles(top) {
     flame.scale.set(1, 2.1, 1);
     flame.userData.noShadow = true;
     const glow = new THREE.Sprite(glowMat);
-    glow.scale.setScalar(0.42);
+    glow.scale.setScalar(baseGlow);
     glow.position.y = 0.66;
     candle.add(flame, glow);
     candle.position.set(p.x, top.y, p.z);
     group.add(candle);
     flames.push({ flame, glow, phase: i * 1.7 });
   }
-  const light = new THREE.PointLight(0xffb560, 2.5, 4, 2);
+  const light = new THREE.PointLight(0xffb560, baseLight, wishMode ? 6.5 : 4, 2);
   light.position.set(0, top.y + 0.8, -0.2);
   group.add(light);
 
@@ -873,9 +1064,9 @@ function candles(top) {
       for (const f of flames) {
         const flicker = 1 + Math.sin(t * 17 + f.phase) * 0.08 + Math.sin(t * 29 + f.phase * 2) * 0.05;
         f.flame.scale.set(1, 2.1 * flicker, 1);
-        f.glow.scale.setScalar(0.42 * flicker);
+        f.glow.scale.setScalar(baseGlow * flicker);
       }
-      light.intensity = 2.5 + Math.sin(t * 13) * 0.3;
+      light.intensity = baseLight + Math.sin(t * 13) * (wishMode ? 0.55 : 0.3);
     },
   };
 }
@@ -960,26 +1151,30 @@ function plaque(top, message, shape) {
   const g = new THREE.Group();
   const stretch = 1.55;
   const texture = textTexture(1024, 1024, (ctx, w, h) => {
-    ctx.fillStyle = '#f6ead8';
+    ctx.fillStyle = '#4C2007';
     ctx.fillRect(0, 0, w, h);
     ctx.save();
     ctx.translate(w / 2, h / 2);
     ctx.scale(1 / stretch, 1);
-    ctx.strokeStyle = '#c9a063';
+    ctx.strokeStyle = '#d9b066';
     ctx.lineWidth = 14;
     ctx.beginPath();
     ctx.arc(0, 0, w * 0.44, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.fillStyle = '#3a1d10';
+
+    // Embossed SAVORY cocoa-pod seal at the top of the plaque
+    drawSavoryPod(ctx, 0, -w * 0.28, 120, '#d9b066');
+
+    ctx.fillStyle = '#F7F7D3';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const lines = wrap(message, 18);
-    const size = fitText(ctx, lines.reduce((a, b) => (a.length > b.length ? a : b)), w * 1.1, lines.length > 1 ? 150 : 200, '"Great Vibes", cursive');
-    lines.forEach((line, i) => ctx.fillText(line, 0, (i - (lines.length - 1) / 2) * size * 1.05));
+    const size = fitText(ctx, lines.reduce((a, b) => (a.length > b.length ? a : b)), w * 1.08, lines.length > 1 ? 140 : 185, '"Great Vibes", "Amiri", cursive, serif');
+    lines.forEach((line, i) => ctx.fillText(line, 0, 32 + (i - (lines.length - 1) / 2) * size * 1.05));
     ctx.restore();
   });
-  const side = new THREE.MeshStandardMaterial({ color: 0xefe0c8, roughness: 0.5 });
-  const face = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.5 });
+  const side = new THREE.MeshStandardMaterial({ color: 0x3a1805, roughness: 0.42 });
+  const face = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.42 });
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.04, 48), [side, face, side]);
   // A cylinder's top-cap texture runs along its local z axis, so stretch z and turn it to face the front.
   disc.scale.z = stretch;

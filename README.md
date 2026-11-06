@@ -1,4 +1,4 @@
-# Savory Chocolate
+# SAVORY
 
 A luxury bakery website with a real-time 3D cake builder, online ordering for pickup or delivery, and an admin dashboard.
 
