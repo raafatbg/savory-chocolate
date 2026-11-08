@@ -2,43 +2,40 @@
   "hosting": [
     {
       "target": "cakes",
-      "public": "public",
+      "public": "dist/cakes",
+      "cleanUrls": true,
+      "trailingSlash": false,
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
         {
-          "source": "**",
-          "run": {
-            "serviceId": "savory-chocolate",
-            "region": "europe-west1"
-          }
+          "source": "/track/**",
+          "destination": "/track.html"
         }
       ]
     },
     {
       "target": "menu",
-      "public": "public",
+      "public": "dist/menu",
+      "cleanUrls": true,
+      "trailingSlash": false,
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
         {
-          "source": "**",
-          "run": {
-            "serviceId": "savory-chocolate",
-            "region": "europe-west1"
-          }
+          "source": "/track/**",
+          "destination": "/track.html"
         }
       ]
     },
     {
       "target": "admin",
-      "public": "public",
+      "public": "dist/admin",
+      "cleanUrls": true,
+      "trailingSlash": false,
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
         {
           "source": "**",
-          "run": {
-            "serviceId": "savory-chocolate",
-            "region": "europe-west1"
-          }
+          "destination": "/index.html"
         }
       ]
     }

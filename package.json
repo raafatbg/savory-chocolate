@@ -7,7 +7,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server.js",
-    "dev": "node --disable-warning=ExperimentalWarning --watch server.js"
+    "dev": "node --disable-warning=ExperimentalWarning --watch server.js",
+    "build:firebase": "node --disable-warning=ExperimentalWarning scripts/build-firebase.mjs",
+    "deploy:firebase": "node --disable-warning=ExperimentalWarning scripts/build-firebase.mjs && firebase deploy --only hosting"
   },
   "engines": {
     "node": ">=22.13"

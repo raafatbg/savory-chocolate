@@ -1,0 +1,21 @@
+{
+  "projects": {
+    "default": "savory-962f3"
+  },
+  "targets": {
+    "savory-962f3": {
+      "hosting": {
+        "cakes": [
+          "savory-962f3-cakes"
+        ],
+        "menu": [
+          "savory-962f3-menu"
+        ],
+        "admin": [
+          "savory-962f3-admin"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

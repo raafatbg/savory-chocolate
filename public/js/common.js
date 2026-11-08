@@ -1,6 +1,8 @@
 // Helpers shared by every public page. Importing this module also wires up the
 // header (scroll state + mobile menu + bilingual AR/EN switcher) and scroll-reveal animations.
 
+import { serverlessApi } from '/js/serverless-api.js';
+
 export async function api(path, { method = 'GET', body, form } = {}) {
   const options = { method, headers: {} };
   if (form) {
@@ -13,7 +15,11 @@ export async function api(path, { method = 'GET', body, form } = {}) {
   try {
     res = await fetch(path, options);
   } catch {
-    throw new Error('Could not reach the server. Check your connection and try again.');
+    return serverlessApi(path, { method, body, form });
+  }
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    return serverlessApi(path, { method, body, form });
   }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
