@@ -3,7 +3,7 @@
 // the full SAVORY database (seeded from /seed.json + localStorage) so all 3 sites
 // (Cake Studio, Menu, and Admin) work out of the box on *.web.app.
 
-const DB_KEY = 'savory_static_db_v1';
+const DB_KEY = 'savory_static_db_v2';
 const SESSION_KEY = 'savory_admin_session_v1';
 
 const BOX_TIERS = {

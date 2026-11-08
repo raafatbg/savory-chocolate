@@ -539,25 +539,85 @@ function showConfirmation(order, name) {
 
 // ---------- What we make (Menu & Chocolatier specialties) ----------
 
+// ---------- 2-Card Chef's Spotlight Showcase (Reference Duo Carousel) ----------
+
+const duoGrid = document.getElementById('choco-duo-grid');
+const spotlightPool = [
+  items.find((i) => /lava|muffin/i.test(i.name)) || { id: 0, name: 'Molten Chocolate Lava Crown', price_cents: 650, options: [], artKey: 'cupcake' },
+  items.find((i) => /mirror|torte|orange/i.test(i.name)) || { id: 0, name: 'Mirror-Glaze Orange & Dark Torte', price_cents: 2800, options: [], artKey: 'cake' },
+  items.find((i) => /kunafa/i.test(i.name)) || { id: 0, name: 'Pistachio Kunafa Chocolate Bar', price_cents: 950, options: [], artKey: 'chocolate' },
+  items.find((i) => /crepe/i.test(i.name)) || { id: 0, name: 'Triple Belgian Chocolate Crepe', price_cents: 750, options: [], artKey: 'crepe' },
+];
+let duoIndex = 0;
+
+function renderDuo() {
+  if (!duoGrid) return;
+  const pair = [
+    spotlightPool[duoIndex % spotlightPool.length],
+    spotlightPool[(duoIndex + 1) % spotlightPool.length],
+  ];
+  duoGrid.innerHTML = pair.map((it) => `
+    <div class="choco-showcase-card choco-duo-card">
+      <div class="choco-frame choco-duo-frame">
+        <span class="choco-price-badge">PRICE<br><strong>${money(it.price_cents)}</strong></span>
+        <div class="choco-duo-art">${it.image ? `<img src="/uploads/${esc(it.image)}" alt="${esc(it.name)}">` : (it.artKey ? art(it.artKey) : illustrationFor(it))}</div>
+      </div>
+      <button type="button" class="choco-title-bar" data-duo-pick="${it.id || ''}">${esc(it.name)}</button>
+      <button type="button" class="choco-buy-link" data-duo-pick="${it.id || ''}">BUY NOW</button>
+    </div>
+  `).join('');
+}
+
+renderDuo();
+
+document.getElementById('duo-prev')?.addEventListener('click', () => {
+  duoIndex = (duoIndex - 1 + spotlightPool.length) % spotlightPool.length;
+  renderDuo();
+});
+document.getElementById('duo-next')?.addEventListener('click', () => {
+  duoIndex = (duoIndex + 1) % spotlightPool.length;
+  renderDuo();
+});
+duoGrid?.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-duo-pick]');
+  if (!btn) return;
+  const id = Number(btn.dataset.duoPick);
+  const item = itemsById.get(id);
+  if (item && ordersOpen) {
+    if (item.options?.length) openOptions(item, btn);
+    else addToCart(item.id, [], 1, btn);
+  } else {
+    document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' });
+  }
+});
+
+// ---------- Featured Products in Dark Cocoa Sawtooth Section ----------
+
 const PRODUCT_LINES = [
-  { art: 'chocolate', name: 'Chocolates & bark', text: 'Fine chocolates and loaded chocolate bark, for gifting or sharing.', href: '#menu', go: 'Browse chocolates' },
-  { art: 'gift', name: 'Luxury gift boxes', text: 'Curate a 9, 16, or 25-piece SAVORY chocolate box with a satin ribbon.', href: '#box-banner', go: 'Build a box' },
-  { art: 'icecream', name: 'Ice cream & Flurry', text: 'Scoops, soft serve and Savory Flurry cups piled with toppings.', href: '#menu', go: 'See the menu' },
-  { art: 'crepe', name: 'Warm crepes', text: 'Warm crepes drizzled with chocolate, pistachio and more.', href: '#menu', go: 'See the menu' },
-  { art: 'shake', name: 'Thick shakes', text: 'Thick shakes crowned with cookies and chocolate.', href: '#menu', go: 'See the menu' },
-  { art: 'eclair', name: 'Éclairs & pastries', text: 'Éclairs and sweet pastries, fresh from our kitchen.', href: '#menu', go: 'See the menu' },
-  { art: 'nuts', name: 'Mixed nuts', text: 'Smoked almonds, pistachios, cashews, hazelnuts and more.', href: '#menu', go: 'See the menu' },
-  { art: 'cake', name: 'Gateaux slices', text: 'Individual slices and daily counter bakes ready to enjoy.', href: '#menu', go: 'See the menu' },
+  { art: 'cupcake', name: 'Molten Lava Bakes', price: '$ 6.50', href: '#menu' },
+  { art: 'cake', name: 'Mirror-Glaze Tortes', price: '$ 28.00', href: '#menu' },
+  { art: 'chocolate', name: 'Pistachio Kunafa Bars', price: '$ 9.50', href: '#menu' },
+  { art: 'crepe', name: 'Belgian Chocolate Crepes', price: '$ 7.50', href: '#menu' },
+  { art: 'icecream', name: 'Savory Oreo Flurry', price: '$ 6.00', href: '#menu' },
+  { art: 'shake', name: 'Ferrero Thick Shakes', price: '$ 7.00', href: '#menu' },
 ];
 
 const linesEl = document.getElementById('product-lines');
 if (linesEl) {
   linesEl.innerHTML = PRODUCT_LINES.map((p, i) => `
-    <a class="card spotlight product-line" href="${p.href}" data-reveal style="--delay: ${(i % 4) * 0.07}s">
-      <span class="pl-icon">${art(p.art)}</span>
+    <a class="card spotlight product-line choco-square-card" href="${p.href}" data-reveal style="--delay: ${(i % 3) * 0.07}s">
+      <div class="choco-square-art">${art(p.art)}</div>
       <h3>${esc(p.name)}</h3>
-      <p>${esc(p.text)}</p>
-      <span class="choco-buy-pill">${esc(p.go)}</span>
+      <div class="choco-square-price">${esc(p.price)}</div>
     </a>`).join('');
   reveal(linesEl);
 }
+
+const ghostL = document.getElementById('wide-ghost-left');
+const ghostR = document.getElementById('wide-ghost-right');
+if (ghostL) ghostL.innerHTML = art('cake');
+if (ghostR) ghostR.innerHTML = art('cupcake');
+
+document.querySelectorAll('[data-open-box]').forEach((btn) => {
+  btn.addEventListener('click', () => document.getElementById('open-box-builder')?.click());
+});

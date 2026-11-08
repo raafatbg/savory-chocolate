@@ -97,6 +97,7 @@ const MIGRATIONS = [
   migrateToVersion3,
   migrateToVersion4,
   migrateToVersion5,
+  migrateToVersion6,
 ];
 const LATEST = MIGRATIONS.length;
 
@@ -116,6 +117,120 @@ function backup(fromVersion) {
   if (!fs.existsSync(target)) {
     db.exec(`VACUUM INTO '${target.replace(/'/g, "''")}'`);
     console.log(`Backed up the database to ${target} before upgrading it.`);
+  }
+}
+
+// Version 6: seed SAVORY's full chocolatier & patisserie menu items and customer reviews.
+function migrateToVersion6() {
+  const exists = db.prepare('SELECT id FROM menu_items WHERE name = ?');
+  const insertItem = db.prepare(`
+    INSERT INTO menu_items (name, description, category, price_cents, options, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  const extraItems = [
+    [
+      'Molten Chocolate Lava Crown',
+      'Warm dark cocoa muffin crowned with thick, glossy melted Belgian milk-chocolate ganache.',
+      'Signature Gateaux & Bakes',
+      650,
+      JSON.stringify([
+        { name: 'Serve with', type: 'single', required: false, choices: [{ name: 'Vanilla bean gelato scoop', price_cents: 200 }, { name: 'Extra warm ganache pour', price_cents: 150 }] },
+      ]),
+      1,
+    ],
+    [
+      'Mirror-Glaze Orange & Dark Torte',
+      'Velvety 70% dark chocolate mousse torte finished in a mirror glaze with candied orange & roasted hazelnuts.',
+      'Signature Gateaux & Bakes',
+      2800,
+      JSON.stringify([
+        { name: 'Size', type: 'single', required: true, choices: [{ name: 'Individual Petit Gateau', price_cents: 0 }, { name: 'Sharing Torte (Serves 6–8)', price_cents: 1400 }] },
+      ]),
+      2,
+    ],
+    [
+      'Pistachio Kunafa Chocolate Bar',
+      'Thick Belgian milk or dark chocolate bar stuffed with crispy roasted kataifi pastry and vibrant pistachio cream.',
+      'Chocolates & Bark',
+      950,
+      JSON.stringify([
+        { name: 'Chocolate shell', type: 'single', required: true, choices: [{ name: 'Belgian Milk Chocolate', price_cents: 0 }, { name: '70% Dark Couverture', price_cents: 50 }] },
+      ]),
+      3,
+    ],
+    [
+      'Loaded Roasted Almond & Pistachio Bark',
+      'Hand-tempered dark and milk chocolate slabs studded with caramelized almonds, pistachios and flaky sea salt.',
+      'Chocolates & Bark',
+      1400,
+      JSON.stringify([
+        { name: 'Weight', type: 'single', required: true, choices: [{ name: '250g Ballot', price_cents: 0 }, { name: '500g Gift Pouch', price_cents: 1200 }] },
+      ]),
+      4,
+    ],
+    [
+      'Triple Belgian Chocolate Crepe',
+      'Freshly griddled golden crepe folded with dark, milk and white Belgian chocolate ribbons and hazelnut crunch.',
+      'Crepes & Waffles',
+      750,
+      JSON.stringify([
+        { name: 'Add-ons', type: 'multi', required: false, choices: [{ name: 'Roasted pistachios', price_cents: 150 }, { name: 'Fresh strawberries', price_cents: 150 }, { name: 'Vanilla ice cream', price_cents: 200 }] },
+      ]),
+      5,
+    ],
+    [
+      'Pistachio & Kunafa Crunch Crepe',
+      'Warm crepe filled with house pistachio praline, crispy kunafa threads and a drizzle of white chocolate.',
+      'Crepes & Waffles',
+      850,
+      '[]',
+      6,
+    ],
+    [
+      'Savory Oreo & Brownie Flurry',
+      'Creamy soft-serve swirled with warm fudge brownie chunks, crushed Oreo cookies and Belgian chocolate sauce.',
+      'Savory Flurry & Shakes',
+      600,
+      JSON.stringify([
+        { name: 'Size', type: 'single', required: true, choices: [{ name: 'Regular Cup', price_cents: 0 }, { name: 'Large Cup', price_cents: 150 }] },
+      ]),
+      7,
+    ],
+    [
+      'Ferrero & Hazelnut Thick Shake',
+      'Rich chocolate-hazelnut milkshake Rim-dipped in ganache and crowned with whipped cream and a praline truffle.',
+      'Savory Flurry & Shakes',
+      700,
+      '[]',
+      8,
+    ],
+    [
+      'Belgian Chocolate Éclair',
+      'Crisp choux pastry filled with silky dark chocolate diplomat cream and topped with a glossy cocoa glaze.',
+      'Signature Gateaux & Bakes',
+      450,
+      '[]',
+      9,
+    ],
+    [
+      'Smoked & Roasted Mixed Nuts',
+      'Our house selection of smoked almonds, jumbo cashews, roasted hazelnuts and Lebanese pistachios.',
+      'Chocolates & Bark',
+      1200,
+      '[]',
+      10,
+    ],
+  ];
+  for (const row of extraItems) {
+    if (!exists.get(row[0])) insertItem.run(...row);
+  }
+
+  const reviewCount = db.prepare('SELECT COUNT(*) AS n FROM reviews').get().n;
+  if (reviewCount === 0) {
+    const addRev = db.prepare('INSERT INTO reviews (name, text, rating, sort_order) VALUES (?, ?, ?, ?)');
+    addRev.run('Nour K.', 'We designed our engagement cake in the 3D studio and it arrived looking even more breathtaking in real life. The dark chocolate ganache and pistachio layer were unforgettable!', 5, 0);
+    addRev.run('Rami H.', 'The best chocolates and crepes in Aramoun and Aley. Their custom 16-piece chocolate gift box with the satin ribbon is now our go-to gift for every family visit.', 5, 1);
+    addRev.run('Maya S.', 'Ordered a custom birthday cake and tracked it live right until pickup. Super smooth experience and the cake was fresh, rich, and not overly sweet.', 5, 2);
   }
 }
 

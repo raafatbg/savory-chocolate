@@ -379,3 +379,26 @@ body.admin ::-webkit-scrollbar-thumb { background: #d6c3ad; border-color: var(--
 
 .pill.st-baking { background: rgba(181, 84, 26, 0.14); color: #9c4110; border-color: rgba(181, 84, 26, 0.35); }
 .order-card.st-baking { border-left: 3px solid #b5541a; }
+
+
+/* Chocolatier Sawtooth Header & Butter-Cream Accents for Admin */
+.admin-header {
+  background: linear-gradient(180deg, #361403 0%, #4C2007 100%);
+  position: sticky;
+  top: 0;
+  margin-bottom: 18px;
+}
+
+.admin-header::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background:
+    linear-gradient(45deg, transparent 50%, #4C2007 50%),
+    linear-gradient(315deg, transparent 50%, #4C2007 50%);
+  background-size: 18px 10px;
+  background-repeat: repeat-x;
+}
