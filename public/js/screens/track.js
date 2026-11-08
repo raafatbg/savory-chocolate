@@ -110,19 +110,19 @@ function applyMenuSiteChrome() {
   const nav = document.getElementById('site-nav');
   if (nav) {
     nav.innerHTML = `
-      <a href="/menu" data-i18n="nav_menu">Menu</a>
-      <a href="/menu#box-banner" data-i18n="nav_boxes">Gift Boxes</a>
-      <a href="/menu#what-we-make" data-i18n="nav_specialties">Specialties</a>
-      <a href="/track?site=menu" aria-current="page" data-i18n="nav_track">Track Order</a>
-      <a href="/menu#visit-section" data-i18n="foot_visit">Visit Us</a>
+      <a href="/" data-i18n="nav_menu">Menu</a>
+      <a href="/#box-banner" data-i18n="nav_boxes">Gift Boxes</a>
+      <a href="/#what-we-make" data-i18n="nav_specialties">Specialties</a>
+      <a href="/track" aria-current="page" data-i18n="nav_track">Track Order</a>
+      <a href="/#visit-section" data-i18n="foot_visit">Visit Us</a>
     `;
   }
   const cta = document.querySelector('.header-cta');
   if (cta) {
-    cta.href = '/menu';
+    cta.href = '/';
     cta.textContent = 'Back to menu';
   }
-  document.querySelectorAll('.brand').forEach((b) => { b.href = '/menu'; });
+  document.querySelectorAll('.brand').forEach((b) => { b.href = '/'; });
 }
 
 if (new URLSearchParams(location.search).get('site') === 'menu') {

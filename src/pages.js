@@ -97,13 +97,13 @@ function omviContacts() {
   }).join('');
 }
 
-export function renderPage(name) {
+export function renderPage(name, options = {}) {
+  const siteMode = options.siteMode || 'cakes';
   const s = getSettings();
   const places = locations(s);
   const values = {
     ...s,
     year: String(new Date().getFullYear()),
-    // Wordmark: first word in script, the rest in small caps (Savory / CHOCOLATE).
     brand_script: (s.shop_name || '').trim().split(/\s+/)[0] || '',
     brand_caps: (s.shop_name || '').trim().split(/\s+/).slice(1).join(' '),
     instagram_handle: (s.instagram || '').replace(/^https?:\/\/(www\.)?instagram\.com\//, '').split(/[/?#]/)[0],
@@ -116,6 +116,9 @@ export function renderPage(name) {
     omvi_about: OMVI.about,
     has_omvi_contact: OMVI.email || OMVI.phone || OMVI.whatsapp || OMVI.instagram || OMVI.website ? '1' : '',
     no_omvi_contact: OMVI.email || OMVI.phone || OMVI.whatsapp || OMVI.instagram || OMVI.website ? '' : '1',
+    cakes_site_url: options.cakesSiteUrl || process.env.CAKES_SITE_URL || 'http://localhost:3000',
+    menu_site_url: options.menuSiteUrl || process.env.MENU_SITE_URL || 'http://localhost:3001',
+    admin_site_url: options.adminSiteUrl || process.env.ADMIN_SITE_URL || 'http://localhost:3002',
   };
   const blocks = {
     visit_rows: visitRows(places),
@@ -129,7 +132,13 @@ export function renderPage(name) {
   let html = read(`screens/${name}.html`);
   // Partials can contain other partials, so expand a few levels deep.
   for (let i = 0; i < 3 && html.includes('{{>'); i++) {
-    html = html.replace(/{{>\s*([\w-]+)\s*}}/g, (_, partial) => read(`partials/${partial}.html`));
+    html = html.replace(/{{>\s*([\w-]+)\s*}}/g, (_, partial) => {
+      if (siteMode === 'menu') {
+        if (partial === 'header') return read('partials/header-menu.html');
+        if (partial === 'footer') return read('partials/footer-menu.html');
+      }
+      return read(`partials/${partial}.html`);
+    });
   }
 
   // Blocks can be nested, so keep resolving until none are left.

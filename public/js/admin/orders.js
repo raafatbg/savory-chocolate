@@ -73,7 +73,8 @@ function buildCustomerWhatsAppHref(o) {
   if (!digits) return '';
   const cleanDigits = digits.startsWith('0') ? `961${digits.slice(1)}` : digits.length <= 8 ? `961${digits}` : digits;
   const firstName = String(o.customer_name || '').trim().split(/\s+/)[0] || 'there';
-  const trackUrl = `${location.origin}/track?code=${encodeURIComponent(o.code)}`;
+  const siteBase = (o.type === 'menu' ? document.body.dataset.menuUrl : document.body.dataset.cakesUrl) || location.origin;
+  const trackUrl = `${siteBase.replace(/\/$/, '')}/track?code=${encodeURIComponent(o.code)}`;
   const statusMsg = {
     new: `Hi ${firstName}! Thank you for your SAVORY order (${o.code}). We have received it and will confirm shortly.`,
     confirmed: `Hi ${firstName}! Your SAVORY order (${o.code}) is confirmed for ${o.pickup_date} at ${friendlyTime(o.pickup_time)}. Track live: ${trackUrl}`,

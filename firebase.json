@@ -1,0 +1,46 @@
+{
+  "hosting": [
+    {
+      "target": "cakes",
+      "public": "public",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        {
+          "source": "**",
+          "run": {
+            "serviceId": "savory-chocolate",
+            "region": "europe-west1"
+          }
+        }
+      ]
+    },
+    {
+      "target": "menu",
+      "public": "public",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        {
+          "source": "**",
+          "run": {
+            "serviceId": "savory-chocolate",
+            "region": "europe-west1"
+          }
+        }
+      ]
+    },
+    {
+      "target": "admin",
+      "public": "public",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        {
+          "source": "**",
+          "run": {
+            "serviceId": "savory-chocolate",
+            "region": "europe-west1"
+          }
+        }
+      ]
+    }
+  ]
+}

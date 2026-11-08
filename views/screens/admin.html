@@ -6,7 +6,7 @@
   {{> head}}
   <link rel="stylesheet" href="/css/admin.css">
 </head>
-<body class="admin">
+<body class="admin" data-cakes-url="{{cakes_site_url}}" data-menu-url="{{menu_site_url}}">
 
   <!-- Log in / first-time setup -->
   <main id="auth-view" class="auth-wrap" hidden>
@@ -38,10 +38,10 @@
   <div id="dash-view" hidden>
     <header class="admin-header">
       <div class="container admin-bar">
-        <a class="brand" href="/admin">{{> brand-logo}}<span class="admin-pill">Admin</span></a>
+        <a class="brand" href="/">{{> brand-logo}}<span class="admin-pill">Admin</span></a>
         <div class="admin-actions">
-          <a class="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener">🍰 Cake Studio ↗</a>
-          <a class="btn btn-ghost btn-sm" href="/menu" target="_blank" rel="noopener">🍫 Menu Site ↗</a>
+          <a class="btn btn-ghost btn-sm" href="{{cakes_site_url}}" target="_blank" rel="noopener">🍰 Cake Studio ↗</a>
+          <a class="btn btn-ghost btn-sm" href="{{menu_site_url}}" target="_blank" rel="noopener">🍫 Menu Site ↗</a>
           <button type="button" class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
         </div>
       </div>

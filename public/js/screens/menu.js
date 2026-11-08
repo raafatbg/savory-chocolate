@@ -531,7 +531,7 @@ function showConfirmation(order, name) {
     name,
     title: 'your order is in!',
     shopName: settings.shop_name,
-    links: `<a class="btn btn-gold" href="/track?site=menu&code=${encodeURIComponent(order.order_code || order.code)}">Track order live</a><a class="btn btn-outline" href="/menu">Order more from menu</a>`,
+    links: `<a class="btn btn-gold" href="/track?code=${encodeURIComponent(order.order_code || order.code)}">Track order live</a><a class="btn btn-outline" href="/">Order more from menu</a>`,
   });
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
