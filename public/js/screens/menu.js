@@ -313,7 +313,7 @@ function renderMenu() {
           const from = item.options.length && fromPrice(item) !== item.price_cents;
           return `
           <article class="card spotlight menu-card" data-reveal style="--delay: ${(k % 3) * 0.06}s">
-            <div class="thumb ${item.image ? '' : 'illus'}">${item.image
+            <div class="thumb ${item.image ? '' : 'illus'}"><span class="choco-price-badge">${from ? 'FROM' : 'PRICE'}<br><strong>${money(from ? fromPrice(item) : item.price_cents)}</strong></span>${item.image
               ? `<img src="/uploads/${esc(item.image)}" alt="${esc(item.name)}" loading="lazy">`
               : illustrationFor(item)}</div>
             <div class="body">
@@ -557,7 +557,7 @@ if (linesEl) {
       <span class="pl-icon">${art(p.art)}</span>
       <h3>${esc(p.name)}</h3>
       <p>${esc(p.text)}</p>
-      <span class="go">${esc(p.go)} <span class="arrow" aria-hidden="true">→</span></span>
+      <span class="choco-buy-pill">${esc(p.go)}</span>
     </a>`).join('');
   reveal(linesEl);
 }

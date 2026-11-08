@@ -1,0 +1,75 @@
+<div class="choco-drip-wrap" aria-hidden="true">
+  <svg class="choco-drip-svg" viewBox="0 0 680 310" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin slice">
+    <defs>
+      <linearGradient id="chocoBase" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2E1102"/>
+        <stop offset="48%" stop-color="#4C2007"/>
+        <stop offset="100%" stop-color="#5E290B"/>
+      </linearGradient>
+      <linearGradient id="chocoRim" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#7B3914" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#3B1704" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="chocoSpec" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#B96E3B" stop-opacity="0.78"/>
+        <stop offset="60%" stop-color="#8F491D" stop-opacity="0.48"/>
+        <stop offset="100%" stop-color="#5E290B" stop-opacity="0"/>
+      </linearGradient>
+      <filter id="dripShadow" x="-8%" y="-4%" width="116%" height="118%">
+        <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#2E1102" flood-opacity="0.22"/>
+      </filter>
+    </defs>
+
+    <!-- Main melted chocolate curtain & long drips -->
+    <g filter="url(#dripShadow)">
+      <!-- Small left detachment drop -->
+      <path d="M22 0 H64 C64 26 57 38 43 38 C29 38 22 26 22 0 Z" fill="url(#chocoBase)"/>
+      <path d="M31 4 C31 18 35 26 40 28" stroke="url(#chocoSpec)" stroke-width="3.5" stroke-linecap="round"/>
+
+      <!-- Main interconnected glossy chocolate drip wave -->
+      <path d="
+        M92 0
+        H680
+        V215
+        C668 215 662 198 660 158
+        C658 118 656 76 638 72
+        C620 68 614 102 613 132
+        C612 162 608 176 596 176
+        C584 176 580 154 579 118
+        C578 82 572 56 548 56
+        C524 56 516 94 514 156
+        C512 218 518 286 496 286
+        C474 286 480 218 478 152
+        C476 86 464 46 436 46
+        C408 46 398 78 396 130
+        C394 182 400 242 380 242
+        C360 242 366 184 364 128
+        C362 72 348 36 318 36
+        C288 36 280 58 272 58
+        C264 58 258 34 238 34
+        C218 34 210 66 208 110
+        C206 154 214 186 194 186
+        C174 186 182 150 180 104
+        C178 58 168 38 148 40
+        C128 42 126 68 112 68
+        C98 68 94 36 92 0 Z
+      " fill="url(#chocoBase)"/>
+
+      <!-- 3D bevelled inner rim contours -->
+      <path d="M188 42 C198 74 196 142 194 174" stroke="url(#chocoSpec)" stroke-width="5" stroke-linecap="round"/>
+      <path d="M372 44 C382 88 380 182 378 228" stroke="url(#chocoSpec)" stroke-width="5.5" stroke-linecap="round"/>
+      <path d="M488 52 C498 106 496 212 494 270" stroke="url(#chocoSpec)" stroke-width="6" stroke-linecap="round"/>
+      <path d="M588 62 C596 96 596 142 594 164" stroke="url(#chocoSpec)" stroke-width="4.5" stroke-linecap="round"/>
+      <path d="M650 76 C656 112 656 168 654 198" stroke="url(#chocoSpec)" stroke-width="4" stroke-linecap="round"/>
+
+      <!-- Crisp white-gold specular shine arcs on the drips -->
+      <path d="M114 12 C136 26 166 22 192 8" stroke="#A65A2A" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
+      <path d="M292 14 C324 28 362 24 398 10" stroke="#A65A2A" stroke-width="3.5" stroke-linecap="round" opacity="0.55"/>
+      <path d="M432 18 C472 34 522 28 566 12" stroke="#A65A2A" stroke-width="4" stroke-linecap="round" opacity="0.55"/>
+      <circle cx="194" cy="175" r="3" fill="#C97C46" opacity="0.75"/>
+      <circle cx="380" cy="230" r="3.5" fill="#C97C46" opacity="0.75"/>
+      <circle cx="496" cy="273" r="4" fill="#C97C46" opacity="0.8"/>
+      <circle cx="596" cy="166" r="2.8" fill="#C97C46" opacity="0.7"/>
+    </g>
+  </svg>
+</div>

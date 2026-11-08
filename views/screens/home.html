@@ -9,32 +9,58 @@
   {{> header}}
 
   <main id="main">
-    <section class="hero">
-      <div class="container">
-        <div class="hero-copy" data-reveal>
-          {{#slogan}}<span class="script">{{slogan}}</span>{{/slogan}}
-          <h1 id="hero-title">{{hero_title}}</h1>
-          <p class="lead">{{tagline}}</p>
-          <div class="hero-actions">
-            <a class="btn btn-gold btn-lg btn-shine" href="/cakes">Design your cake <span class="arrow" aria-hidden="true">→</span></a>
-            <a class="btn btn-outline btn-lg" href="#signature">Signature designs</a>
+    <section class="hero choco-hero">
+      {{> choco-drip}}
+      <div class="choco-hero-shell">
+        <aside class="choco-sidebar" aria-label="Cake Studio categories">
+          <div class="choco-sidebar-brand">
+            {{> brand-logo}}
           </div>
-          <div class="trust">
-            <span>Made from scratch</span>
-            <span>Baked to order</span>
-            <span>Pickup or delivery</span>
+          <ul class="choco-sidebar-links">
+            <li><a href="/cakes" class="active"><span class="caret">›</span> 3D CAKE STUDIO</a></li>
+            <li><a href="#signature"><span class="caret">›</span> SIGNATURE CAKES</a></li>
+            <li><a href="#ways"><span class="caret">›</span> BESPOKE TIERS</a></li>
+            <li><a href="#flavor-palette"><span class="caret">›</span> FLAVOR PALETTE</a></li>
+            <li><a href="/gallery"><span class="caret">›</span> CAKE GALLERY</a></li>
+            <li><a href="/track"><span class="caret">›</span> TRACK ORDER</a></li>
+          </ul>
+        </aside>
+
+        <div class="choco-hero-main">
+          <div class="hero-copy" data-reveal>
+            {{#slogan}}<span class="script">{{slogan}}</span>{{/slogan}}
+            <h1 id="hero-title">{{hero_title}}</h1>
+            <p class="lead">{{tagline}}</p>
+            <div class="hero-actions">
+              <a class="btn-split" href="/cakes">
+                <span class="btn-split-text" data-i18n="cta_design_cake">DESIGN YOUR CAKE</span>
+                <span class="btn-split-icon" aria-hidden="true">+</span>
+              </a>
+              <a class="btn btn-outline btn-lg" href="#signature">Signature designs</a>
+            </div>
+            <div class="trust">
+              <span>Made from scratch</span>
+              <span>Baked to order</span>
+              <span>Pickup or delivery</span>
+            </div>
+            <a class="omvi-badge" href="/contact#omvi">
+              <span class="omvi-badge-label">Website &amp; 3D experience by</span>
+              <span class="omvi">{{omvi_name}}</span>
+            </a>
           </div>
-          <a class="omvi-badge" href="/contact#omvi">
-            <span class="omvi-badge-label">Website &amp; 3D experience by</span>
-            <span class="omvi">{{omvi_name}}</span>
-          </a>
-        </div>
-        <div class="stage" id="hero-stage">
-          <img class="fallback" src="/img/cake.svg" alt="A three-tier chocolate cake">
-          <span class="stage-hint"><span class="drag">Drag to spin &middot; </span>Rendered live in 3D</span>
+
+          <div class="stage-wrap">
+            <div class="stage" id="hero-stage">
+              <img class="fallback" src="/img/cake.svg" alt="A three-tier chocolate cake">
+              <span class="stage-hint"><span class="drag">Drag to spin &middot; </span><span id="hero-cake-name">Royal Ganache Crown</span></span>
+            </div>
+            <div class="choco-slider-nav" aria-label="Switch 3D showcase cake">
+              <button type="button" class="choco-nav-btn" id="hero-prev" aria-label="Previous 3D cake">‹</button>
+              <button type="button" class="choco-nav-btn" id="hero-next" aria-label="Next 3D cake">›</button>
+            </div>
+          </div>
         </div>
       </div>
-      <a class="scroll-cue" href="#ways">Scroll</a>
     </section>
 
     <div class="marquee" aria-hidden="true">
@@ -44,49 +70,60 @@
       </div>
     </div>
 
-    <section class="section" id="ways">
+    <section class="section" id="signature">
+      <div class="container">
+        <div class="section-head choco-section-head" data-reveal>
+          <span class="eyebrow">CUSTOM &amp; STANDARD ORDERS</span>
+          <h2>Signature <em class="gold-text">3D Creations</em></h2>
+          <p>Our favorite creations, rendered live by the same 3D engine as the cake builder. Click any creation to customize its size, layers, and message.</p>
+        </div>
+        <div class="designs choco-showcase-grid" id="designs"></div>
+      </div>
+    </section>
+
+    <section class="section section-cocoa-sawtooth" id="ways">
       <div class="container">
         <div class="section-head" data-reveal>
-          <span class="eyebrow">Bespoke Patisserie</span>
-          <h2>Crafted for every <em class="gold-text">celebration</em></h2>
+          <span class="eyebrow">FEATURED EXPERIENCES</span>
+          <h2>Crafted for every <em>celebration</em></h2>
+          <p>Design from scratch in our interactive 3D studio or customize a signature patisserie centerpiece.</p>
         </div>
         <div class="paths">
-          <a class="card spotlight path-card" href="/cakes" data-reveal>
-            <span class="num">01 &mdash; From Scratch</span>
+          <a class="card spotlight path-card choco-feature-card" href="/cakes" data-reveal>
+            <span class="num">01 &mdash; Interactive Studio</span>
             <h3>3D Cake Builder</h3>
             <p>Choose the shape, tiers, flavors, frosting, drip and toppings, cut a 3D slice to inspect your layers, and watch your cake come to life as you design it. <span id="lead-note"></span></p>
-            <span class="go">Start designing <span class="arrow" aria-hidden="true">→</span></span>
-            <svg class="art" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-              <rect x="18" y="70" width="84" height="34" rx="6"/><rect x="32" y="42" width="56" height="30" rx="6"/><rect x="44" y="20" width="32" height="24" rx="5"/>
-              <path d="M18 78c8 0 8 8 14 8s6-8 14-8 8 10 14 10 6-10 14-10 8 8 14 8 6-8 14-8"/><path d="M60 8v10"/><path d="M60 2c3 3 3 5 0 7-3-2-3-4 0-7z"/>
-            </svg>
+            <span class="choco-buy-pill">OPEN 3D BUILDER</span>
           </a>
-          <a class="card spotlight path-card" href="#signature" data-reveal style="--delay: 0.12s">
-            <span class="num">02 &mdash; Curated</span>
-            <h3>Signature cakes</h3>
+          <a class="card spotlight path-card choco-feature-card" href="#signature" data-reveal style="--delay: 0.12s">
+            <span class="num">02 &mdash; Chef Curated</span>
+            <h3>Signature Cakes</h3>
             <p>Start from one of our pastry chef’s signature 3D creations and customize the size, flavors, colors, and chocolate plaque message in seconds.</p>
-            <span class="go">Explore signature cakes <span class="arrow" aria-hidden="true">→</span></span>
-            <svg class="art" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-              <path d="M60 96S20 72 20 42a22 22 0 0 1 40-10 22 22 0 0 1 40 10c0 30-40 54-40 54z"/>
-              <circle cx="46" cy="40" r="4"/><circle cx="74" cy="40" r="4"/><circle cx="60" cy="54" r="4"/>
-            </svg>
+            <span class="choco-buy-pill">BROWSE CREATIONS</span>
           </a>
         </div>
-      </div>
-    </section>
 
-    <section class="section" id="signature" style="padding-top: 0;">
-      <div class="container">
-        <div class="section-head" data-reveal>
-          <span class="eyebrow">Signature designs</span>
-          <h2>Start from a <em class="gold-text">masterpiece</em></h2>
-          <p>Our favorite creations, rendered live by the same 3D engine as the cake builder. Open one and make it yours.</p>
+        <div class="steps" style="margin-top: 36px;">
+          <div class="card spotlight step choco-feature-card" data-reveal>
+            <span class="n">01</span>
+            <h3>Design in 3D</h3>
+            <p>Customize every tier, flavor, frosting, and message in our live 3D studio.</p>
+          </div>
+          <div class="card spotlight step choco-feature-card" data-reveal style="--delay: 0.1s">
+            <span class="n">02</span>
+            <h3>Pick a time</h3>
+            <p>Tell us when you'd like it, and whether you'll collect it or want it delivered.</p>
+          </div>
+          <div class="card spotlight step choco-feature-card" data-reveal style="--delay: 0.2s">
+            <span class="n">03</span>
+            <h3>Enjoy</h3>
+            <p>We bake it fresh for your celebration. Pay when you collect it or when it arrives.</p>
+          </div>
         </div>
-        <div class="designs" id="designs"></div>
       </div>
     </section>
 
-    <section class="section" style="padding-top: 0;">
+    <section class="section" id="flavor-palette">
       <div class="container showcase">
         <div data-reveal>
           <span class="eyebrow left">Made your way</span>
@@ -98,35 +135,12 @@
             <li>Glossy drips, toppings and candlelit wish mode</li>
             <li>A personal message on a SAVORY chocolate plaque</li>
           </ul>
-          <a class="btn btn-gold" href="/cakes">Open the cake builder <span class="arrow" aria-hidden="true">→</span></a>
+          <a class="btn-split" href="/cakes">
+            <span class="btn-split-text">OPEN CAKE BUILDER</span>
+            <span class="btn-split-icon" aria-hidden="true">→</span>
+          </a>
         </div>
         <div class="card option-cloud" id="option-cloud" data-reveal style="padding: 36px; --delay: 0.1s;"></div>
-      </div>
-    </section>
-
-    <section class="section" style="padding-top: 0;">
-      <div class="container">
-        <div class="section-head" data-reveal>
-          <span class="eyebrow">How it works</span>
-          <h2>Ordering is a piece of cake</h2>
-        </div>
-        <div class="steps">
-          <div class="card spotlight step" data-reveal>
-            <span class="n gold-text">01</span>
-            <h3>Design in 3D</h3>
-            <p>Customize every tier, flavor, frosting, and message in our live 3D studio.</p>
-          </div>
-          <div class="card spotlight step" data-reveal style="--delay: 0.1s">
-            <span class="n gold-text">02</span>
-            <h3>Pick a time</h3>
-            <p>Tell us when you'd like it, and whether you'll collect it or want it delivered.</p>
-          </div>
-          <div class="card spotlight step" data-reveal style="--delay: 0.2s">
-            <span class="n gold-text">03</span>
-            <h3>Enjoy</h3>
-            <p>We bake it fresh for your celebration. Pay when you collect it or when it arrives.</p>
-          </div>
-        </div>
       </div>
     </section>
 

@@ -2,31 +2,52 @@ import { api, esc, storage, loadSettings, reveal, splitHeadline } from '/js/comm
 import { createCakeStage, renderCakeSnapshot, releaseSnapshots } from '/js/cake3d.js';
 import { SIGNATURE_DESIGNS } from '/js/designs.js';
 
-const HERO_CAKE = {
-  shape: 'round',
-  tiers: 3,
-  size: 1,
-  tierColors: ['#efe0c9', '#f0c9c2', '#efe0c9'],
-  drip: '#2b160d',
-  toppings: ['berries', 'goldleaf'],
-  extras: ['candles'],
-};
+const HERO_SHOWCASE = [
+  {
+    name: 'Royal Ganache Crown',
+    cake: {
+      shape: 'round',
+      tiers: 3,
+      size: 1,
+      tierColors: ['#efe0c9', '#f0c9c2', '#efe0c9'],
+      drip: '#2b160d',
+      toppings: ['berries', 'goldleaf'],
+      extras: ['candles'],
+    },
+  },
+  ...SIGNATURE_DESIGNS.slice(0, 3).map((d) => ({ name: d.name, cake: d.cake })),
+];
+
+let heroIndex = 0;
 
 splitHeadline(document.getElementById('hero-title'), { accent: 1 });
 
 const stage = createCakeStage(document.getElementById('hero-stage'), { sparkles: true, float: true, scrollSpin: true });
-stage?.setCake(HERO_CAKE, { intro: true });
+stage?.setCake(HERO_SHOWCASE[0].cake, { intro: true });
 
-// Signature designs: each card gets a still render from the 3D engine once it's near the screen.
+function stepHeroCake(delta) {
+  heroIndex = (heroIndex + delta + HERO_SHOWCASE.length) % HERO_SHOWCASE.length;
+  const pick = HERO_SHOWCASE[heroIndex];
+  stage?.setCake(pick.cake);
+  const label = document.getElementById('hero-cake-name');
+  if (label) label.textContent = pick.name;
+}
+
+document.getElementById('hero-prev')?.addEventListener('click', () => stepHeroCake(-1));
+document.getElementById('hero-next')?.addEventListener('click', () => stepHeroCake(1));
+
+// Signature designs: styled with the chocolatier showcase frame, top-right price badge, dark cocoa title bar & BUY/CUSTOMIZE action.
 const designsEl = document.getElementById('designs');
+const SAMPLE_PRICES = ['$45', '$55', '$65', '$50', '$60', '$75'];
 designsEl.innerHTML = SIGNATURE_DESIGNS.map((d, i) => `
-  <a class="card spotlight design-card" href="/cakes?design=${d.id}" data-reveal style="--delay: ${i * 0.08}s">
-    <div class="render loading" data-render="${d.id}"></div>
-    <div class="body">
-      <h3>${esc(d.name)}</h3>
-      <p>${esc(d.description)}</p>
-      <span class="go">Customize this design <span class="arrow" aria-hidden="true">→</span></span>
+  <a class="choco-showcase-card design-card" href="/cakes?design=${d.id}" data-reveal style="--delay: ${i * 0.08}s">
+    <div class="choco-frame">
+      <span class="choco-price-badge">FROM<br><strong>${SAMPLE_PRICES[i % SAMPLE_PRICES.length]}</strong></span>
+      <div class="render loading" data-render="${d.id}"></div>
+      <p class="choco-frame-desc">${esc(d.description)}</p>
     </div>
+    <div class="choco-title-bar">${esc(d.name)}</div>
+    <span class="choco-buy-link">CUSTOMIZE NOW</span>
   </a>`).join('');
 reveal(designsEl);
 

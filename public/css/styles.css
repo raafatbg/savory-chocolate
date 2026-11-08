@@ -2117,3 +2117,515 @@ html[dir="rtl"] .arrow {
   color: var(--text);
   font-size: 0.92rem;
 }
+
+
+/* ==========================================================================
+   Chocolatier Editorial Upgrade (Melted Drips, Sawtooth Wrapper Edges,
+   Dark Cocoa Sidebar, Split CTA Buttons & Framed Showcase Cards)
+   ========================================================================== */
+
+/* 1. Glossy Melted Chocolate Ceiling Drip */
+.page-hero.has-drip,
+.choco-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.choco-drip-wrap {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(56vw, 680px);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.choco-drip-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 860px) {
+  .choco-drip-wrap {
+    width: min(78vw, 440px);
+    opacity: 0.92;
+  }
+}
+
+/* 2. Chocolatier Hero with Left Sawtooth Dark-Cocoa Sidebar */
+.choco-hero {
+  padding: 0 !important;
+  min-height: 620px;
+  display: block;
+  background:
+    radial-gradient(680px 420px at 68% 42%, rgba(255, 255, 255, 0.72), transparent 70%),
+    var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.choco-hero-shell {
+  max-width: 1380px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 235px 1fr;
+  min-height: 610px;
+  position: relative;
+}
+
+.choco-sidebar {
+  position: relative;
+  background: linear-gradient(180deg, #381503 0%, #4C2007 60%, #2E1102 100%);
+  color: #F7F7D3;
+  padding: 36px 26px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+  z-index: 3;
+  box-shadow: 10px 0 32px -14px rgba(46, 17, 2, 0.35);
+}
+
+/* Vertical sawtooth / serrated chocolate-wrapper right border */
+.choco-sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -13px;
+  width: 14px;
+  background:
+    linear-gradient(135deg, #431B05 50%, transparent 50%),
+    linear-gradient(45deg, #431B05 50%, transparent 50%);
+  background-size: 14px 20px;
+  background-repeat: repeat-y;
+}
+
+.choco-sidebar-brand .brand-mark {
+  color: #F7F7D3;
+}
+
+.choco-sidebar-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.choco-sidebar-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(247, 247, 211, 0.86);
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.choco-sidebar-links a .caret {
+  font-size: 1.05rem;
+  line-height: 1;
+  color: #D88946;
+}
+
+.choco-sidebar-links a:hover,
+.choco-sidebar-links a.active {
+  color: #D88946;
+  transform: translateX(4px);
+}
+
+.choco-hero-main {
+  padding: 58px 44px 52px 54px;
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr;
+  align-items: center;
+  gap: 32px;
+  position: relative;
+  z-index: 3;
+}
+
+.choco-menu-hero .choco-hero-main {
+  grid-template-columns: 1fr;
+  max-width: 820px;
+}
+
+.choco-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(3.2rem, 6.2vw, 5.1rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #240D02;
+  margin-bottom: 12px;
+}
+
+.choco-platter-art {
+  margin: 8px 0 22px;
+  max-width: 530px;
+}
+
+.choco-platter-art svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 18px 24px rgba(46, 17, 2, 0.18));
+}
+
+.stage-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.choco-slider-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  align-self: flex-end;
+}
+
+.choco-nav-btn {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 4px;
+  background: #3D1804;
+  color: #F7F7D3;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 18px -6px rgba(46, 17, 2, 0.35);
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.choco-nav-btn:hover {
+  background: #5C280B;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 1020px) {
+  .choco-hero-shell {
+    grid-template-columns: 1fr;
+  }
+  .choco-sidebar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 18px 22px;
+    gap: 16px;
+  }
+  .choco-sidebar::after {
+    display: none;
+  }
+  .choco-sidebar-links {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 14px 20px;
+  }
+  .choco-hero-main {
+    grid-template-columns: 1fr;
+    padding: 36px 22px 44px;
+  }
+}
+
+/* 3. Two-Tone Split-Block CTA Button (READ MORE | + style) */
+.btn-split {
+  display: inline-flex;
+  align-items: stretch;
+  text-decoration: none;
+  border: 0;
+  padding: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  font-family: var(--font-body);
+  box-shadow: 0 12px 26px -10px rgba(46, 17, 2, 0.38);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.btn-split-text {
+  background: #2B1002;
+  color: #F7F7D3;
+  padding: 14px 24px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-split-icon {
+  background: #5B280B;
+  color: #F7F7D3;
+  width: 46px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  border-left: 1px solid rgba(247, 247, 211, 0.16);
+  transition: background-color 0.2s;
+}
+
+.btn-split:hover {
+  transform: translateY(-2px);
+  color: #F7F7D3;
+  box-shadow: 0 18px 32px -10px rgba(46, 17, 2, 0.48);
+}
+
+.btn-split:hover .btn-split-icon {
+  background: #7A3711;
+}
+
+/* 4. Framed Showcase Cards with Top-Right Cocoa Price Badge & Dark Title Bar */
+.choco-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 32px;
+}
+
+.choco-showcase-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: var(--text);
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  transition: transform 0.28s var(--ease);
+}
+
+.choco-showcase-card:hover {
+  transform: translateY(-6px);
+}
+
+.choco-frame {
+  width: 100%;
+  background: #FFFDF6;
+  border: 1px solid rgba(76, 32, 7, 0.14);
+  border-radius: 6px;
+  padding: 18px 18px 16px;
+  position: relative;
+  box-shadow: 0 18px 40px -22px rgba(46, 17, 2, 0.22);
+}
+
+.choco-frame .render {
+  border-radius: 4px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 42%, #FFFDF8 0%, #F4F1CA 100%);
+}
+
+.choco-frame-desc {
+  margin: 12px 4px 2px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.choco-price-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 4;
+  background: #3B1704;
+  color: #F7F7D3;
+  padding: 7px 11px;
+  border-radius: 3px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  box-shadow: 0 8px 18px -6px rgba(46, 17, 2, 0.45);
+}
+
+.choco-price-badge strong {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+
+.choco-title-bar {
+  background: #3B1704;
+  color: #F7F7D3;
+  padding: 12px 22px;
+  width: min(84%, 270px);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  margin-top: 16px;
+  box-shadow: 0 10px 22px -10px rgba(46, 17, 2, 0.4);
+  transition: background-color 0.2s;
+}
+
+.choco-showcase-card:hover .choco-title-bar {
+  background: #5A260A;
+}
+
+.choco-buy-link {
+  margin-top: 10px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #2B1002;
+  border-bottom: 2px solid #3B1704;
+  padding-bottom: 2px;
+}
+
+/* Menu cards: position thumb relative so the top-right PRICE badge sits cleanly in the corner */
+.menu-card .thumb {
+  position: relative;
+}
+
+/* 5. Full-Bleed Deep Cocoa Section with Horizontal Sawtooth / Zigzag Wrapper Edges */
+.section-cocoa-sawtooth {
+  position: relative;
+  background: linear-gradient(180deg, #3B1704 0%, #4C2007 52%, #331303 100%);
+  color: #F7F7D3;
+  padding: 92px 0 96px !important;
+  margin: 36px 0;
+}
+
+.section-cocoa-sawtooth::before {
+  content: '';
+  position: absolute;
+  top: -16px;
+  left: 0;
+  right: 0;
+  height: 16px;
+  background:
+    linear-gradient(135deg, transparent 50%, #3B1704 50%),
+    linear-gradient(225deg, transparent 50%, #3B1704 50%);
+  background-size: 24px 16px;
+  background-repeat: repeat-x;
+}
+
+.section-cocoa-sawtooth::after {
+  content: '';
+  position: absolute;
+  bottom: -16px;
+  left: 0;
+  right: 0;
+  height: 16px;
+  background:
+    linear-gradient(45deg, transparent 50%, #331303 50%),
+    linear-gradient(315deg, transparent 50%, #331303 50%);
+  background-size: 24px 16px;
+  background-repeat: repeat-x;
+}
+
+.section-cocoa-sawtooth .section-head h2,
+.section-cocoa-sawtooth .section-head em {
+  color: #F7F7D3;
+  background: none;
+  -webkit-text-fill-color: #F7F7D3;
+}
+
+.section-cocoa-sawtooth .section-head .eyebrow {
+  color: #E5A467;
+}
+
+.section-cocoa-sawtooth .section-head p {
+  color: rgba(247, 247, 211, 0.82);
+}
+
+/* Crisp butter-cream cards inside the dark cocoa sawtooth band */
+.section-cocoa-sawtooth .card {
+  background: #FFFDF5;
+  color: #3B1704;
+  border: 0;
+  border-radius: 6px;
+  box-shadow: 0 22px 44px -20px rgba(0, 0, 0, 0.45);
+}
+
+.section-cocoa-sawtooth .card h3 {
+  color: #2B1002;
+  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 0.96rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.section-cocoa-sawtooth .card p {
+  color: #643114;
+}
+
+.choco-buy-pill {
+  display: inline-block;
+  margin-top: 12px;
+  background: #3B1704;
+  color: #F7F7D3;
+  padding: 9px 18px;
+  border-radius: 3px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.card:hover .choco-buy-pill {
+  background: #5C280B;
+  transform: translateY(-1px);
+}
+
+/* 6. Deep Cocoa Footer with Sawtooth Top Edge */
+.site-footer {
+  position: relative;
+  background: #2E1102;
+  color: #F7F7D3;
+  border-top: 0;
+  margin-top: 32px;
+}
+
+.site-footer::before {
+  content: '';
+  position: absolute;
+  top: -14px;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background:
+    linear-gradient(135deg, transparent 50%, #2E1102 50%),
+    linear-gradient(225deg, transparent 50%, #2E1102 50%);
+  background-size: 22px 14px;
+  background-repeat: repeat-x;
+}
+
+.site-footer h4,
+.site-footer strong,
+.site-footer .brand-mark {
+  color: #F7F7D3;
+}
+
+.site-footer p,
+.site-footer a,
+.site-footer .footer-bottom {
+  color: rgba(247, 247, 211, 0.8);
+}
+
+.site-footer a:hover {
+  color: #E5A467;
+}
+
+.site-footer .footer-wordmark {
+  color: rgba(247, 247, 211, 0.05);
+}

@@ -5,15 +5,97 @@
   <meta name="description" content="Order fine chocolates, luxury gift boxes, crepes, Savory Flurry, ice cream, shakes and bakes ahead for pickup or delivery.">
   {{> head}}
 </head>
-<body>
+<body class="has-hero">
   {{> header-menu}}
 
   <main id="main">
-    <section class="page-hero" style="padding-bottom: 36px;">
-      <div class="container" data-reveal>
-        <span class="eyebrow">Chocolatier &amp; Patisserie Menu</span>
-        <h1>Fresh from our <em class="gold-text">counter</em></h1>
-        <p>Handcrafted chocolates, warm crepes, Savory Flurry, shakes and daily bakes — order ahead for pickup or delivery.</p>
+    <section class="hero choco-hero choco-menu-hero">
+      {{> choco-drip}}
+      <div class="choco-hero-shell">
+        <aside class="choco-sidebar" aria-label="Chocolatier categories">
+          <div class="choco-sidebar-brand">
+            {{> brand-logo}}
+          </div>
+          <ul class="choco-sidebar-links">
+            <li><a href="#box-banner" class="active"><span class="caret">›</span> CHOCOLATE COMBOS</a></li>
+            <li><a href="#menu"><span class="caret">›</span> LUXURY CHOCOLATES</a></li>
+            <li><a href="#what-we-make"><span class="caret">›</span> CREPES &amp; FLURRY</a></li>
+            <li><a href="#menu"><span class="caret">›</span> DAILY BAKES</a></li>
+            <li><a href="/track"><span class="caret">›</span> TRACK ORDER</a></li>
+            <li><a href="#visit-section"><span class="caret">›</span> VISIT BRANCHES</a></li>
+          </ul>
+        </aside>
+
+        <div class="choco-hero-main">
+          <div class="hero-copy" data-reveal>
+            <span class="eyebrow left">CHOCOLATIER &amp; PATISSERIE</span>
+            <h1>Chocolates</h1>
+            <p class="lead">Handcrafted Belgian pralines, pistachio kunafa truffles, warm crepes, Savory Flurry, and daily bakes — made fresh in Aramoun &amp; Aley.</p>
+
+            <!-- Handcrafted Chocolate Platter Artwork (inspired by reference) -->
+            <div class="choco-platter-art" aria-hidden="true">
+              <svg viewBox="0 0 540 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <radialGradient id="platterShadow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#2E1102" stop-opacity="0.28"/>
+                    <stop offset="100%" stop-color="#2E1102" stop-opacity="0"/>
+                  </radialGradient>
+                  <linearGradient id="darkCube" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#6B3314"/>
+                    <stop offset="50%" stop-color="#3E1805"/>
+                    <stop offset="100%" stop-color="#240C01"/>
+                  </linearGradient>
+                  <linearGradient id="milkBar" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#9A562C"/>
+                    <stop offset="55%" stop-color="#6D3616"/>
+                    <stop offset="100%" stop-color="#4A2008"/>
+                  </linearGradient>
+                  <radialGradient id="truffleGloss" cx="35%" cy="30%" r="65%">
+                    <stop offset="0%" stop-color="#B97344"/>
+                    <stop offset="40%" stop-color="#58250B"/>
+                    <stop offset="100%" stop-color="#260D02"/>
+                  </radialGradient>
+                </defs>
+                <ellipse cx="265" cy="176" rx="235" ry="24" fill="url(#platterShadow)"/>
+                <!-- Ribbed Praline Cubes (left) -->
+                <rect x="44" y="88" width="52" height="58" rx="6" fill="url(#darkCube)"/>
+                <path d="M50 98H90M50 108H90M50 118H90M50 128H90" stroke="#854824" stroke-width="2" stroke-linecap="round"/>
+                <rect x="86" y="76" width="54" height="68" rx="6" fill="#331203"/>
+                <path d="M96 84V136M108 84V136M120 84V136M132 84V136" stroke="#5E290D" stroke-width="2" stroke-linecap="round"/>
+                <rect x="34" y="122" width="58" height="46" rx="6" fill="url(#milkBar)"/>
+                <path d="M40 130H86M40 138H86M40 146H86M40 154H86" stroke="#B67245" stroke-width="2"/>
+                <!-- Artisanal Chocolate Lava Muffin / Dome (center) -->
+                <path d="M168 106 L180 162 H288 L300 106 Z" fill="#8C532B"/>
+                <path d="M158 104 C158 52 200 32 242 32 C284 32 322 54 322 104 C322 122 296 130 240 130 C184 130 158 122 158 104 Z" fill="url(#darkCube)"/>
+                <path d="M196 48 C222 38 262 40 286 56" stroke="#9B582E" stroke-width="4" stroke-linecap="round" opacity="0.65"/>
+                <!-- Segmented Belgian Chocolate Bar (right) -->
+                <g transform="rotate(14 395 135)">
+                  <rect x="315" y="96" width="168" height="78" rx="8" fill="url(#milkBar)" stroke="#3B1704" stroke-width="2"/>
+                  <rect x="325" y="104" width="44" height="28" rx="4" fill="#824520" stroke="#B56E3E" stroke-width="1.5"/>
+                  <rect x="377" y="104" width="44" height="28" rx="4" fill="#824520" stroke="#B56E3E" stroke-width="1.5"/>
+                  <rect x="429" y="104" width="44" height="28" rx="4" fill="#824520" stroke="#B56E3E" stroke-width="1.5"/>
+                  <rect x="325" y="138" width="44" height="28" rx="4" fill="#743B19" stroke="#A66032" stroke-width="1.5"/>
+                  <rect x="377" y="138" width="44" height="28" rx="4" fill="#743B19" stroke="#A66032" stroke-width="1.5"/>
+                  <rect x="429" y="138" width="44" height="28" rx="4" fill="#743B19" stroke="#A66032" stroke-width="1.5"/>
+                </g>
+                <!-- Glossy Chocolate Truffle Spheres (foreground) -->
+                <circle cx="116" cy="160" r="18" fill="url(#truffleGloss)"/>
+                <circle cx="152" cy="166" r="20" fill="url(#truffleGloss)"/>
+                <circle cx="192" cy="162" r="22" fill="url(#truffleGloss)"/>
+                <circle cx="234" cy="168" r="21" fill="url(#truffleGloss)"/>
+                <circle cx="274" cy="163" r="19" fill="url(#truffleGloss)"/>
+              </svg>
+            </div>
+
+            <div class="hero-actions">
+              <a class="btn-split" href="#box-banner">
+                <span class="btn-split-text">CURATE GIFT BOX</span>
+                <span class="btn-split-icon" aria-hidden="true">+</span>
+              </a>
+              <a class="btn btn-outline btn-lg" href="#menu">Explore full menu</a>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -34,7 +116,10 @@
               <span class="eyebrow left">Signature Gifting</span>
               <h2>Build Your Own <em class="gold-text">SAVORY</em> Chocolate Box</h2>
               <p class="muted">Curate a 9, 16, or 25-piece luxury gift box filled with handmade pralines, pistachio kunafa truffles, and dark ganaches, tied with a satin ribbon.</p>
-              <button type="button" class="btn btn-gold" id="open-box-builder">Curate a gift box <span class="arrow" aria-hidden="true">→</span></button>
+              <button type="button" class="btn-split" id="open-box-builder">
+                <span class="btn-split-text">CURATE A GIFT BOX</span>
+                <span class="btn-split-icon" aria-hidden="true">+</span>
+              </button>
             </div>
             <div class="box-banner-art" aria-hidden="true">
               <div class="mini-box-grid">
@@ -80,17 +165,21 @@
           </div>
         </aside>
       </div>
+    </div>
 
-      <section class="section" id="what-we-make" style="padding-top: 0;">
+    <section class="section section-cocoa-sawtooth" id="what-we-make">
+      <div class="container">
         <div class="section-head" data-reveal>
-          <span class="eyebrow">What we make</span>
-          <h2>Something for every <em class="gold-text">sweet tooth</em></h2>
-          <p>From fine chocolates to crepes, shakes and Savory Flurry, handcrafted in Aramoun.</p>
+          <span class="eyebrow">FEATURED PRODUCTS</span>
+          <h2>Something for every <em>sweet tooth</em></h2>
+          <p>From fine chocolates to crepes, shakes and Savory Flurry, handcrafted in Aramoun &amp; Aley.</p>
         </div>
         <div class="product-lines" id="product-lines"></div>
-      </section>
+      </div>
+    </section>
 
-      <section class="section" id="visit-section" style="padding-top: 0;">
+    <section class="section" id="visit-section">
+      <div class="container">
         <div class="visit">
           <div class="card" data-reveal>
             <span class="eyebrow left">Chocolatier &amp; Cafe</span>
@@ -106,8 +195,8 @@
             </dl>
           </div>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   </main>
 
   <a href="#cart" class="btn btn-gold bottom-bar" id="cart-bar">
