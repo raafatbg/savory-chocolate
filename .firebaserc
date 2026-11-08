@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "savory-962f3"
+    "default": "savory-lb"
   },
   "targets": {
     "savory-962f3": {
@@ -13,6 +13,19 @@
         ],
         "admin": [
           "savory-962f3-admin"
+        ]
+      }
+    },
+    "savory-lb": {
+      "hosting": {
+        "cakes": [
+          "savory-lb-cakes"
+        ],
+        "menu": [
+          "savory-lb-menu"
+        ],
+        "admin": [
+          "savory-lb-admin"
         ]
       }
     }

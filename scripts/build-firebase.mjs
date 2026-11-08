@@ -14,9 +14,9 @@ const PUBLIC_DIR = path.join(ROOT, 'public');
 const THREE_DIR = path.join(ROOT, 'node_modules', 'three');
 
 const URLS = {
-  cakesSiteUrl: process.env.CAKES_SITE_URL || 'https://savory-962f3-cakes.web.app',
-  menuSiteUrl: process.env.MENU_SITE_URL || 'https://savory-962f3-menu.web.app',
-  adminSiteUrl: process.env.ADMIN_SITE_URL || 'https://savory-962f3-admin.web.app',
+  cakesSiteUrl: process.env.CAKES_SITE_URL || 'https://savory-lb-cakes.web.app',
+  menuSiteUrl: process.env.MENU_SITE_URL || 'https://savory-lb-menu.web.app',
+  adminSiteUrl: process.env.ADMIN_SITE_URL || 'https://savory-lb-admin.web.app',
 };
 
 function buildSeed() {
