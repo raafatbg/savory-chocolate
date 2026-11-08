@@ -62,7 +62,7 @@ db.exec(`
     code           TEXT NOT NULL UNIQUE,
     type           TEXT NOT NULL CHECK (type IN ('menu', 'cake')),
     status         TEXT NOT NULL DEFAULT 'new'
-                   CHECK (status IN ('new', 'confirmed', 'ready', 'completed', 'cancelled')),
+                   CHECK (status IN ('new', 'confirmed', 'baking', 'ready', 'completed', 'cancelled')),
     customer_name  TEXT NOT NULL,
     customer_phone TEXT NOT NULL,
     customer_email TEXT NOT NULL DEFAULT '',
@@ -96,6 +96,7 @@ const MIGRATIONS = [
   migrateToVersion2,
   migrateToVersion3,
   migrateToVersion4,
+  migrateToVersion5,
 ];
 const LATEST = MIGRATIONS.length;
 
@@ -116,6 +117,45 @@ function backup(fromVersion) {
     db.exec(`VACUUM INTO '${target.replace(/'/g, "''")}'`);
     console.log(`Backed up the database to ${target} before upgrading it.`);
   }
+}
+
+// Version 5: allow 'baking' ("In the Kitchen") status on orders.
+function migrateToVersion5() {
+  db.exec(`
+    CREATE TABLE orders_v5 (
+      id                 INTEGER PRIMARY KEY,
+      code               TEXT NOT NULL UNIQUE,
+      type               TEXT NOT NULL CHECK (type IN ('menu', 'cake')),
+      status             TEXT NOT NULL DEFAULT 'new'
+                         CHECK (status IN ('new', 'confirmed', 'baking', 'ready', 'completed', 'cancelled')),
+      customer_name      TEXT NOT NULL,
+      customer_phone     TEXT NOT NULL,
+      customer_email     TEXT NOT NULL DEFAULT '',
+      pickup_date        TEXT NOT NULL,
+      pickup_time        TEXT NOT NULL,
+      notes              TEXT NOT NULL DEFAULT '',
+      total_cents        INTEGER NOT NULL,
+      created_at         TEXT NOT NULL DEFAULT (datetime('now')),
+      fulfillment        TEXT NOT NULL DEFAULT 'pickup',
+      delivery_address   TEXT NOT NULL DEFAULT '',
+      delivery_fee_cents INTEGER NOT NULL DEFAULT 0,
+      branch             TEXT NOT NULL DEFAULT '',
+      reference_image    TEXT NOT NULL DEFAULT ''
+    );
+    INSERT INTO orders_v5 (
+      id, code, type, status, customer_name, customer_phone, customer_email,
+      pickup_date, pickup_time, notes, total_cents, created_at,
+      fulfillment, delivery_address, delivery_fee_cents, branch, reference_image
+    )
+    SELECT
+      id, code, type, status, customer_name, customer_phone, customer_email,
+      pickup_date, pickup_time, notes, total_cents, created_at,
+      fulfillment, delivery_address, delivery_fee_cents, branch, reference_image
+    FROM orders;
+    DROP TABLE orders;
+    ALTER TABLE orders_v5 RENAME TO orders;
+    CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status, created_at);
+  `);
 }
 
 // Version 4: branches (customers pick one; each has its own WhatsApp) and inspiration photos on orders.
