@@ -570,6 +570,28 @@ const summaryStep = document.getElementById('summary-step');
 new IntersectionObserver(([entry]) => bar.classList.toggle('show', !entry.isIntersecting && entry.boundingClientRect.top > 0))
   .observe(summaryStep);
 
+// Mobile Floating PiP 3D Preview: keeps the single WebGL stage visible while scrolling Steps 02-08 on mobile
+const previewCol = document.getElementById('preview-col');
+const previewCard = document.getElementById('preview-card');
+const pipExpandBtn = document.getElementById('pip-expand-btn');
+if (previewCol && previewCard && 'IntersectionObserver' in window) {
+  new IntersectionObserver(([entry]) => {
+    const isMobile = window.matchMedia('(max-width: 960px)').matches;
+    const scrolledPast = !entry.isIntersecting && entry.boundingClientRect.bottom < 80;
+    if (isMobile && scrolledPast) {
+      previewCol.style.minHeight = `${previewCard.offsetHeight || 380}px`;
+      previewCard.classList.add('is-pip');
+    } else {
+      previewCard.classList.remove('is-pip');
+      previewCol.style.minHeight = '';
+    }
+  }, { threshold: [0, 0.15] }).observe(previewCol);
+
+  pipExpandBtn?.addEventListener('click', () => {
+    window.scrollTo({ top: Math.max(0, previewCol.offsetTop - 90), behavior: 'smooth' });
+  });
+}
+
 // ---------- submit ----------
 
 form.addEventListener('submit', async (event) => {

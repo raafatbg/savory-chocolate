@@ -3149,3 +3149,401 @@ textarea:focus-visible,
     transform: none !important;
   }
 }
+
+/* ============================================================================
+   6 FRONTEND UPGRADES: Sister-Site Switcher, Menu Search/Filters, Quick-View,
+   Mobile PiP 3D Preview, Cart Upsells, and Recent Orders Memory
+   ============================================================================ */
+
+/* 1. Cross-Site Sister Switcher & Header Active Order Pill */
+.sister-site-pill,
+.active-order-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.sister-site-pill {
+  background: rgba(59, 23, 4, 0.08);
+  border: 1px solid rgba(59, 23, 4, 0.22);
+  color: #3B1704;
+}
+
+.sister-site-pill:hover {
+  background: #3B1704;
+  color: #F7F7D3;
+  transform: translateY(-1px);
+}
+
+.active-order-pill {
+  background: #3B1704;
+  border: 1px solid #D9B066;
+  color: #F7F7D3;
+}
+
+.active-order-pill:hover {
+  background: #552309;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1120px) {
+  .sister-site-pill span {
+    display: none;
+  }
+}
+
+/* 2. Menu Search Bar, Quick Filter Pills & Dietary Badges */
+.menu-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  background: #FFFFFF;
+  border: 1px solid rgba(76, 32, 7, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px -18px rgba(59, 23, 4, 0.16);
+}
+
+.menu-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.menu-search-icon {
+  position: absolute;
+  left: 14px;
+  color: #6E462C;
+  pointer-events: none;
+}
+
+#menu-search {
+  width: 100%;
+  padding: 11px 38px 11px 42px;
+  border-radius: 8px;
+  border: 1px solid rgba(76, 32, 7, 0.2);
+  background: #FBFBE6;
+  color: #2B1003;
+  font-size: 0.92rem;
+}
+
+.menu-search-clear {
+  position: absolute;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(76, 32, 7, 0.1);
+  color: #3B1704;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.menu-filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.menu-filter-pill {
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(76, 32, 7, 0.18);
+  background: #FBFBE6;
+  color: #3B1704;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.menu-filter-pill:hover {
+  border-color: #3B1704;
+  transform: translateY(-1px);
+}
+
+.menu-filter-pill.active {
+  background: #3B1704;
+  border-color: #3B1704;
+  color: #F7F7D3;
+}
+
+.menu-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.menu-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.menu-badge.badge-chef { background: #3B1704; color: #D9B066; }
+.menu-badge.badge-nut  { background: rgba(150, 188, 97, 0.22); color: #365314; }
+.menu-badge.badge-dark { background: rgba(76, 32, 7, 0.12); color: #3B1704; }
+.menu-badge.badge-warm { background: rgba(198, 125, 45, 0.18); color: #7C2D12; }
+.menu-badge.badge-chill { background: rgba(56, 189, 248, 0.16); color: #0C4A6E; }
+
+/* 3. Product Quick-View Modal & Thumb Hover Hint */
+.menu-card .thumb[data-quickview] {
+  cursor: pointer;
+}
+
+.quickview-hint {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 3;
+  background: rgba(59, 23, 4, 0.86);
+  color: #F7F7D3;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.menu-card .thumb[data-quickview]:hover .quickview-hint,
+.menu-card .thumb[data-quickview]:focus-visible .quickview-hint {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.quickview-dialog {
+  width: min(540px, calc(100vw - 24px));
+}
+
+.quickview-hero {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid rgba(76, 32, 7, 0.12);
+  border-radius: 12px;
+  height: 220px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 16px;
+}
+
+.quickview-art {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.quickview-art svg,
+.quickview-art img {
+  max-width: 220px;
+  max-height: 190px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 20px rgba(45, 18, 4, 0.18));
+}
+
+.quickview-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #3B1704 !important;
+  color: #F7F7D3 !important;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+}
+
+.quickview-pairing {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(217, 176, 102, 0.16);
+  border-left: 3px solid #3B1704;
+  font-size: 0.82rem;
+  color: #3B1704;
+  font-weight: 600;
+}
+
+/* 4. Mobile Floating PiP 3D Cake Preview */
+.pip-expand-btn {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .preview-card.is-pip {
+    position: fixed;
+    top: 70px;
+    right: 12px;
+    width: 156px;
+    z-index: 85;
+    padding: 6px !important;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 2px solid #3B1704;
+    box-shadow: 0 18px 38px -10px rgba(36, 13, 2, 0.45);
+    animation: pipPopIn 0.26s cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+  .preview-card.is-pip .stage {
+    height: 132px !important;
+    min-height: 132px !important;
+    border-radius: 8px;
+  }
+  .preview-card.is-pip .stage-tools,
+  .preview-card.is-pip .stage-hint,
+  .preview-card.is-pip .slice-legend,
+  .preview-card.is-pip .preview-meta .muted {
+    display: none !important;
+  }
+  .preview-card.is-pip .preview-meta {
+    padding: 6px 4px 2px;
+    font-size: 0.75rem;
+  }
+  .preview-card.is-pip .preview-meta .title {
+    display: none;
+  }
+  .preview-card.is-pip .preview-meta .amount {
+    font-size: 0.92rem;
+  }
+  .preview-card.is-pip .pip-expand-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 6;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 0;
+    background: #3B1704;
+    color: #F7F7D3;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+}
+
+@keyframes pipPopIn {
+  from { opacity: 0; transform: scale(0.86) translateY(-10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 5. "Complete Your Treat" 1-Click Cart Upsell Strip */
+.cart-upsell {
+  margin: 14px 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(217, 176, 102, 0.14);
+  border: 1px dashed rgba(76, 32, 7, 0.25);
+}
+
+.cart-upsell-head {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3B1704;
+  margin-bottom: 8px;
+}
+
+.cart-upsell-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cart-upsell-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #FFFFFF;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(76, 32, 7, 0.1);
+}
+
+.cart-upsell-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+}
+
+.cart-upsell-info strong {
+  color: #2B1003;
+  font-weight: 700;
+}
+
+.cart-upsell-info span {
+  color: #6E462C;
+  font-size: 0.74rem;
+}
+
+/* 6. Saved Recent Orders Chips on /track */
+.recent-orders {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(76, 32, 7, 0.12);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.recent-orders-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #6E462C;
+}
+
+.recent-orders-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.recent-order-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(76, 32, 7, 0.22);
+  background: #FFFFFF;
+  color: #3B1704;
+  font: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.recent-order-chip:hover,
+.recent-order-chip.active {
+  background: #3B1704;
+  border-color: #3B1704;
+  color: #F7F7D3;
+}

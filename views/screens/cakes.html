@@ -38,8 +38,10 @@
       <div id="closed-notice" class="alert alert-info" hidden>We're not taking online orders right now. Please give us a call instead.</div>
 
       <div class="builder-layout">
-        <div class="preview-col">
-          <div class="card preview-card">
+        <div class="preview-col" id="preview-col">
+          <div id="preview-sentinel" aria-hidden="true"></div>
+          <div class="card preview-card" id="preview-card">
+            <button type="button" class="pip-expand-btn" id="pip-expand-btn" aria-label="Scroll back to full 3D cake studio">↗ Full 3D</button>
             <div class="stage" id="cake-stage">
               <img class="fallback" src="/img/cake.svg" alt="Cake illustration">
               <span class="stage-hint"><span class="drag">Drag to turn &middot; </span>Live preview</span>

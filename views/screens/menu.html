@@ -23,6 +23,7 @@
             <li><a href="#menu"><span class="caret">›</span> DAILY BAKES</a></li>
             <li><a href="/track"><span class="caret">›</span> TRACK ORDER</a></li>
             <li><a href="#visit-section"><span class="caret">›</span> VISIT BRANCHES</a></li>
+            <li><a href="{{cakes_site_url}}" target="_blank" rel="noopener"><span class="caret">›</span> 3D CAKE STUDIO ↗</a></li>
           </ul>
           <div class="choco-sidebar-hours">
             <div class="choco-live-pill"><span class="choco-live-dot" aria-hidden="true"></span> OPEN DAILY</div>
@@ -176,6 +177,21 @@
             </div>
           </section>
 
+          <div class="menu-toolbar" id="menu-toolbar" data-reveal>
+            <div class="menu-search-wrap">
+              <svg class="menu-search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" id="menu-search" placeholder="Search chocolates, kunafa, crepes, flurry, shakes…" aria-label="Search menu items" autocomplete="off">
+              <button type="button" class="menu-search-clear" id="menu-search-clear" hidden aria-label="Clear search">✕</button>
+            </div>
+            <div class="menu-filter-pills" id="menu-filter-pills" role="group" aria-label="Quick dietary and flavor filters">
+              <button type="button" class="menu-filter-pill active" data-qfilter="all">All Creations</button>
+              <button type="button" class="menu-filter-pill" data-qfilter="popular">★ Chef's Picks</button>
+              <button type="button" class="menu-filter-pill" data-qfilter="pistachio">Pistachio &amp; Kunafa</button>
+              <button type="button" class="menu-filter-pill" data-qfilter="dark">Belgian Dark</button>
+              <button type="button" class="menu-filter-pill" data-qfilter="under10">Under $10</button>
+            </div>
+          </div>
+
           <nav class="category-nav" id="category-nav" aria-label="Menu categories"></nav>
           <div id="menu"><p class="loading">Loading the menu…</p></div>
         </div>
@@ -195,6 +211,7 @@
             </div>
             <form id="checkout-form" autocomplete="on" hidden>
               <ul class="cart-lines" id="cart-lines"></ul>
+              <div class="cart-upsell" id="cart-upsell" hidden></div>
               <div class="sum-rows" id="sum-rows"></div>
               <div class="total-row"><span>Total</span><span class="amount" id="cart-total"></span></div>
 
@@ -239,15 +256,21 @@
     <span id="cart-bar-total"></span>
   </a>
 
-  <dialog id="item-dialog" aria-labelledby="d-name">
+  <dialog id="item-dialog" class="quickview-dialog" aria-labelledby="d-name">
     <form class="dialog-body" id="item-form">
-      <div class="dialog-head">
+      <div class="quickview-hero">
+        <div class="quickview-art" id="d-art" aria-hidden="true"></div>
+        <button type="button" class="dialog-close quickview-close" data-close aria-label="Close">✕</button>
+      </div>
+      <div class="dialog-head" style="margin-top: 14px;">
         <div>
+          <span class="eyebrow left" id="d-cat" style="margin-bottom: 4px;">SAVORY Patisserie</span>
           <h2 id="d-name"></h2>
+          <div class="menu-badges" id="d-badges" style="margin: 6px 0 8px;"></div>
           <p class="muted" id="d-desc" style="margin: 0;"></p>
         </div>
-        <button type="button" class="dialog-close" data-close aria-label="Close">✕</button>
       </div>
+      <div class="quickview-pairing" id="d-pairing"></div>
       <div id="d-groups"></div>
       <div id="d-error" class="alert alert-error" role="alert" hidden style="margin-top: 16px;"></div>
       <div class="dialog-actions">

@@ -283,18 +283,86 @@ document.getElementById('box-form')?.addEventListener('submit', (e) => {
   addToCart(0, [], 1, document.getElementById('open-box-builder'), customBox);
 });
 
-// ---------- menu ----------
+// ---------- menu search, quick filters & badges ----------
+
+let searchQuery = '';
+let activeQuickFilter = 'all';
+
+function inferMenuBadges(item) {
+  const text = `${item.name} ${item.description} ${item.category}`.toLowerCase();
+  const badges = [];
+  if (/lava|mirror|kunafa|gift box|fettuccine|flurry/i.test(text)) {
+    badges.push({ label: "★ Chef's Pick", cls: 'badge-chef' });
+  }
+  if (/pistachio|kunafa|hazelnut|praline|almond|pecan|nut/i.test(text)) {
+    badges.push({ label: 'Nuts & Praline', cls: 'badge-nut' });
+  }
+  if (/70%|dark|ganache|mirror|truffle|bark/i.test(text)) {
+    badges.push({ label: 'Belgian Cocoa', cls: 'badge-dark' });
+  }
+  if (/lava|warm|crepe|waffle|molten|brownie/i.test(text)) {
+    badges.push({ label: 'Served Warm', cls: 'badge-warm' });
+  } else if (/flurry|shake|ice cream|chilled/i.test(text)) {
+    badges.push({ label: 'Chilled', cls: 'badge-chill' });
+  }
+  return badges.slice(0, 3);
+}
+
+function inferPairing(item) {
+  const text = `${item.name} ${item.category}`.toLowerCase();
+  if (/crepe|waffle|lava|brownie/.test(text)) {
+    return 'Chef’s Pairing: Enjoy warm with a scoop of Madagascar vanilla gelato or double espresso.';
+  }
+  if (/flurry|shake/.test(text)) {
+    return 'Chef’s Pairing: Pairs effortlessly with a warm Belgian chocolate brownie or pistachio kunafa bar.';
+  }
+  if (/box|praline|truffle|bark/.test(text)) {
+    return 'Chef’s Pairing: Hand-tempered for gifting — pairs beautifully with roasted Arabic coffee.';
+  }
+  return 'Chef’s Pairing: Freshly crafted to order in our Aramoun & Aley kitchens.';
+}
+
+function matchesFilter(item) {
+  const text = `${item.name} ${item.description} ${item.category}`.toLowerCase();
+  if (searchQuery && !text.includes(searchQuery)) return false;
+  if (activeQuickFilter === 'popular') return /lava|mirror|kunafa|gift box|fettuccine|flurry/i.test(text);
+  if (activeQuickFilter === 'pistachio') return /pistachio|kunafa|hazelnut|praline|nut/i.test(text);
+  if (activeQuickFilter === 'dark') return /dark|70%|ganache|mirror|lava|truffle|bark/i.test(text);
+  if (activeQuickFilter === 'under10') return fromPrice(item) <= 1000;
+  return true;
+}
 
 function renderMenu() {
   if (!items.length) {
     if (!menuEl.querySelector('.alert')) {
-      menuEl.innerHTML = '<div class="card empty-state"><div class="icon" aria-hidden="true">🍰</div><p>Our menu is being updated. Please check back soon!</p></div>';
+      menuEl.innerHTML = '<div class="card empty-state"><p>Our menu is being updated. Please check back soon!</p></div>';
     }
     return;
   }
 
+  const filtered = items.filter(matchesFilter);
+  if (!filtered.length) {
+    document.getElementById('category-nav').innerHTML = '';
+    menuEl.innerHTML = `
+      <div class="card empty-state" style="padding: 42px 24px; text-align: center;">
+        <p style="margin-bottom: 14px;">No creations match your current search or filter.</p>
+        <button type="button" class="btn btn-outline btn-sm" id="reset-menu-filters">Show all creations</button>
+      </div>`;
+    document.getElementById('reset-menu-filters')?.addEventListener('click', () => {
+      searchQuery = '';
+      activeQuickFilter = 'all';
+      const searchInput = document.getElementById('menu-search');
+      if (searchInput) searchInput.value = '';
+      const clearBtn = document.getElementById('menu-search-clear');
+      if (clearBtn) clearBtn.hidden = true;
+      document.querySelectorAll('[data-qfilter]').forEach((b) => b.classList.toggle('active', b.dataset.qfilter === 'all'));
+      renderMenu();
+    });
+    return;
+  }
+
   const categories = new Map();
-  for (const item of items) {
+  for (const item of filtered) {
     if (!categories.has(item.category)) categories.set(item.category, []);
     categories.get(item.category).push(item);
   }
@@ -311,15 +379,21 @@ function renderMenu() {
       <div class="menu-grid">
         ${categories.get(name).map((item, k) => {
           const from = item.options.length && fromPrice(item) !== item.price_cents;
+          const badges = inferMenuBadges(item);
           return `
           <article class="card spotlight menu-card" data-reveal style="--delay: ${(k % 3) * 0.06}s">
-            <div class="thumb ${item.image ? '' : 'illus'}"><span class="choco-price-badge">${from ? 'FROM' : 'PRICE'}<br><strong>${money(from ? fromPrice(item) : item.price_cents)}</strong></span>${item.image
-              ? `<img src="/uploads/${esc(item.image)}" alt="${esc(item.name)}" loading="lazy">`
-              : illustrationFor(item)}</div>
+            <div class="thumb ${item.image ? '' : 'illus'}" data-quickview="${item.id}" role="button" tabindex="0" aria-label="Quick view ${esc(item.name)}">
+              <span class="choco-price-badge">${from ? 'FROM' : 'PRICE'}<br><strong>${money(from ? fromPrice(item) : item.price_cents)}</strong></span>
+              <span class="quickview-hint">Quick view</span>
+              ${item.image
+                ? `<img src="/uploads/${esc(item.image)}" alt="${esc(item.name)}" loading="lazy">`
+                : illustrationFor(item)}
+            </div>
             <div class="body">
-              <h3>${esc(item.name)}</h3>
+              ${badges.length ? `<div class="menu-badges">${badges.map((b) => `<span class="menu-badge ${b.cls}">${esc(b.label)}</span>`).join('')}</div>` : ''}
+              <h3 data-quickview="${item.id}" style="cursor:pointer">${esc(item.name)}</h3>
               <p class="desc">${esc(item.description)}</p>
-              ${item.options.length ? '<span class="has-options">✦ Customizable</span>' : ''}
+              ${item.options.length ? '<span class="has-options">✦ Customizable options</span>' : ''}
               <div class="foot">
                 <span class="price">${from ? '<span class="from">from</span>' : ''}${money(from ? fromPrice(item) : item.price_cents)}</span>
                 <span data-control="${item.id}"></span>
@@ -344,6 +418,29 @@ function renderMenu() {
     menuEl.querySelectorAll('.menu-category').forEach((s) => spy.observe(s));
   }
 }
+
+const searchInput = document.getElementById('menu-search');
+const searchClear = document.getElementById('menu-search-clear');
+searchInput?.addEventListener('input', () => {
+  searchQuery = searchInput.value.trim().toLowerCase();
+  if (searchClear) searchClear.hidden = !searchQuery;
+  renderMenu();
+});
+searchClear?.addEventListener('click', () => {
+  if (!searchInput) return;
+  searchInput.value = '';
+  searchQuery = '';
+  searchClear.hidden = true;
+  searchInput.focus();
+  renderMenu();
+});
+document.getElementById('menu-filter-pills')?.addEventListener('click', (e) => {
+  const pill = e.target.closest('[data-qfilter]');
+  if (!pill) return;
+  activeQuickFilter = pill.dataset.qfilter;
+  document.querySelectorAll('[data-qfilter]').forEach((b) => b.classList.toggle('active', b === pill));
+  renderMenu();
+});
 
 function renderControls() {
   for (const item of items) {
@@ -394,6 +491,33 @@ function renderCart() {
       </li>`;
   }).join('');
 
+  // 1-Click "Complete Your Treat" Cart Upsell Strip
+  const upsellEl = document.getElementById('cart-upsell');
+  if (upsellEl && ordersOpen) {
+    const inCartIds = new Set(cart.filter((l) => !l.custom_box).map((l) => l.id));
+    const candidates = items.filter((it) => !inCartIds.has(it.id) && !it.options.some((g) => g.required));
+    const picks = candidates.slice(0, 2);
+    if (picks.length && count > 0) {
+      upsellEl.hidden = false;
+      upsellEl.innerHTML = `
+        <div class="cart-upsell-head">✦ Complete your treat</div>
+        <div class="cart-upsell-list">
+          ${picks.map((u) => `
+            <div class="cart-upsell-item">
+              <div class="cart-upsell-info">
+                <strong>${esc(u.name)}</strong>
+                <span>${money(u.price_cents)}</span>
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" data-add="${u.id}">+ Add</button>
+            </div>
+          `).join('')}
+        </div>`;
+    } else {
+      upsellEl.hidden = true;
+      upsellEl.innerHTML = '';
+    }
+  }
+
   document.getElementById('sum-rows').innerHTML = fee
     ? `<div class="sum-row"><span>Subtotal</span><span>${money(subtotal)}</span></div>
        <div class="sum-row"><span>Delivery</span><span>${money(fee)}</span></div>`
@@ -421,11 +545,29 @@ let dialogQty = 1;
 let dialogSource = null;
 
 function openOptions(item, source = null) {
+  if (!item) return;
   dialogItem = item;
   dialogSource = source;
   dialogQty = 1;
   document.getElementById('d-name').textContent = item.name;
   document.getElementById('d-desc').textContent = item.description;
+  const catEl = document.getElementById('d-cat');
+  if (catEl) catEl.textContent = item.category || 'SAVORY Patisserie';
+  const artEl = document.getElementById('d-art');
+  if (artEl) {
+    artEl.innerHTML = item.image
+      ? `<img src="/uploads/${esc(item.image)}" alt="${esc(item.name)}">`
+      : illustrationFor(item);
+  }
+  const badgesEl = document.getElementById('d-badges');
+  if (badgesEl) {
+    const badges = inferMenuBadges(item);
+    badgesEl.innerHTML = badges.map((b) => `<span class="menu-badge ${b.cls}">${esc(b.label)}</span>`).join('');
+  }
+  const pairingEl = document.getElementById('d-pairing');
+  if (pairingEl) {
+    pairingEl.textContent = inferPairing(item);
+  }
   document.getElementById('d-error').hidden = true;
   document.getElementById('d-groups').innerHTML = item.options.map((g, gi) => {
     const multi = g.type === 'multi';
@@ -484,10 +626,12 @@ dialogForm.addEventListener('submit', (event) => {
 document.addEventListener('click', (event) => {
   const add = event.target.closest('[data-add]');
   const choose = event.target.closest('[data-choose]');
+  const quickview = event.target.closest('[data-quickview]');
   const inc = event.target.closest('[data-inc]');
   const dec = event.target.closest('[data-dec]');
   if (add && ordersOpen) addToCart(Number(add.dataset.add), [], 1, add);
-  if (choose && ordersOpen) openOptions(itemsById.get(Number(choose.dataset.choose)), choose);
+  else if (choose && ordersOpen) openOptions(itemsById.get(Number(choose.dataset.choose)), choose);
+  else if (quickview) openOptions(itemsById.get(Number(quickview.dataset.quickview)), quickview);
   if (inc) changeLine(inc.dataset.inc, 1);
   if (dec) changeLine(dec.dataset.dec, -1);
 });

@@ -1,4 +1,4 @@
-import { api, esc, money, friendlyDate } from '/js/common.js';
+import { api, esc, money, friendlyDate, getRecentOrders, rememberOrderCode } from '/js/common.js';
 
 const STAGES = [
   { key: 'new', label: 'Order received', desc: 'Your order is in our queue and awaiting confirmation from the branch.' },
@@ -39,7 +39,38 @@ async function lookup(code, { quiet = false } = {}) {
   }
 }
 
+function renderRecentOrders(activeCode = '') {
+  const box = document.getElementById('recent-orders');
+  if (!box) return;
+  const list = getRecentOrders();
+  if (!list.length) {
+    box.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  box.innerHTML = `
+    <span class="recent-orders-label">Recent orders on this device:</span>
+    <div class="recent-orders-pills">
+      ${list.map((o) => `
+        <button type="button" class="recent-order-chip ${o.code === activeCode ? 'active' : ''}" data-recent-code="${esc(o.code)}">
+          <strong>${esc(o.code)}</strong>
+        </button>`).join('')}
+    </div>`;
+}
+
+document.getElementById('recent-orders')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-recent-code]');
+  if (!btn) return;
+  const code = btn.dataset.recentCode;
+  input.value = code;
+  clearInterval(pollTimer);
+  lookup(code);
+  pollTimer = setInterval(() => lookup(code, { quiet: true }), 20000);
+});
+
 function renderOrder(order) {
+  rememberOrderCode(order.code, order.type === 'cake' ? '3D Cake' : 'Menu Order');
+  renderRecentOrders(order.code);
   resultCard.hidden = false;
   document.getElementById('t-code').textContent = order.code;
   document.getElementById('t-type').textContent = order.type === 'cake' ? '3D Custom Cake Order' : 'Patisserie Menu Order';
@@ -98,10 +129,17 @@ form.addEventListener('submit', (e) => {
 
 const pathMatch = location.pathname.match(/^\/track\/([^/]+)$/);
 const initialCode = pathMatch?.[1] || new URLSearchParams(location.search).get('code');
+renderRecentOrders(initialCode ? decodeURIComponent(initialCode).toUpperCase() : '');
 if (initialCode) {
   input.value = decodeURIComponent(initialCode).toUpperCase();
   lookup(input.value);
   pollTimer = setInterval(() => lookup(input.value, { quiet: true }), 20000);
+} else {
+  const latest = getRecentOrders()[0];
+  if (latest?.code) {
+    input.value = latest.code;
+    lookup(latest.code, { quiet: true });
+  }
 }
 
 
