@@ -20,6 +20,7 @@ const DETAIL_LABELS = {
 
 let filter = 'active';
 let branchFilter = '';
+let orderSearch = '';
 let branchesLoaded = false;
 let currentOrders = [];
 
@@ -46,7 +47,13 @@ export async function load() {
     return;
   }
   const { counts } = data;
-  const orders = branchFilter ? data.orders.filter((o) => o.branch === branchFilter) : data.orders;
+  let orders = branchFilter ? data.orders.filter((o) => o.branch === branchFilter) : data.orders;
+  if (orderSearch) {
+    orders = orders.filter((o) => {
+      const hay = `${o.code} ${o.customer_name} ${o.customer_phone} ${o.branch || ''} ${(o.items || []).map((i) => i.name).join(' ')}`.toLowerCase();
+      return hay.includes(orderSearch);
+    });
+  }
   currentOrders = orders;
   const n = (s) => counts[s] || 0;
   const filterCounts = {
@@ -54,6 +61,21 @@ export async function load() {
     active: n('new') + n('confirmed') + n('baking') + n('ready'),
     all: Object.values(counts).reduce((a, b) => a + b, 0),
   };
+
+  // Render Executive Patisserie KPI Strip
+  const kpiEl = $('#orders-kpi');
+  if (kpiEl) {
+    const today = isoDate(0);
+    const dueToday = orders.filter((o) => o.pickup_date === today && o.status !== 'cancelled').length;
+    const revenueCents = orders.filter((o) => o.status !== 'cancelled').reduce((s, o) => s + (o.total_cents || 0), 0);
+    const cakesCount = orders.filter((o) => o.type === 'cake').length;
+    kpiEl.innerHTML = `
+      <div class="card kpi-card"><span class="kpi-label">Active Kitchen Queue</span><strong class="kpi-val">${filterCounts.active}</strong></div>
+      <div class="card kpi-card"><span class="kpi-label">Scheduled Today</span><strong class="kpi-val">${dueToday}</strong></div>
+      <div class="card kpi-card"><span class="kpi-label">View Order Value</span><strong class="kpi-val">${money(revenueCents)}</strong></div>
+      <div class="card kpi-card"><span class="kpi-label">3D Cakes / Menu</span><strong class="kpi-val">${cakesCount} / ${Math.max(0, orders.length - cakesCount)}</strong></div>
+    `;
+  }
 
   $('#order-filters').innerHTML = FILTERS.map(([key, label]) => `
     <button type="button" data-filter="${key}" aria-pressed="${key === filter}">
@@ -269,5 +291,9 @@ $('#orders-list').addEventListener('change', (e) => {
 $('#orders-refresh').addEventListener('click', () => load());
 $('#order-branch').addEventListener('change', (e) => {
   branchFilter = e.target.value;
+  load();
+});
+$('#order-search')?.addEventListener('input', (e) => {
+  orderSearch = e.target.value.trim().toLowerCase();
   load();
 });

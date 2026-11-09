@@ -3547,3 +3547,15 @@ textarea:focus-visible,
   border-color: #3B1704;
   color: #F7F7D3;
 }
+
+/* Occasion quick-start bar & tasting profile (3D Cake Builder) */
+.occasion-bar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; padding: 12px 14px; background: #FFFFFF; border: 1px solid rgba(76, 32, 7, 0.12); border-radius: 12px; }
+.occasion-label { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #6E462C; }
+.occasion-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.tasting-profile { margin-top: 18px; padding: 14px 16px; border-radius: 10px; background: rgba(217, 176, 102, 0.14); border: 1px dashed rgba(76, 32, 7, 0.25); }
+.tasting-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.86rem; color: #3B1704; }
+.tasting-desc { margin: 8px 0 12px; font-size: 0.84rem; color: #6E462C; }
+.tasting-meters { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.tasting-meter span { display: block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #3B1704; margin-bottom: 4px; }
+.tasting-bar { height: 8px; border-radius: 999px; background: rgba(76, 32, 7, 0.12); overflow: hidden; }
+.tasting-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #6B3110, #D9B066); transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1); }

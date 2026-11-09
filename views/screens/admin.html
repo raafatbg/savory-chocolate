@@ -66,11 +66,13 @@
             <p class="muted small" id="orders-updated"></p>
           </div>
           <div class="orders-tools">
+            <input type="search" id="order-search" placeholder="Search code, name or phone…" aria-label="Search orders" style="min-width: 210px;">
             <label class="visually-hidden" for="order-branch">Branch</label>
             <select id="order-branch"><option value="">All branches</option></select>
             <button type="button" class="btn btn-outline btn-sm" id="orders-refresh">Refresh</button>
           </div>
         </div>
+        <div class="admin-kpi-grid" id="orders-kpi"></div>
         <div class="filters" id="order-filters"></div>
         <div id="orders-list"></div>
       </section>

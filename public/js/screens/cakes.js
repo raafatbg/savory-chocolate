@@ -288,6 +288,54 @@ function update({ redraw = true, intro = false } = {}) {
   document.getElementById('bar-total').textContent = sized ? money(total) : '';
   document.getElementById('preview-title').textContent = [selected('size')[0]?.name, selected('shape')[0]?.name, selected('tiers')[0]?.name]
     .filter(Boolean).join(' · ') || 'Custom cake';
+
+  renderTastingProfile();
+}
+
+function renderTastingProfile() {
+  const box = document.getElementById('tasting-profile');
+  if (!box) return;
+  const sponge = selected('flavor')[0]?.name || 'Chocolate Sponge';
+  const filling = selected('filling')[0]?.name || 'Dark Ganache';
+  const combined = `${sponge} ${filling}`.toLowerCase();
+
+  let richness = 78;
+  let sweetness = 65;
+  let note = 'Balanced cocoa depth with a velvety patisserie crumb.';
+  if (/dark|chocolate|ganache|nutella|praline/.test(combined)) {
+    richness = 92;
+    sweetness = 62;
+    note = 'Deep roasted Belgian cocoa profile with a luxurious Truffle-like finish.';
+  } else if (/pistachio|kunafa|lotus|caramel/.test(combined)) {
+    richness = 86;
+    sweetness = 78;
+    note = 'Warm roasted nutty notes paired with caramelized Levantine indulgence.';
+  } else if (/berry|strawberry|raspberry|lemon/.test(combined)) {
+    richness = 64;
+    sweetness = 70;
+    note = 'Bright orchard fruit acidity cuts through the silky cream layers.';
+  } else if (/vanilla|white|funfetti/.test(combined)) {
+    richness = 68;
+    sweetness = 82;
+    note = 'Aromatic Madagascar vanilla bean crumb — a crowd-pleasing celebration classic.';
+  }
+
+  box.innerHTML = `
+    <div class="tasting-head">
+      <span class="portion-badge">Tasting Note</span>
+      <strong>${esc(sponge)} + ${esc(filling)}</strong>
+    </div>
+    <p class="tasting-desc">${esc(note)}</p>
+    <div class="tasting-meters">
+      <div class="tasting-meter">
+        <span>Richness</span>
+        <div class="tasting-bar"><i style="width:${richness}%"></i></div>
+      </div>
+      <div class="tasting-meter">
+        <span>Sweetness</span>
+        <div class="tasting-bar"><i style="width:${sweetness}%"></i></div>
+      </div>
+    </div>`;
 }
 
 // ---------- signature designs (/cakes?design=classic) & shared 3D links (/cakes?custom=...) ----------
@@ -306,6 +354,23 @@ function applyDesign(design) {
       for (const o of group.options) input(o).checked = want.some((w) => matches(o, w));
     }
   }
+}
+
+const occasionPills = document.getElementById('occasion-pills');
+if (occasionPills && groups.length) {
+  occasionPills.innerHTML = SIGNATURE_DESIGNS.map((d) => `
+    <button type="button" class="menu-filter-pill" data-preset-id="${esc(d.id)}">${esc(d.name)}</button>
+  `).join('');
+  occasionPills.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-preset-id]');
+    if (!btn) return;
+    const d = SIGNATURE_DESIGNS.find((x) => x.id === btn.dataset.presetId);
+    if (!d) return;
+    occasionPills.querySelectorAll('[data-preset-id]').forEach((b) => b.classList.toggle('active', b === btn));
+    applyDesign(d);
+    update({ redraw: true, intro: true });
+    refreshStepper();
+  });
 }
 
 const params = new URLSearchParams(location.search);

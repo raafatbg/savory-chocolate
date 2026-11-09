@@ -1,38 +1,44 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <title>Gallery · {{shop_name}}</title>
-  <meta name="description" content="Cakes and treats from the {{shop_name}} kitchen.">
+  <title>Cake Gallery · {{shop_name}}</title>
+  <meta name="description" content="Explore signature 3D cake creations and custom celebration centerpieces from the {{shop_name}} patisserie.">
   {{> head}}
 </head>
 <body>
   {{> header}}
 
   <main id="main">
-    <section class="page-hero">
+    <section class="page-hero has-drip">
+      {{> choco-drip}}
       <div class="container" data-reveal>
-        <span class="eyebrow">Gallery</span>
-        <h1>From our <em class="gold-text">kitchen</em></h1>
-        <p>A few of the cakes and treats we've had the pleasure of making.</p>
+        <span class="eyebrow">Patisserie Lookbook</span>
+        <h1>From our <em class="gold-text">kitchen &amp; 3D studio</em></h1>
+        <p>Click any signature creation to inspect it up close or open it directly in our interactive 3D Cake Builder.</p>
+        <div class="menu-filter-pills gallery-filter-pills" id="gallery-filters" role="group" aria-label="Filter gallery creations" style="justify-content: center; margin-top: 22px;">
+          <button type="button" class="menu-filter-pill active" data-gfilter="all">All Creations</button>
+          <button type="button" class="menu-filter-pill" data-gfilter="wedding">Wedding &amp; 3-Tier</button>
+          <button type="button" class="menu-filter-pill" data-gfilter="chocolate">Chocolate &amp; Pistachio</button>
+          <button type="button" class="menu-filter-pill" data-gfilter="romance">Heart &amp; Celebration</button>
+        </div>
       </div>
     </section>
 
     <div class="container" style="padding-bottom: 96px;">
-      <div class="masonry" id="gallery"><p class="loading">Loading…</p></div>
-      <div class="card empty-state" id="gallery-empty" hidden style="padding: 64px 24px;">
-        <span class="script" style="font-size: 2.2rem;">Coming soon</span>
-        <h2 style="margin-top: 8px;">Our gallery is being plated</h2>
-        <p>We're photographing our latest creations. In the meantime, why not design your own?</p>
-        <a class="btn btn-gold" href="/cakes" style="margin-top: 12px;">Design a cake</a>
-      </div>
+      <div class="designs choco-showcase-grid" id="gallery-3d-grid" style="margin-bottom: 48px;"></div>
+      <div class="masonry" id="gallery"></div>
     </div>
   </main>
 
   <dialog class="lightbox" id="lightbox" aria-label="Photo">
     <button type="button" class="dialog-close" data-close aria-label="Close">✕</button>
-    <button type="button" class="nav prev" data-step="-1" aria-label="Previous photo">‹</button>
-    <figure><img id="lb-img" alt=""><figcaption id="lb-caption"></figcaption></figure>
-    <button type="button" class="nav next" data-step="1" aria-label="Next photo">›</button>
+    <button type="button" class="nav prev" data-step="-1" aria-label="Previous creation">‹</button>
+    <figure>
+      <img id="lb-img" alt="">
+      <figcaption id="lb-caption"></figcaption>
+      <div style="text-align: center; margin-top: 14px;" id="lb-actions"></div>
+    </figure>
+    <button type="button" class="nav next" data-step="1" aria-label="Next creation">›</button>
   </dialog>
 
   {{> footer}}
