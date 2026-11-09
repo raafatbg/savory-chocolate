@@ -225,6 +225,23 @@ const PHRASE_AR = new Map([
   ['Your order', 'طلبك'],
   ['Track order', 'تتبّع الطلب'],
   ['Curate a gift box →', 'صمّم علبة هدايا ←'],
+  ['Curate a gift box', 'صمّم علبة هدايا'],
+  ['All Creations', 'كافة الإبداعات'],
+  ["★ Chef's Picks", '★ مختارات الشيف'],
+  ['Pistachio & Kunafa', 'فستق وكنافة'],
+  ['Belgian Dark', 'شوكولاتة داكنة بلجيكية'],
+  ['Under $10', 'أقل من 10$'],
+  ['Quick-start from a chef preset:', 'ابدأ سريعاً من تصاميم الشيف:'],
+  ['Recent orders on this device:', 'طلباتك الأخيرة على هذا الجهاز:'],
+  ['Tasting Note', 'ملاحظة التذوّق'],
+  ['Richness', 'كثافة النكهة'],
+  ['Sweetness', 'درجة الحلاوة'],
+  ['✦ Complete your treat', '✦ أكمل تحليتك'],
+  ['Add gift box to order', 'إضافة علبة الهدايا للطلب'],
+  ['OPEN DAILY', 'يومياً نفتح أبوابنا'],
+  ['Wedding & 3-Tier', 'أعراس وتصاميم متعددة الطبقات'],
+  ['Chocolate & Pistachio', 'شوكولاتة وفستق'],
+  ['Heart & Celebration', 'قلوب ومناسبات خاصة'],
 ]);
 
 const origTextMap = new WeakMap();
@@ -243,7 +260,7 @@ function applyLanguage(lang) {
   });
 
   // Translate matching standalone phrases cleanly and reversibly
-  document.querySelectorAll('.eyebrow, .trust span, .step h3, .section-head h2, .card h2, .card h3, .btn, dt, .tool-btn span').forEach((el) => {
+  document.querySelectorAll('.eyebrow, .trust span, .step h3, .section-head h2, .card h2, .card h3, .btn, dt, .tool-btn span, .menu-filter-pill, .recent-orders-label, .portion-badge, .cart-upsell-head, .occasion-label').forEach((el) => {
     if (el.hasAttribute('data-i18n') || el.children.length > 0) return;
     if (!origTextMap.has(el)) origTextMap.set(el, el.textContent.trim());
     const orig = origTextMap.get(el);
