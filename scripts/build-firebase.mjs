@@ -19,12 +19,11 @@ const URLS = {
   adminSiteUrl: process.env.ADMIN_SITE_URL || 'https://savory-lb-admin.web.app',
 };
 
+const BUILD_ID = Date.now().toString(36);
+
+// seed.json is a public file, so it only holds what the shop shows to everyone.
+// Orders, contact messages and admin accounts (customer names, phones, addresses) never go in it.
 function buildSeed() {
-  const orders = db.prepare('SELECT * FROM orders ORDER BY created_at DESC LIMIT 200').all();
-  const itemsStmt = db.prepare('SELECT name, unit_price_cents, quantity, details FROM order_items WHERE order_id = ? ORDER BY id');
-  for (const o of orders) {
-    o.items = itemsStmt.all(o.id).map((i) => ({ ...i, details: JSON.parse(i.details || '{}') }));
-  }
   return {
     settings: getSettings(),
     branches: db.prepare('SELECT * FROM branches ORDER BY sort_order, id').all(),
@@ -34,8 +33,8 @@ function buildSeed() {
     gallery_images: db.prepare('SELECT * FROM gallery_images ORDER BY sort_order, id DESC').all(),
     reviews: db.prepare('SELECT * FROM reviews ORDER BY sort_order, id DESC').all(),
     faqs: db.prepare('SELECT * FROM faqs ORDER BY sort_order, id').all(),
-    orders,
-    messages: db.prepare('SELECT * FROM messages ORDER BY created_at DESC LIMIT 100').all(),
+    orders: [],
+    messages: [],
     admins: [],
   };
 }
@@ -65,6 +64,13 @@ function prepareSiteDir(targetName) {
 
   // Write seed.json
   fs.writeFileSync(path.join(dir, 'seed.json'), seedJson);
+
+  // Give the service worker cache a per-build name, so each deploy replaces the old cached files.
+  const swPath = path.join(dir, 'sw.js');
+  const sw = fs.readFileSync(swPath, 'utf8');
+  const stamped = sw.replace(/const CACHE_NAME = '[^']*';/, `const CACHE_NAME = 'savory-pwa-${BUILD_ID}';`);
+  if (stamped === sw) throw new Error('Could not find CACHE_NAME in public/sw.js.');
+  fs.writeFileSync(swPath, stamped);
   return dir;
 }
 

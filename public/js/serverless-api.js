@@ -285,31 +285,44 @@ export async function serverlessApi(rawPath, { method = 'GET', body, form } = {}
   // ---------- Admin Endpoints ----------
   if (path === '/api/admin/status') {
     const admins = state.admins || [];
-    const loggedIn = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
     return {
       setupNeeded: admins.length === 0,
-      admin: loggedIn && admins.length ? { id: 1, username: admins[0].username } : null,
+      admin: isLoggedIn() && admins.length ? { id: 1, username: admins[0].username } : null,
     };
   }
   if (method === 'POST' && path === '/api/admin/setup') {
-    state.admins = [{ id: 1, username: String(data.username || 'admin').trim(), password: String(data.password || '') }];
+    if ((state.admins || []).length) fail(403, 'An admin account already exists. Please log in.');
+    const { username, password } = checkCredentials(data.username, data.password);
+    state.admins = [{ id: 1, username, password_hash: await hashPassword(password) }];
     saveDb(state);
-    localStorage.setItem(SESSION_KEY, '1');
+    logIn();
     return { ok: true };
   }
   if (method === 'POST' && path === '/api/admin/login') {
     const admin = (state.admins || [])[0];
-    if (!admin || (admin.username.toLowerCase() !== String(data.username || '').trim().toLowerCase() || admin.password !== String(data.password || ''))) {
-      const err = new Error('Wrong username or password.');
-      err.status = 401;
-      throw err;
+    const sameUser = admin && admin.username.toLowerCase() === String(data.username || '').trim().toLowerCase();
+    if (!sameUser || !(await checkPassword(state, admin, String(data.password || '')))) {
+      fail(401, 'Wrong username or password.');
     }
-    localStorage.setItem(SESSION_KEY, '1');
+    logIn();
     return { ok: true };
   }
   if (method === 'POST' && path === '/api/admin/logout') {
-    localStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem(SESSION_KEY);
+    logOut();
+    return { ok: true };
+  }
+
+  // Everything below needs a logged-in admin, like the real server.
+  if (path.startsWith('/api/admin/') && !isLoggedIn()) fail(401, 'Please log in.');
+
+  if (method === 'POST' && path === '/api/admin/password') {
+    const admin = (state.admins || [])[0];
+    if (!admin || !(await checkPassword(state, admin, String(data.current_password || '')))) {
+      fail(400, 'Current password is wrong.');
+    }
+    const { password } = checkCredentials(admin.username, data.new_password);
+    admin.password_hash = await hashPassword(password);
+    saveDb(state);
     return { ok: true };
   }
   if (path === '/api/admin/counts') {
@@ -332,74 +345,234 @@ export async function serverlessApi(rawPath, { method = 'GET', body, form } = {}
   }
   const orderPatch = path.match(/^\/api\/admin\/orders\/(\d+)$/);
   if (orderPatch && method === 'PATCH') {
-    const id = Number(orderPatch[1]);
-    const o = (state.orders || []).find((x) => Number(x.id) === id);
-    if (o && data.status) o.status = data.status;
-    saveDb(state);
-    return { ok: true };
-  }
-  if (orderPatch && method === 'DELETE') {
-    const id = Number(orderPatch[1]);
-    state.orders = (state.orders || []).filter((x) => Number(x.id) !== id);
-    saveDb(state);
-    return { ok: true };
-  }
-  if (method === 'GET' && path === '/api/admin/menu') {
-    return (state.menu_items || []).map((i) => ({
-      ...i,
-      options: typeof i.options === 'string' ? JSON.parse(i.options || '[]') : (i.options || []),
-    }));
-  }
-  if (method === 'POST' && path === '/api/admin/menu') {
-    const next = {
-      id: Date.now(),
-      name: String(data.name || '').trim(),
-      description: String(data.description || '').trim(),
-      category: String(data.category || 'Other').trim(),
-      price_cents: Math.round(Number(data.price || 0) * 100),
-      available: data.available === '0' || data.available === false ? 0 : 1,
-      sort_order: Number(data.sort_order || 0),
-      options: typeof data.options === 'string' ? JSON.parse(data.options || '[]') : (data.options || []),
-    };
-    state.menu_items = [...(state.menu_items || []), next];
-    saveDb(state);
-    return next;
-  }
-  const menuMatch = path.match(/^\/api\/admin\/menu\/(\d+)$/);
-  if (menuMatch && (method === 'PUT' || method === 'POST')) {
-    const id = Number(menuMatch[1]);
-    const item = (state.menu_items || []).find((x) => Number(x.id) === id);
-    if (item) {
-      if (data.name !== undefined) item.name = String(data.name).trim();
-      if (data.description !== undefined) item.description = String(data.description).trim();
-      if (data.category !== undefined) item.category = String(data.category).trim();
-      if (data.price !== undefined) item.price_cents = Math.round(Number(data.price) * 100);
-      if (data.available !== undefined) item.available = data.available === '0' || data.available === false ? 0 : 1;
-      if (data.options !== undefined) item.options = typeof data.options === 'string' ? JSON.parse(data.options || '[]') : data.options;
-      saveDb(state);
-    }
-    return item || { ok: true };
-  }
-  if (menuMatch && method === 'DELETE') {
-    const id = Number(menuMatch[1]);
-    state.menu_items = (state.menu_items || []).filter((x) => Number(x.id) !== id);
+    if (!ORDER_STATUSES.includes(data.status)) fail(400, 'Unknown status.');
+    const o = (state.orders || []).find((x) => Number(x.id) === Number(orderPatch[1]));
+    if (!o) fail(404, 'Order not found.');
+    o.status = data.status;
     saveDb(state);
     return { ok: true };
   }
   if (method === 'GET' && path === '/api/admin/cake-options') {
-    return { groups: state.cake_groups || [], options: state.cake_options || [] };
+    return { groups: state.cake_groups || [], options: sortRows(state.cake_options) };
   }
-  if (method === 'GET' && path === '/api/admin/gallery') return state.gallery_images || [];
-  if (method === 'GET' && path === '/api/admin/reviews') return state.reviews || [];
-  if (method === 'GET' && path === '/api/admin/faqs') return state.faqs || [];
-  if (method === 'GET' && path === '/api/admin/messages') return state.messages || [];
-  if (method === 'GET' && path === '/api/admin/branches') return state.branches || [];
   if (method === 'GET' && path === '/api/admin/settings') return state.settings || {};
   if (method === 'PUT' && path === '/api/admin/settings') {
-    state.settings = { ...(state.settings || {}), ...data };
+    state.settings = { ...(state.settings || {}), ...settingsFields(data) };
     saveDb(state);
     return state.settings;
   }
+  if (method === 'POST' && path === '/api/admin/gallery') {
+    fail(400, 'Photo uploads need the live server. This preview site can\'t store photos.');
+  }
 
-  return { ok: true };
+  // Lists the dashboard manages: menu items, cake options, gallery, reviews, FAQ, branches, messages.
+  const crud = path.match(/^\/api\/admin\/([a-z-]+)(?:\/(\d+))?$/);
+  const collection = crud && COLLECTIONS[crud[1]];
+  if (collection) {
+    const rows = (state[collection.key] ||= []);
+    const id = crud[2] ? Number(crud[2]) : null;
+    if (id === null) {
+      if (method === 'GET') return sortRows(rows, collection.order).map(collection.out || ((r) => r));
+      if (method === 'POST' && collection.fields) {
+        const row = { id: nextId(rows), ...collection.fields(data) };
+        rows.push(row);
+        saveDb(state);
+        return collection.out ? collection.out(row) : row;
+      }
+    } else {
+      const index = rows.findIndex((r) => Number(r.id) === id);
+      if (index === -1) fail(404, `${collection.label} not found.`);
+      if (method === 'DELETE') {
+        rows.splice(index, 1);
+        saveDb(state);
+        return { ok: true };
+      }
+      const update = method === 'PATCH' ? collection.patch : collection.fields;
+      if ((method === 'PUT' || method === 'PATCH') && update) {
+        Object.assign(rows[index], update(data, rows[index]));
+        saveDb(state);
+        return collection.out ? collection.out(rows[index]) : rows[index];
+      }
+    }
+  }
+
+  fail(404, 'Not found.');
+}
+
+// ---------- Admin helpers ----------
+
+const ORDER_STATUSES = ['new', 'confirmed', 'baking', 'ready', 'completed', 'cancelled'];
+
+function fail(status, message) {
+  const err = new Error(message);
+  err.status = status;
+  throw err;
+}
+
+const isLoggedIn = () => Boolean(sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY));
+const logIn = () => localStorage.setItem(SESSION_KEY, '1');
+function logOut() {
+  localStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
+}
+
+const bool = (v) => v === true || v === 1 || v === '1' || v === 'true' || v === 'on';
+const toCents = (v) => Math.max(0, Math.round(Number(v || 0) * 100)) || 0;
+const toInt = (v, fallback = 0) => (Number.isFinite(Number(v)) && v !== '' && v !== undefined ? Math.round(Number(v)) : fallback);
+const str = (v) => String(v ?? '').trim();
+const nextId = (rows) => rows.reduce((max, r) => Math.max(max, Number(r.id) || 0), 0) + 1;
+const parseOptions = (v) => (typeof v === 'string' ? JSON.parse(v || '[]') : (v || []));
+
+function sortRows(rows = [], order = 'sort') {
+  const list = [...rows];
+  if (order === 'newest') return list.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)) || b.id - a.id);
+  return list.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0) || (a.id - b.id));
+}
+
+// Field rules mirror src/routes/admin.js, so the preview behaves like the real dashboard.
+const COLLECTIONS = {
+  'menu-items': {
+    key: 'menu_items',
+    label: 'Menu item',
+    fields: (d, existing) => {
+      const f = {
+        name: str(d.name),
+        description: str(d.description),
+        category: str(d.category) || 'Other',
+        price_cents: toCents(d.price),
+        available: bool(d.available) ? 1 : 0,
+        sort_order: toInt(d.sort_order),
+        options: parseOptions(d.options),
+        image: bool(d.remove_image) ? null : (existing?.image ?? null),
+      };
+      if (!f.name) fail(400, 'Name is required.');
+      if (f.available && f.price_cents === 0) fail(400, `Set a price for "${f.name}" before showing it on the menu.`);
+      return f;
+    },
+    out: (item) => ({ ...item, options: parseOptions(item.options) }),
+  },
+  'cake-options': {
+    key: 'cake_options',
+    label: 'Option',
+    fields: (d) => {
+      const isSize = d.type === 'size';
+      const f = {
+        type: str(d.type),
+        name: str(d.name),
+        description: str(d.description),
+        price_cents: toCents(d.price),
+        color: str(d.color),
+        visual: str(d.visual),
+        available: bool(d.available) ? 1 : 0,
+        sort_order: toInt(d.sort_order),
+        price_scale: isSize ? Math.round((Number(d.price_scale) || 1) * 100) / 100 : 1,
+        lead_days: isSize ? toInt(d.lead_days) : 0,
+        scales: isSize || bool(d.scales) ? 1 : 0,
+      };
+      if (!f.name) fail(400, 'Name is required.');
+      return f;
+    },
+  },
+  gallery: {
+    key: 'gallery_images',
+    label: 'Photo',
+    order: 'sort',
+    fields: (d) => ({ caption: str(d.caption), sort_order: toInt(d.sort_order) }),
+  },
+  reviews: {
+    key: 'reviews',
+    label: 'Review',
+    fields: (d) => {
+      const f = {
+        name: str(d.name),
+        text: str(d.text),
+        rating: Math.min(5, Math.max(1, toInt(d.rating, 5))),
+        available: bool(d.available) ? 1 : 0,
+        sort_order: toInt(d.sort_order),
+      };
+      if (!f.name || !f.text) fail(400, 'Name and review are required.');
+      return f;
+    },
+  },
+  faqs: {
+    key: 'faqs',
+    label: 'Question',
+    fields: (d) => {
+      const f = { question: str(d.question), answer: str(d.answer), available: bool(d.available) ? 1 : 0, sort_order: toInt(d.sort_order) };
+      if (!f.question || !f.answer) fail(400, 'Question and answer are required.');
+      return f;
+    },
+  },
+  branches: {
+    key: 'branches',
+    label: 'Branch',
+    fields: (d) => {
+      const f = {
+        name: str(d.name),
+        address: str(d.address),
+        phone: str(d.phone),
+        whatsapp: str(d.whatsapp),
+        maps_link: str(d.maps_link),
+        available: bool(d.available) ? 1 : 0,
+        sort_order: toInt(d.sort_order),
+      };
+      if (!f.name) fail(400, 'Branch name is required.');
+      return f;
+    },
+  },
+  messages: {
+    key: 'messages',
+    label: 'Message',
+    order: 'newest',
+    patch: (d) => ({ is_read: bool(d.is_read) ? 1 : 0 }),
+  },
+};
+
+function settingsFields(d) {
+  const out = {};
+  for (const [k, v] of Object.entries(d)) {
+    if (['orders_open', 'delivery_enabled'].includes(k)) out[k] = bool(v) ? '1' : '0';
+    else if (['delivery_fee', 'delivery_min'].includes(k)) out[k] = String(toCents(v));
+    else if (k === 'currency') out[k] = str(v).toUpperCase();
+    else out[k] = str(v);
+  }
+  return out;
+}
+
+function checkCredentials(rawUsername, rawPassword) {
+  const username = str(rawUsername);
+  if (!/^[a-zA-Z0-9_.-]{3,40}$/.test(username)) fail(400, 'Username must be 3–40 letters, numbers, dots, dashes or underscores.');
+  const password = typeof rawPassword === 'string' ? rawPassword : '';
+  if (password.length < 8) fail(400, 'Password must be at least 8 characters.');
+  if (password.length > 200) fail(400, 'Password is too long.');
+  return { username, password };
+}
+
+// Passwords are stored as salted PBKDF2-SHA256 hashes, never as plain text.
+const PBKDF2_ROUNDS = 210000;
+const toHex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+const fromHex = (hex) => new Uint8Array(hex.match(/../g).map((h) => parseInt(h, 16)));
+
+async function derive(password, salt, rounds) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  return toHex(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: rounds }, key, 256));
+}
+
+async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  return `pbkdf2$${PBKDF2_ROUNDS}$${toHex(salt)}$${await derive(password, salt, PBKDF2_ROUNDS)}`;
+}
+
+async function checkPassword(state, admin, password) {
+  // Accounts made by the old preview stored the password as plain text: check it once, then hash it.
+  if (admin.password !== undefined && !admin.password_hash) {
+    if (admin.password !== password) return false;
+    admin.password_hash = await hashPassword(password);
+    delete admin.password;
+    saveDb(state);
+    return true;
+  }
+  const [scheme, rounds, saltHex, hashHex] = String(admin.password_hash || '').split('$');
+  if (scheme !== 'pbkdf2') return false;
+  return (await derive(password, fromHex(saltHex), Number(rounds))) === hashHex;
 }

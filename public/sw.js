@@ -1,5 +1,6 @@
 // Service Worker for SAVORY Standalone Progressive Web Apps (PWA)
-const CACHE_NAME = 'savory-pwa-v1';
+// The Firebase build replaces this name with a per-build version, so each deploy clears the old cache.
+const CACHE_NAME = 'savory-pwa-v2';
 
 const STATIC_ASSETS = [
   '/',
@@ -35,6 +36,20 @@ self.addEventListener('fetch', (event) => {
 
   // Bypass API calls, let serverless-api / backend handle them
   if (url.pathname.startsWith('/api/') || event.request.method !== 'GET') {
+    return;
+  }
+
+  // Pages and the preview data: network first, so a new deploy shows up on the next visit.
+  if (event.request.mode === 'navigate' || url.pathname === '/seed.json') {
+    event.respondWith(
+      fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+        }
+        return networkResponse;
+      }).catch(() => caches.match(event.request).then((cached) => cached || caches.match('/'))),
+    );
     return;
   }
 

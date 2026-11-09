@@ -24,7 +24,19 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. The first visit to http://localhost:3000/admin asks you to **create the admin account**. Do this before the site goes online.
+This starts three sites from the same code and database:
+
+| Site | Local address | What's on it |
+| --- | --- | --- |
+| Cake Studio | http://localhost:3000 | Home, 3D cake builder, gallery, about, FAQ, contact, order tracking |
+| Menu & Chocolatier | http://localhost:3001 | Menu and checkout at `/`, plus about, FAQ, contact, tracking |
+| Admin | http://localhost:3002 | The dashboard at `/` |
+
+The first visit to the Admin site asks you to **create the admin account**. Do this before the site goes online.
+
+Online, each site gets its own address. When `PORT` (or `SITE_MODE`) is set, one server runs and picks the site from the host name: a host containing `admin` serves the dashboard, one containing `menu` serves the menu, and anything else serves the Cake Studio. Set `SITE_MODE=cakes|menu|admin` to force one.
+
+Orders also open WhatsApp with the order written out, ready to send to the chosen branch. Customers can follow their order at `/track/<code>`.
 
 ## The admin dashboard
 
@@ -52,6 +64,9 @@ src/routes/admin.js      Everything behind the admin login
 views/                   Page templates and shared partials (header, footer, forms)
 public/js/cake3d.js      The Three.js 3D cake (shapes, tiers, drips, toppings, candles, plaque)
 public/js/admin/         One module per admin tab
+public/js/serverless-api.js  Browser stand-in for the API on the static Firebase preview
+src/whatsapp.js          Writes the WhatsApp order message for the branch
+scripts/build-firebase.mjs  Builds the three static sites into dist/
 public/css/              styles.css (dark & gold site), admin.css (light dashboard)
 data/                    Created on first run: app.db + uploads/ (photos) + backups
 ```
@@ -69,6 +84,26 @@ data/                    Created on first run: app.db + uploads/ (photos) + back
 | `DATA_DIR` | `./data` | Where the database, photos and backups live |
 | `NODE_ENV` | — | Set to `production` when hosting over HTTPS (secure cookie, cached pages) |
 | `TRUST_PROXY` | `loopback` | Set to `1` behind a hosting proxy (Render, Railway, nginx, …) |
+| `SITE_MODE` | — | `cakes`, `menu` or `admin`: run one site only |
+| `CAKES_PORT` / `MENU_PORT` / `ADMIN_PORT` | `3000` / `3001` / `3002` | Ports when running all three locally |
+| `CAKES_SITE_URL` / `MENU_SITE_URL` / `ADMIN_SITE_URL` | worked out from the host | Links between the three sites |
+
+## Firebase preview (static)
+
+```bash
+npm run deploy:firebase
+```
+
+This builds three static sites into `dist/` (cakes, menu, admin) and deploys them to Firebase Hosting (`*.web.app`). There's no server there: `public/js/serverless-api.js` stands in for the API and keeps everything **in each visitor's own browser** (localStorage).
+
+That makes it a **preview for showing the design, not a working shop**:
+
+- Orders and messages stay on the customer's device. The shop only hears about an order through the WhatsApp message.
+- The admin dashboard edits a copy that lives in that one browser. Nobody else sees the changes.
+- Photo uploads don't work.
+- `seed.json` is public, so the build puts only menu, cake options, gallery, reviews, FAQ, branches and settings in it. It never includes orders, messages or admin accounts.
+
+To take real orders, run the Node server on a host with a persistent disk (see below).
 
 ## Hosting notes
 
