@@ -381,26 +381,14 @@ body.admin ::-webkit-scrollbar-thumb { background: #d6c3ad; border-color: var(--
 .order-card.st-baking { border-left: 3px solid #b5541a; }
 
 
-/* Chocolatier Sawtooth Header & Butter-Cream Accents for Admin */
+/* Luxury Deep Cocoa Header & Butter-Cream Accents for Admin */
 .admin-header {
   background: linear-gradient(180deg, #361403 0%, #4C2007 100%);
   position: sticky;
   top: 0;
   margin-bottom: 18px;
-}
-
-.admin-header::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  right: 0;
-  height: 10px;
-  background:
-    linear-gradient(45deg, transparent 50%, #4C2007 50%),
-    linear-gradient(315deg, transparent 50%, #4C2007 50%);
-  background-size: 18px 10px;
-  background-repeat: repeat-x;
+  border-bottom: 1px solid rgba(217, 176, 102, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 /* Executive Patisserie KPI Strip & order search */

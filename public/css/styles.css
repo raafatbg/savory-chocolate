@@ -2124,275 +2124,329 @@ html[dir="rtl"] .arrow {
 
 
 /* ==========================================================================
-   Chocolatier Editorial Upgrade (Melted Drips, Sawtooth Wrapper Edges,
-   Dark Cocoa Sidebar, Split CTA Buttons & Framed Showcase Cards)
+   SAVORY Modern Luxury Boutique Redesign:
+   - Preserves official brand colors: Butter-Cream (#F7F7D3) & Deep Cocoa (#4C2007)
+   - Clean, grand full-width layout (no drips, no jagged sawtooth borders, no sidebars)
+   - High-contrast editorial typography, interactive 3D illuminated turntable, Bento grid
+   - Seamless floating glass header with persistent crisp brand logo
    ========================================================================== */
 
-/* 1. Glossy Melted Chocolate Ceiling Drip */
-.page-hero.has-drip,
+/* 1. Floating Glass Header & Persistent Brand Identity */
+.site-header {
+  background: rgba(247, 247, 211, 0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(76, 32, 7, 0.12);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.site-header.scrolled {
+  background: rgba(247, 247, 211, 0.98);
+  border-bottom-color: rgba(76, 32, 7, 0.2);
+  box-shadow: 0 10px 30px -12px rgba(76, 32, 7, 0.16);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--text);
+  flex-shrink: 0;
+  transition: transform 0.25s var(--ease);
+}
+
+.brand:hover {
+  transform: translateY(-1px);
+}
+
+.brand-mark {
+  height: 38px;
+  width: auto;
+  display: block;
+  color: #4C2007;
+  transition: transform 0.35s var(--ease);
+}
+
+.brand:hover .brand-mark {
+  transform: scale(1.08) rotate(-2deg);
+}
+
+.brand-word {
+  height: 22px;
+  width: auto;
+  display: block;
+  color: #4C2007;
+}
+
+/* 2. Grand Full-Width Luxury Boutique Hero */
+.luxury-hero,
 .choco-hero {
   position: relative;
   overflow: hidden;
+  padding: 68px 0 76px !important;
+  background:
+    radial-gradient(1100px 720px at 75% 25%, rgba(255, 255, 255, 0.92) 0%, rgba(247, 247, 211, 0.45) 55%, transparent 100%),
+    radial-gradient(900px 500px at 15% 85%, rgba(76, 32, 7, 0.05) 0%, transparent 60%),
+    var(--bg);
+  border-bottom: 1px solid rgba(76, 32, 7, 0.12);
 }
 
-.choco-drip-wrap {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: min(56vw, 680px);
-  pointer-events: none;
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: 56px;
+  position: relative;
   z-index: 2;
 }
 
-.choco-drip-svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-@media (max-width: 860px) {
-  .choco-drip-wrap {
-    width: min(78vw, 440px);
-    opacity: 0.92;
-  }
-}
-
-/* 2. Chocolatier Hero with Left Sawtooth Dark-Cocoa Sidebar */
-.choco-hero {
-  padding: 0 !important;
-  min-height: 620px;
-  display: block;
-  background:
-    radial-gradient(680px 420px at 68% 42%, rgba(255, 255, 255, 0.72), transparent 70%),
-    var(--bg);
-  border-bottom: 1px solid var(--line);
-}
-
-.choco-hero-shell {
-  max-width: 1380px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 235px 1fr;
-  min-height: 610px;
-  position: relative;
-}
-
-.choco-sidebar {
-  position: relative;
-  background: linear-gradient(180deg, #381503 0%, #4C2007 60%, #2E1102 100%);
-  color: #F7F7D3;
-  padding: 36px 26px 44px;
+.luxury-hero .hero-copy {
   display: flex;
   flex-direction: column;
-  gap: 34px;
-  z-index: 3;
-  box-shadow: 10px 0 32px -14px rgba(46, 17, 2, 0.35);
+  align-items: flex-start;
+  text-align: left;
 }
 
-/* Vertical sawtooth / serrated chocolate-wrapper right border */
-.choco-sidebar::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: -13px;
-  width: 14px;
-  background:
-    linear-gradient(135deg, #431B05 50%, transparent 50%),
-    linear-gradient(45deg, #431B05 50%, transparent 50%);
-  background-size: 14px 20px;
-  background-repeat: repeat-y;
-}
-
-.choco-sidebar-brand .brand-mark {
-  color: #F7F7D3;
-}
-
-.choco-sidebar-links {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.choco-sidebar-links a {
+.luxury-badge {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  color: rgba(247, 247, 211, 0.86);
-  text-decoration: none;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  transition: color 0.2s, transform 0.2s;
-}
-
-.choco-sidebar-links a .caret {
-  font-size: 1.05rem;
-  line-height: 1;
-  color: #D88946;
-}
-
-.choco-sidebar-links a:hover,
-.choco-sidebar-links a.active {
-  color: #D88946;
-  transform: translateX(4px);
-}
-
-.choco-hero-main {
-  padding: 58px 44px 52px 54px;
-  display: grid;
-  grid-template-columns: 1.08fr 0.92fr;
-  align-items: center;
-  gap: 32px;
-  position: relative;
-  z-index: 3;
-}
-
-.choco-menu-hero .choco-hero-main {
-  grid-template-columns: 1fr;
-  max-width: 820px;
-}
-
-.choco-hero h1 {
-  font-family: var(--font-display);
-  font-size: clamp(3.2rem, 6.2vw, 5.1rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #240D02;
-  margin-bottom: 12px;
-}
-
-.choco-platter-art {
-  margin: 8px 0 22px;
-  max-width: 530px;
-}
-
-.choco-platter-art svg {
-  width: 100%;
-  height: auto;
-  display: block;
-  filter: drop-shadow(0 18px 24px rgba(46, 17, 2, 0.18));
-}
-
-.stage-wrap {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.choco-slider-nav {
-  display: flex;
-  gap: 10px;
-  margin-top: 12px;
-  align-self: flex-end;
-}
-
-.choco-nav-btn {
-  width: 38px;
-  height: 38px;
-  border: 0;
-  border-radius: 4px;
-  background: #3D1804;
-  color: #F7F7D3;
-  font-size: 1.35rem;
-  line-height: 1;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 8px 18px -6px rgba(46, 17, 2, 0.35);
-  transition: background-color 0.2s, transform 0.2s;
-}
-
-.choco-nav-btn:hover {
-  background: #5C280B;
-  transform: translateY(-2px);
-}
-
-@media (max-width: 1020px) {
-  .choco-hero-shell {
-    grid-template-columns: 1fr;
-  }
-  .choco-sidebar {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    padding: 18px 22px;
-    gap: 16px;
-  }
-  .choco-sidebar::after {
-    display: none;
-  }
-  .choco-sidebar-links {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 14px 20px;
-  }
-  .choco-hero-main {
-    grid-template-columns: 1fr;
-    padding: 36px 22px 44px;
-  }
-}
-
-/* 3. Two-Tone Split-Block CTA Button (READ MORE | + style) */
-.btn-split {
-  display: inline-flex;
-  align-items: stretch;
-  text-decoration: none;
-  border: 0;
-  padding: 0;
-  border-radius: 4px;
-  overflow: hidden;
-  cursor: pointer;
-  font-family: var(--font-body);
-  box-shadow: 0 12px 26px -10px rgba(46, 17, 2, 0.38);
-  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
-}
-
-.btn-split-text {
-  background: #2B1002;
-  color: #F7F7D3;
-  padding: 14px 24px;
-  font-size: 0.78rem;
+  gap: 8px;
+  padding: 6px 16px;
+  background: rgba(76, 32, 7, 0.08);
+  border: 1px solid rgba(76, 32, 7, 0.18);
+  border-radius: 999px;
+  font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: #4C2007;
+  margin-bottom: 20px;
+}
+
+.luxury-badge .badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #256f3a;
+  box-shadow: 0 0 0 3px rgba(37, 111, 58, 0.2);
+}
+
+.hero-script {
+  font-size: 1.6rem;
+  color: #7A3912;
+  margin-bottom: 4px;
+}
+
+.luxury-hero h1,
+#hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.9rem, 5.8vw, 4.5rem);
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -0.015em;
+  color: #4C2007;
+  margin: 0 0 16px;
+}
+
+.luxury-hero .lead {
+  font-size: 1.15rem;
+  line-height: 1.62;
+  color: #643114;
+  max-width: 540px;
+  margin-bottom: 28px;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.btn-arrow {
+  display: inline-block;
+  margin-left: 6px;
+  transition: transform 0.25s var(--ease);
+}
+
+.btn:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+.trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(76, 32, 7, 0.14);
+  width: 100%;
+}
+
+.trust-item {
   display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #7A4222;
+  letter-spacing: 0.01em;
+}
+
+.trust-icon {
+  color: #D9B066;
+  font-size: 0.95rem;
+}
+
+/* 3. 3D Illuminated Turntable & Plinth Showcase */
+.hero-stage-column {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-plinth-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0%, rgba(247, 247, 211, 0.3) 55%, transparent 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.luxury-stage-wrap,
+.stage-wrap {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  background: #FFFDF8;
+  border: 1px solid rgba(76, 32, 7, 0.12);
+  border-radius: 24px;
+  padding: 24px 20px 20px;
+  box-shadow: 0 24px 60px -28px rgba(76, 32, 7, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
   align-items: center;
 }
 
-.btn-split-icon {
-  background: #5B280B;
-  color: #F7F7D3;
-  width: 46px;
-  display: inline-grid;
-  place-items: center;
-  font-size: 1.15rem;
+.stage-hint {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #643114;
+}
+
+.stage-hint .drag {
+  color: #D9B066;
   font-weight: 700;
-  border-left: 1px solid rgba(247, 247, 211, 0.16);
-  transition: background-color 0.2s;
 }
 
-.btn-split:hover {
-  transform: translateY(-2px);
+.hero-slider-nav,
+.choco-slider-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  width: 100%;
+}
+
+.hero-nav-btn,
+.choco-nav-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #4C2007;
   color: #F7F7D3;
-  box-shadow: 0 18px 32px -10px rgba(46, 17, 2, 0.48);
+  border: 1px solid rgba(217, 176, 102, 0.35);
+  font-size: 1.35rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -6px rgba(76, 32, 7, 0.35);
+  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
-.btn-split:hover .btn-split-icon {
-  background: #7A3711;
+.hero-nav-btn:hover,
+.choco-nav-btn:hover {
+  background: #2E1102;
+  transform: scale(1.08);
+  box-shadow: 0 12px 26px -6px rgba(76, 32, 7, 0.5);
 }
 
-/* 4. Framed Showcase Cards with Top-Right Cocoa Price Badge & Dark Title Bar */
+.hero-nav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(76, 32, 7, 0.08);
+  border: 1px solid rgba(76, 32, 7, 0.12);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4C2007;
+}
+
+.hero-nav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #D9B066;
+}
+
+/* 4. Luxury Confection Ribbon Marquee */
+.luxury-marquee,
+.marquee {
+  background: #4C2007;
+  color: #F7F7D3;
+  padding: 15px 0;
+  border-top: 1px solid rgba(217, 176, 102, 0.3);
+  border-bottom: 1px solid rgba(217, 176, 102, 0.3);
+  overflow: hidden;
+  box-shadow: 0 10px 24px -10px rgba(76, 32, 7, 0.25);
+}
+
+.luxury-marquee .marquee-track,
+.marquee-track {
+  display: flex;
+  gap: 0;
+  white-space: nowrap;
+  animation: marquee 34s linear infinite;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.marquee-sep {
+  color: #D9B066;
+  margin: 0 16px;
+}
+
+/* 5. Signature 3D Creations Bento Showcase */
+.luxury-section-head,
+.choco-section-head {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 44px;
+}
+
+.luxury-showcase-grid,
 .choco-showcase-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-  gap: 32px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 34px;
 }
 
 .choco-showcase-card {
@@ -2405,81 +2459,91 @@ html[dir="rtl"] .arrow {
   border: 0 !important;
   box-shadow: none !important;
   padding: 0 !important;
-  transition: transform 0.28s var(--ease);
+  transition: transform 0.3s var(--ease);
 }
 
 .choco-showcase-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-8px);
 }
 
 .choco-frame {
   width: 100%;
-  background: #FFFDF6;
+  background: #FFFDF8;
   border: 1px solid rgba(76, 32, 7, 0.14);
-  border-radius: 6px;
-  padding: 18px 18px 16px;
+  border-radius: 18px;
+  padding: 20px 20px 18px;
   position: relative;
-  box-shadow: 0 18px 40px -22px rgba(46, 17, 2, 0.22);
+  box-shadow: 0 20px 48px -24px rgba(76, 32, 7, 0.24);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.choco-showcase-card:hover .choco-frame {
+  border-color: rgba(217, 176, 102, 0.6);
+  box-shadow: 0 26px 54px -22px rgba(76, 32, 7, 0.32);
 }
 
 .choco-frame .render {
-  border-radius: 4px;
+  border-radius: 12px;
   overflow: hidden;
-  background: radial-gradient(circle at 50% 42%, #FFFDF8 0%, #F4F1CA 100%);
+  background: radial-gradient(circle at 50% 45%, #FFFFFF 0%, #F5F2D0 100%);
 }
 
 .choco-frame-desc {
-  margin: 12px 4px 2px;
+  margin: 14px 6px 2px;
   font-size: 0.88rem;
-  color: var(--muted);
+  line-height: 1.5;
+  color: #643114;
   text-align: center;
 }
 
 .choco-price-badge {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 16px;
+  right: 16px;
   z-index: 4;
-  background: #3B1704;
+  background: #4C2007;
   color: #F7F7D3;
-  padding: 7px 11px;
-  border-radius: 3px;
+  padding: 7px 13px;
+  border-radius: 999px;
   font-size: 0.64rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   line-height: 1.2;
   text-align: center;
   text-transform: uppercase;
-  box-shadow: 0 8px 18px -6px rgba(46, 17, 2, 0.45);
+  border: 1px solid rgba(217, 176, 102, 0.35);
+  box-shadow: 0 8px 20px -6px rgba(76, 32, 7, 0.5);
 }
 
 .choco-price-badge strong {
   display: block;
-  font-size: 0.84rem;
+  font-size: 0.88rem;
   font-weight: 800;
-  letter-spacing: 0.03em;
-  margin-top: 2px;
+  letter-spacing: 0.02em;
+  color: #F7F7D3;
 }
 
 .choco-title-bar {
-  background: #3B1704;
+  background: #4C2007;
   color: #F7F7D3;
-  padding: 12px 22px;
-  width: min(84%, 270px);
+  padding: 13px 24px;
+  width: min(88%, 290px);
   text-align: center;
   font-family: var(--font-body);
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  border-radius: 3px;
-  margin-top: 16px;
-  box-shadow: 0 10px 22px -10px rgba(46, 17, 2, 0.4);
-  transition: background-color 0.2s;
+  border-radius: 999px;
+  margin-top: 18px;
+  border: 1px solid rgba(217, 176, 102, 0.35);
+  box-shadow: 0 10px 24px -10px rgba(76, 32, 7, 0.4);
+  transition: background-color 0.2s, transform 0.2s;
 }
 
 .choco-showcase-card:hover .choco-title-bar {
-  background: #5A260A;
+  background: #2E1102;
+  transform: translateY(-2px);
 }
 
 .choco-buy-link {
@@ -2488,53 +2552,40 @@ html[dir="rtl"] .arrow {
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #2B1002;
-  border-bottom: 2px solid #3B1704;
+  color: #4C2007;
+  border-bottom: 2px solid #D9B066;
   padding-bottom: 2px;
+  transition: color 0.2s, border-color 0.2s;
 }
 
-/* Menu cards: position thumb relative so the top-right PRICE badge sits cleanly in the corner */
-.menu-card .thumb {
-  position: relative;
+.choco-showcase-card:hover .choco-buy-link {
+  color: #7A3912;
+  border-color: #4C2007;
 }
 
-/* 5. Full-Bleed Deep Cocoa Section with Horizontal Sawtooth / Zigzag Wrapper Edges */
+/* 6. Seamless Full-Bleed Deep Cocoa Section (NO Sawtooth / Zigzag) */
+.section-cocoa-luxury,
 .section-cocoa-sawtooth {
   position: relative;
-  background: linear-gradient(180deg, #3B1704 0%, #4C2007 52%, #331303 100%);
+  background: linear-gradient(180deg, #3B1704 0%, #4C2007 50%, #301303 100%);
   color: #F7F7D3;
   padding: 92px 0 96px !important;
-  margin: 36px 0;
+  margin: 48px 0;
+  border-top: 1px solid rgba(217, 176, 102, 0.28);
+  border-bottom: 1px solid rgba(217, 176, 102, 0.28);
+  box-shadow: inset 0 20px 40px -20px rgba(0, 0, 0, 0.4), inset 0 -20px 40px -20px rgba(0, 0, 0, 0.4);
 }
 
-.section-cocoa-sawtooth::before {
-  content: '';
-  position: absolute;
-  top: -16px;
-  left: 0;
-  right: 0;
-  height: 16px;
-  background:
-    linear-gradient(135deg, transparent 50%, #3B1704 50%),
-    linear-gradient(225deg, transparent 50%, #3B1704 50%);
-  background-size: 24px 16px;
-  background-repeat: repeat-x;
-}
-
+/* Neutralize old sawtooth pseudo elements completely */
+.section-cocoa-luxury::before,
+.section-cocoa-luxury::after,
+.section-cocoa-sawtooth::before,
 .section-cocoa-sawtooth::after {
-  content: '';
-  position: absolute;
-  bottom: -16px;
-  left: 0;
-  right: 0;
-  height: 16px;
-  background:
-    linear-gradient(45deg, transparent 50%, #331303 50%),
-    linear-gradient(315deg, transparent 50%, #331303 50%);
-  background-size: 24px 16px;
-  background-repeat: repeat-x;
+  display: none !important;
 }
 
+.section-cocoa-luxury .section-head h2,
+.section-cocoa-luxury .section-head em,
 .section-cocoa-sawtooth .section-head h2,
 .section-cocoa-sawtooth .section-head em {
   color: #F7F7D3;
@@ -2542,195 +2593,243 @@ html[dir="rtl"] .arrow {
   -webkit-text-fill-color: #F7F7D3;
 }
 
+.section-cocoa-luxury .section-head .eyebrow,
 .section-cocoa-sawtooth .section-head .eyebrow {
-  color: #E5A467;
+  color: #D9B066;
 }
 
+.section-cocoa-luxury .section-head p,
 .section-cocoa-sawtooth .section-head p {
-  color: rgba(247, 247, 211, 0.82);
+  color: rgba(247, 247, 211, 0.88);
 }
 
-/* Crisp butter-cream cards inside the dark cocoa sawtooth band */
-.section-cocoa-sawtooth .card {
-  background: #FFFDF5;
-  color: #3B1704;
-  border: 0;
-  border-radius: 6px;
-  box-shadow: 0 22px 44px -20px rgba(0, 0, 0, 0.45);
+/* Luxury feature cards inside the dark cocoa section */
+.luxury-feature-card,
+.section-cocoa-sawtooth .card,
+.section-cocoa-luxury .card {
+  background: #FFFDF8;
+  color: #4C2007;
+  border: 1px solid rgba(217, 176, 102, 0.3);
+  border-radius: 18px;
+  padding: 32px 28px;
+  box-shadow: 0 22px 50px -20px rgba(0, 0, 0, 0.45);
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
 }
 
-.section-cocoa-sawtooth .card h3 {
-  color: #2B1002;
-  text-transform: uppercase;
-  font-family: var(--font-body);
-  font-size: 0.96rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+.luxury-feature-card:hover,
+.section-cocoa-sawtooth .card:hover,
+.section-cocoa-luxury .card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 30px 60px -22px rgba(0, 0, 0, 0.55);
 }
 
-.section-cocoa-sawtooth .card p {
+.luxury-feature-card h3,
+.section-cocoa-sawtooth .card h3,
+.section-cocoa-luxury .card h3 {
+  color: #4C2007;
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.luxury-feature-card p,
+.section-cocoa-sawtooth .card p,
+.section-cocoa-luxury .card p {
   color: #643114;
+  line-height: 1.6;
 }
 
+.luxury-buy-pill,
 .choco-buy-pill {
-  display: inline-block;
-  margin-top: 12px;
-  background: #3B1704;
-  color: #F7F7D3;
-  padding: 9px 18px;
-  border-radius: 3px;
-  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  background: #4C2007;
+  color: #F7F7D3 !important;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.13em;
   text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid rgba(217, 176, 102, 0.35);
   transition: background-color 0.2s, transform 0.2s;
 }
 
+.luxury-feature-card:hover .luxury-buy-pill,
 .card:hover .choco-buy-pill {
-  background: #5C280B;
-  transform: translateY(-1px);
+  background: #2E1102;
+  transform: translateX(4px);
 }
 
-/* 6. Deep Cocoa Footer with Sawtooth Top Edge */
+/* Luxury Wide Banner inside Cocoa Section */
+.luxury-wide-banner,
+.choco-wide-banner {
+  max-width: 1040px;
+  margin: 36px auto 0;
+  background: #FFFDF8;
+  border-radius: 20px;
+  padding: 34px 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  box-shadow: 0 24px 54px -18px rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(217, 176, 102, 0.4);
+}
+
+.luxury-wide-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7A3912;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.luxury-wide-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+  font-weight: 600;
+  color: #4C2007;
+  margin-bottom: 6px;
+}
+
+.luxury-wide-desc {
+  font-size: 0.95rem;
+  color: #643114;
+  margin: 0;
+}
+
+.luxury-wide-right {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-shrink: 0;
+}
+
+.luxury-wide-price {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #4C2007;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 820px) {
+  .luxury-wide-banner,
+  .choco-wide-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 28px 22px;
+  }
+  .luxury-wide-right {
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+/* 7. Deep Cocoa Luxury Footer (NO Sawtooth) */
 .site-footer {
   position: relative;
-  background: #2E1102;
+  background: #3B1704;
   color: #F7F7D3;
-  border-top: 0;
-  margin-top: 32px;
+  border-top: 1px solid rgba(217, 176, 102, 0.28);
+  margin-top: 48px;
+  box-shadow: inset 0 20px 40px -20px rgba(0, 0, 0, 0.4);
 }
 
 .site-footer::before {
-  content: '';
-  position: absolute;
-  top: -14px;
-  left: 0;
-  right: 0;
-  height: 14px;
-  background:
-    linear-gradient(135deg, transparent 50%, #2E1102 50%),
-    linear-gradient(225deg, transparent 50%, #2E1102 50%);
-  background-size: 22px 14px;
-  background-repeat: repeat-x;
+  display: none !important;
 }
 
 .site-footer h4,
 .site-footer strong,
-.site-footer .brand-mark {
+.site-footer .brand-mark,
+.site-footer .brand-word {
   color: #F7F7D3;
 }
 
 .site-footer p,
 .site-footer a,
 .site-footer .footer-bottom {
-  color: rgba(247, 247, 211, 0.8);
+  color: rgba(247, 247, 211, 0.85);
 }
 
 .site-footer a:hover {
-  color: #E5A467;
+  color: #D9B066;
 }
 
 .site-footer .footer-wordmark {
-  color: rgba(247, 247, 211, 0.05);
+  color: rgba(247, 247, 211, 0.04);
 }
 
-
-/* ==========================================================================
-   Phase 2 Luxury Chocolatier Polish:
-   - Seamless Header/Sidebar integration (no duplicate top-left logo)
-   - Full-size 3D-shaded gourmet SVG illustrations in menu cards
-   - Reference 2-Card Spotlight Carousel with protruding < > edge arrows
-   - Reference 3-Column Square Featured Cards + Wide Bottom Showcase Banner
-   ========================================================================== */
-
-/* 1. Seamless Header over Chocolatier Sidebar Hero */
-@media (min-width: 1021px) {
-  body.has-hero .site-header:not(.scrolled) .brand {
-    opacity: 0;
-    pointer-events: none;
-    width: 210px;
-  }
-  body.has-hero .site-header:not(.scrolled) .site-nav {
-    margin-left: 12px;
-    margin-right: auto;
-    background: rgba(255, 253, 245, 0.82);
-    backdrop-filter: blur(8px);
-    padding: 4px 10px;
-    border-radius: 999px;
-    border: 1px solid rgba(76, 32, 7, 0.12);
-    box-shadow: 0 10px 24px -14px rgba(46, 17, 2, 0.18);
-  }
-  body.has-hero .site-header:not(.scrolled) .header-actions {
-    background: rgba(255, 253, 245, 0.88);
-    backdrop-filter: blur(8px);
-    padding: 5px 8px;
-    border-radius: 999px;
-    border: 1px solid rgba(76, 32, 7, 0.14);
-  }
-}
-
-.choco-hero-main {
-  padding-top: 96px !important;
-}
-
-/* 2. Rich Studio Frames for Menu Cards & Gourmet Illustrations */
-.menu-card {
+/* 8. Chocolatier Screen Luxury Upgrades */
+.luxury-platter-card {
   background: #FFFDF8;
-  border: 1px solid rgba(76, 32, 7, 0.14);
-  border-radius: 8px;
-  box-shadow: 0 16px 36px -20px rgba(46, 17, 2, 0.18);
+  border-radius: 20px;
+  border: 1px solid rgba(76, 32, 7, 0.12);
+  padding: 24px 24px 18px;
+  box-shadow: 0 24px 56px -24px rgba(76, 32, 7, 0.22);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 530px;
+  width: 100%;
 }
 
-.menu-card .thumb {
-  background:
-    radial-gradient(circle at 50% 44%, #FFFFFF 0%, #FBF8E1 68%, #F1ECC4 100%);
-  border-bottom: 1px solid rgba(76, 32, 7, 0.1);
+.choco-platter-art {
+  width: 100%;
+  margin-bottom: 12px;
 }
 
-.menu-card .thumb.illus svg {
-  width: 84%;
-  height: 84%;
-  filter: drop-shadow(0 12px 18px rgba(46, 17, 2, 0.15));
-  transition: transform 0.55s var(--ease);
+.choco-platter-art svg {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
-.menu-card:hover .thumb.illus svg {
-  transform: scale(1.06) translateY(-3px);
+.luxury-platter-caption {
+  text-align: center;
+  padding-top: 10px;
+  border-top: 1px solid rgba(76, 32, 7, 0.1);
+  width: 100%;
 }
 
-.menu-card h3 {
-  font-family: var(--font-body);
-  font-size: 1.06rem;
+.luxury-platter-caption strong {
+  display: block;
+  font-size: 0.86rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #2B1002;
+  color: #4C2007;
 }
 
-/* 3. Reference 2-Card Spotlight Showcase (FREE STANDARD ORDERS style) */
+.luxury-platter-caption span {
+  font-size: 0.78rem;
+  color: #7A4222;
+}
+
+/* Chef's Duo Spotlight */
+.luxury-duo-section,
 .choco-duo-section {
   padding: 56px 0 64px;
 }
 
-.choco-section-head h2 {
-  font-family: var(--font-body);
-  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #240D02;
-}
-
 .choco-duo-wrap {
   position: relative;
-  max-width: 900px;
+  max-width: 920px;
   margin: 0 auto;
 }
 
 .choco-duo-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 28px;
+  gap: 30px;
 }
 
 @media (max-width: 680px) {
@@ -2740,49 +2839,16 @@ html[dir="rtl"] .arrow {
 }
 
 .choco-duo-frame {
-  background: #FFFFFF;
+  background: #FFFDF8;
   aspect-ratio: 1 / 0.88;
   display: grid;
   place-items: center;
   padding: 24px;
+  border-radius: 18px;
   border: 1px solid rgba(76, 32, 7, 0.12);
-  box-shadow: 0 22px 46px -24px rgba(46, 17, 2, 0.22);
+  box-shadow: 0 22px 48px -24px rgba(76, 32, 7, 0.22);
 }
 
-.choco-duo-art {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-}
-
-.choco-duo-art svg,
-.choco-duo-art img {
-  width: 88%;
-  height: 88%;
-  object-fit: contain;
-  transition: transform 0.5s var(--ease);
-}
-
-.choco-duo-card:hover .choco-duo-art svg,
-.choco-duo-card:hover .choco-duo-art img {
-  transform: scale(1.05);
-}
-
-.choco-duo-card button.choco-title-bar {
-  border: 0;
-  cursor: pointer;
-}
-
-.choco-duo-card button.choco-buy-link {
-  background: none;
-  border: 0;
-  border-bottom: 2px solid #3B1704;
-  cursor: pointer;
-  font-family: var(--font-body);
-}
-
-/* Protruding < and > dark cocoa square arrows on outer edges of the 2-card spotlight */
 .choco-edge-arrow {
   position: absolute;
   top: 38%;
@@ -2791,309 +2857,124 @@ html[dir="rtl"] .arrow {
   width: 44px;
   height: 44px;
   border: 0;
-  border-radius: 3px;
-  background: #240D02;
+  border-radius: 50%;
+  background: #4C2007;
   color: #F7F7D3;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   line-height: 1;
   cursor: pointer;
   display: grid;
   place-items: center;
   box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(217, 176, 102, 0.35);
   transition: background-color 0.2s, transform 0.2s;
 }
 
-.choco-edge-arrow.prev {
-  left: -14px;
-}
-
-.choco-edge-arrow.next {
-  right: -14px;
-}
+.choco-edge-arrow.prev { left: -16px; }
+.choco-edge-arrow.next { right: -16px; }
 
 .choco-edge-arrow:hover {
-  background: #58250A;
-  transform: translateY(-50%) scale(1.06);
+  background: #2E1102;
+  transform: translateY(-50%) scale(1.08);
 }
 
-/* 4. Reference 3-Column Square Featured Cards + Wide Bottom White Banner */
-.choco-featured-tri {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr) !important;
-  gap: 24px !important;
-  max-width: 920px;
-  margin: 0 auto;
-}
-
-@media (max-width: 780px) {
-  .choco-featured-tri {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-}
-@media (max-width: 500px) {
-  .choco-featured-tri {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-.choco-square-card {
-  background: #FFFFFF !important;
-  border-radius: 4px !important;
-  padding: 28px 20px 24px !important;
-  text-align: center;
-  align-items: center;
-  justify-content: center;
-  gap: 8px !important;
-  box-shadow: 0 20px 42px -18px rgba(0, 0, 0, 0.5) !important;
-}
-
-.choco-square-art {
-  width: 146px;
-  height: 124px;
-  margin: 0 auto 6px;
-  display: grid;
-  place-items: center;
-}
-
-.choco-square-art svg {
-  width: 100%;
-  height: 100%;
-  transition: transform 0.45s var(--ease);
-}
-
-.choco-square-card:hover .choco-square-art svg {
-  transform: scale(1.08) translateY(-3px);
-}
-
-.choco-square-card h3 {
-  font-size: 0.82rem !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.1em !important;
-  text-transform: uppercase;
-  color: #240D02 !important;
-  margin: 4px 0 0 !important;
-}
-
-.choco-square-price {
-  font-family: var(--font-body);
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: #240D02;
-  letter-spacing: 0.02em;
-}
-
-/* Wide White Showcase Banner at the bottom of the Dark Cocoa Sawtooth Section */
-.choco-wide-banner {
-  max-width: 920px;
-  margin: 26px auto 0;
-  background: #FFFFFF;
-  border-radius: 4px;
-  padding: 28px 36px;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 20px;
-  box-shadow: 0 22px 46px -18px rgba(0, 0, 0, 0.52);
-  overflow: hidden;
-}
-
-.choco-wide-ghost {
-  width: 130px;
-  height: 105px;
-  margin: 0 auto;
-  opacity: 0.12;
-  filter: grayscale(0.35);
-  pointer-events: none;
-}
-
-.choco-wide-ghost svg,
-.choco-wide-ghost img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.choco-wide-center {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.choco-wide-price {
-  font-family: var(--font-body);
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #240D02;
-}
-
-.choco-wide-title {
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #240D02;
-  margin-bottom: 6px;
-}
-
-.choco-wide-btn {
-  display: inline-block;
-  background: #3B1704;
-  color: #F7F7D3 !important;
-  border: 0;
-  border-radius: 3px;
-  padding: 10px 24px;
-  font-family: var(--font-body);
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.2s;
-}
-
-.choco-wide-btn:hover {
-  background: #5E280B;
-  transform: translateY(-2px);
-}
-
-@media (max-width: 640px) {
-  .choco-wide-banner {
-    grid-template-columns: 1fr;
-    padding: 24px 20px;
-  }
-  .choco-wide-ghost {
-    display: none;
-  }
-}
-
-/* ============================================================================
-   UI/UX PRO MAX PASS — Live Hours Pill, 3-Step Funnel, Motion & Accessibility
-   ============================================================================ */
-
-/* Sidebar Live Opening Hours & Branch Status (Never Hide Hours) */
-.choco-sidebar-hours {
-  margin-top: auto;
-  padding-top: 18px;
-  border-top: 1px solid rgba(247, 247, 211, 0.14);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.choco-live-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  align-self: flex-start;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(217, 176, 102, 0.16);
+/* Gift Box Banner */
+.luxury-box-banner,
+.box-banner {
+  background: #FFFDF8;
   border: 1px solid rgba(217, 176, 102, 0.35);
-  color: #D9B066;
-  font-size: 0.66rem;
+  border-radius: 20px;
+  box-shadow: 0 22px 50px -22px rgba(76, 32, 7, 0.22);
+}
+
+/* Menu Product Cards */
+.menu-card {
+  background: #FFFDF8;
+  border: 1px solid rgba(76, 32, 7, 0.14);
+  border-radius: 18px;
+  box-shadow: 0 16px 36px -20px rgba(76, 32, 7, 0.18);
+  overflow: hidden;
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+.menu-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 24px 48px -18px rgba(76, 32, 7, 0.26);
+}
+
+.menu-card .thumb {
+  background: radial-gradient(circle at 50% 45%, #FFFFFF 0%, #F5F2D0 100%);
+  border-bottom: 1px solid rgba(76, 32, 7, 0.1);
+  position: relative;
+}
+
+.menu-card h3 {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #4C2007;
 }
 
-.choco-live-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #4ADE80;
-  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25);
-  animation: chocoPulse 2.2s infinite ease-in-out;
-}
-
-@keyframes chocoPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.22); opacity: 0.75; }
-}
-
-.choco-hours-text {
-  margin: 0;
-  font-size: 0.74rem;
-  line-height: 1.45;
-  color: rgba(247, 247, 211, 0.88);
-  white-space: pre-line;
-}
-
-.choco-branches-tag {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #D9B066;
-}
-
-@media (max-width: 980px) {
-  .choco-sidebar-hours {
-    margin-top: 12px;
-    padding-top: 12px;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-}
-
-/* 3-Step Conversion Funnel Bar (3D Cake Studio Hero) */
+/* 9. Funnel Steps Bar for 3D Cake Studio */
+.luxury-funnel-bar,
 .choco-funnel-bar {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   margin-top: 24px;
-  padding: 10px 16px;
-  background: #FFFFFF;
+  padding: 10px 18px;
+  background: #FFFDF8;
   border: 1px solid rgba(76, 32, 7, 0.14);
-  border-radius: 12px;
-  box-shadow: 0 14px 32px -18px rgba(59, 23, 4, 0.22);
+  border-radius: 999px;
+  box-shadow: 0 14px 34px -18px rgba(59, 23, 4, 0.2);
 }
 
+.luxury-funnel-step,
 .choco-funnel-step {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
   text-decoration: none;
-  color: #3B1704;
+  color: #4C2007;
   text-align: left;
   transition: background-color 0.2s ease, transform 0.2s ease;
   cursor: pointer;
 }
 
+.luxury-funnel-step:hover,
 .choco-funnel-step:hover {
   background: rgba(76, 32, 7, 0.06);
   transform: translateY(-1px);
 }
 
+.luxury-funnel-step strong,
 .choco-funnel-step strong {
   display: block;
   font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #3B1704;
+  color: #4C2007;
 }
 
+.luxury-funnel-step small,
 .choco-funnel-step small {
   display: block;
   font-size: 0.72rem;
-  color: #6E462C;
+  color: #7A4222;
 }
 
+.luxury-funnel-num,
 .choco-funnel-num {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #3B1704;
+  background: #4C2007;
   color: #F7F7D3;
   font-size: 0.72rem;
   font-weight: 800;
@@ -3102,27 +2983,73 @@ html[dir="rtl"] .arrow {
   flex-shrink: 0;
 }
 
+.luxury-funnel-step.active .luxury-funnel-num,
 .choco-funnel-step.active .choco-funnel-num {
   background: #D9B066;
-  color: #2B1003;
+  color: #2E1102;
 }
 
+.luxury-funnel-sep,
 .choco-funnel-sep {
   color: rgba(76, 32, 7, 0.35);
   font-weight: 700;
   font-size: 1.1rem;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 780px) {
+  .luxury-funnel-bar,
   .choco-funnel-bar {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    border-radius: 16px;
   }
+  .luxury-funnel-sep,
   .choco-funnel-sep {
     display: none;
   }
 }
+
+/* Secondary Pages Luxury Header Banner */
+.luxury-page-hero,
+.page-hero {
+  padding: 64px 0 48px;
+  text-align: center;
+  position: relative;
+}
+
+.luxury-page-hero h1 {
+  margin-bottom: 14px;
+}
+
+.luxury-page-hero p {
+  color: #643114;
+  max-width: 620px;
+  margin: 0 auto;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 1020px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .luxury-hero .hero-copy {
+    align-items: center;
+    text-align: center;
+  }
+  .luxury-hero .lead {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero-actions {
+    justify-content: center;
+  }
+  .trust-strip {
+    justify-content: center;
+  }
+}
+
 
 /* Pro Max Motion Choreography: Stagger Reveal & Keyboard Focus */
 [data-reveal] {
