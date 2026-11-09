@@ -5,6 +5,7 @@ import {
 import { createCakeStage, renderCakeSnapshot, releaseSnapshots, drawSavoryPod } from '/js/cake3d.js';
 import { SIGNATURE_DESIGNS } from '/js/designs.js';
 import { confetti } from '/js/confetti.js';
+import { playClick, playSlice, playWish, playPop, playCelebration, toggleSound } from '/js/audio.js';
 
 const SHAPE_ICONS = {
   round: '<svg class="icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="20" cy="13" rx="14" ry="5"/><path d="M6 13v14c0 2.8 6.3 5 14 5s14-2.2 14-5V13"/></svg>',
@@ -454,6 +455,7 @@ photoDrop.addEventListener('drop', (e) => {
 let messageTimer = 0;
 form.addEventListener('change', (e) => {
   if (e.target.name === 'fulfillment') return;
+  playClick();
   update({ redraw: Boolean(optionById.get(e.target.value)) });
 });
 messageInput.addEventListener('input', () => {
@@ -513,6 +515,7 @@ sliceBtn?.addEventListener('click', () => {
   sliceBtn.setAttribute('aria-pressed', String(isSliced));
   sliceBtn.classList.toggle('active', isSliced);
   sliceBtn.querySelector('span').textContent = isSliced ? 'Whole cake' : 'Cut a slice';
+  playSlice();
   update();
 });
 
@@ -523,10 +526,12 @@ wishBtn?.addEventListener('click', () => {
   wishBtn.setAttribute('aria-pressed', String(next));
   wishBtn.classList.toggle('active', next);
   wishBtn.querySelector('span').textContent = next ? 'Lights on' : 'Make a wish';
+  playWish();
   update();
 });
 
-document.getElementById('surprise-btn').addEventListener('click', () => {
+document.getElementById('surprise-btn')?.addEventListener('click', () => {
+  playPop();
   const inputsOf = (key) => [...form.querySelectorAll(`input[name="${key}"]`)];
   const random = (list) => list[Math.floor(Math.random() * list.length)];
   for (const key of ['shape', 'tiers', 'flavor', 'filling', 'frosting', 'color', 'drip']) {
@@ -541,6 +546,8 @@ document.getElementById('surprise-btn').addEventListener('click', () => {
   update();
   refreshStepper();
 });
+
+document.getElementById('sound-btn')?.addEventListener('click', toggleSound);
 
 document.getElementById('share-btn')?.addEventListener('click', async () => {
   const state = {};
@@ -693,6 +700,7 @@ form.addEventListener('submit', async (event) => {
 function showConfirmation(order, name) {
   bar.remove();
   confetti();
+  playCelebration();
   document.getElementById('builder-col').innerHTML = orderConfirmation(order, {
     name,
     title: 'your cake is ordered!',

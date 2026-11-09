@@ -4,6 +4,7 @@ import {
 } from '/js/common.js';
 import { illustrationFor, art } from '/js/illustrations.js';
 import { confetti } from '/js/confetti.js';
+import { playClick, playPop, playCelebration } from '/js/audio.js';
 
 const CART_KEY = 'sc_cart_v2';
 
@@ -142,6 +143,7 @@ function flyToCart(from) {
 }
 
 function addToCart(id, picks, quantity, from = null, customBox = null) {
+  playPop();
   const key = lineKey(id, picks, customBox);
   const line = cart.find((l) => l.key === key);
   if (line) line.quantity = Math.min(99, line.quantity + quantity);
@@ -153,6 +155,7 @@ function addToCart(id, picks, quantity, from = null, customBox = null) {
 }
 
 function changeLine(key, delta) {
+  playClick();
   const line = cart.find((l) => l.key === key);
   if (!line) return;
   line.quantity = Math.min(99, line.quantity + delta);
@@ -671,6 +674,7 @@ form.addEventListener('submit', async (event) => {
 function showConfirmation(order, name) {
   document.getElementById('cart-bar').remove();
   confetti();
+  playCelebration();
   document.getElementById('page').innerHTML = orderConfirmation(order, {
     name,
     title: 'your order is in!',

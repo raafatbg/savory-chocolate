@@ -1784,6 +1784,10 @@ html[dir="rtl"] .arrow {
   color: var(--on-gold);
   border-color: var(--gold);
 }
+.tool-btn.muted {
+  opacity: 0.55;
+  filter: grayscale(0.85);
+}
 .preview-card .stage {
   transition: background 0.6s var(--ease);
 }

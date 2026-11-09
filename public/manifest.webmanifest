@@ -1,0 +1,18 @@
+{
+  "name": "SAVORY · Artisan Chocolatier & 3D Cake Studio",
+  "short_name": "SAVORY",
+  "description": "Custom 3D cakes, Belgian chocolates, crepes, Savory Flurry and daily patisserie treats.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F7D3",
+  "theme_color": "#4C2007",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/img/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

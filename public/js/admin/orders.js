@@ -1,4 +1,5 @@
 import { $, esc, money, isoDate, friendlyTime, adminApi, toast, errorBlock, emptyCard } from './core.js';
+import { playKitchenChime, toggleSound } from '/js/audio.js';
 
 const FILTERS = [
   ['active', 'Active'], ['new', 'New'], ['confirmed', 'Confirmed'], ['baking', 'In kitchen'], ['ready', 'Ready'],
@@ -23,6 +24,7 @@ let branchFilter = '';
 let orderSearch = '';
 let branchesLoaded = false;
 let currentOrders = [];
+let knownOrderIds = null;
 
 // Fills the branch filter once (only shown when there's more than one branch).
 async function loadBranchFilter() {
@@ -47,6 +49,16 @@ export async function load() {
     return;
   }
   const { counts } = data;
+  const incoming = data.orders || [];
+  if (knownOrderIds !== null) {
+    const hasBrandNew = incoming.some((o) => !knownOrderIds.has(o.id) && (o.status === 'new' || o.status === 'confirmed'));
+    if (hasBrandNew) {
+      playKitchenChime();
+      toast('🔔 New order arrived in the kitchen queue!');
+    }
+  }
+  knownOrderIds = new Set(incoming.map((o) => o.id));
+
   let orders = branchFilter ? data.orders.filter((o) => o.branch === branchFilter) : data.orders;
   if (orderSearch) {
     orders = orders.filter((o) => {
@@ -297,3 +309,4 @@ $('#order-search')?.addEventListener('input', (e) => {
   orderSearch = e.target.value.trim().toLowerCase();
   load();
 });
+$('#admin-sound-btn')?.addEventListener('click', toggleSound);

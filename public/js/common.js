@@ -441,3 +441,10 @@ export function openWhatsApp(url) {
     try { tab.opener = null; } catch { /* cross-origin already */ }
   }
 }
+
+// Progressive Web App (PWA) Service Worker Registration
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}

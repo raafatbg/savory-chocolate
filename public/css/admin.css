@@ -408,5 +408,6 @@ body.admin ::-webkit-scrollbar-thumb { background: #d6c3ad; border-color: var(--
 .kpi-card { padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; border-left: 3px solid #4C2007; }
 .kpi-label { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #6E462C; }
 .kpi-val { font-size: 1.5rem; font-weight: 800; color: #3B1704; }
+.sound-toggle-btn.muted { opacity: 0.5; filter: grayscale(0.85); text-decoration: line-through; }
 .orders-tools input[type="search"] { padding: 7px 10px; font-size: 0.88rem; border-radius: 8px; border: 1px solid var(--line); }
 @media (max-width: 760px) { .admin-kpi-grid { grid-template-columns: repeat(2, 1fr); } }

@@ -76,6 +76,17 @@ function prepareSiteDir(targetName) {
   for (const page of ['cakes', 'gallery', 'about', 'faq', 'contact', 'track', '404']) {
     fs.writeFileSync(path.join(dir, `${page}.html`), renderPage(page, opts));
   }
+  fs.writeFileSync(path.join(dir, 'manifest.webmanifest'), JSON.stringify({
+    name: 'SAVORY · 3D Custom Cake Studio',
+    short_name: 'SAVORY Cakes',
+    description: 'Design custom celebration cakes in interactive 3D and order ahead for pickup or delivery.',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#F7F7D3',
+    theme_color: '#4C2007',
+    orientation: 'portrait-primary',
+    icons: [{ src: '/img/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }],
+  }, null, 2));
 }
 
 // 2. Build Menu & Chocolatier site (dist/menu) — Menu is at root index.html!
@@ -86,6 +97,17 @@ function prepareSiteDir(targetName) {
   for (const page of ['about', 'faq', 'contact', 'track', '404']) {
     fs.writeFileSync(path.join(dir, `${page}.html`), renderPage(page, opts));
   }
+  fs.writeFileSync(path.join(dir, 'manifest.webmanifest'), JSON.stringify({
+    name: 'SAVORY · Chocolatier & Cafe',
+    short_name: 'SAVORY Menu',
+    description: 'Order fine Belgian chocolates, luxury gift boxes, crepes, Savory Flurry and bakes.',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#F7F7D3',
+    theme_color: '#4C2007',
+    orientation: 'portrait-primary',
+    icons: [{ src: '/img/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }],
+  }, null, 2));
 }
 
 // 3. Build Admin Dashboard site (dist/admin) — Admin is at root index.html!
@@ -95,6 +117,17 @@ function prepareSiteDir(targetName) {
   const adminHtml = renderPage('admin', opts);
   fs.writeFileSync(path.join(dir, 'index.html'), adminHtml);
   fs.writeFileSync(path.join(dir, '404.html'), adminHtml);
+  fs.writeFileSync(path.join(dir, 'manifest.webmanifest'), JSON.stringify({
+    name: 'SAVORY · Kitchen Admin & Order Hub',
+    short_name: 'SAVORY Admin',
+    description: 'Real-time kitchen order queue, kitchen prep sheets, WhatsApp messaging and menu management.',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#F7F7D3',
+    theme_color: '#3B1704',
+    orientation: 'portrait-primary',
+    icons: [{ src: '/img/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }],
+  }, null, 2));
 }
 
 console.log('Built dist/cakes, dist/menu, and dist/admin for Firebase Hosting.');
