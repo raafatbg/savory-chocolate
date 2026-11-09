@@ -324,7 +324,14 @@ const revealer = 'IntersectionObserver' in window
   : null;
 
 export function reveal(root = document) {
-  root.querySelectorAll('[data-reveal]:not(.is-visible)').forEach((el) => {
+  const items = root.querySelectorAll('[data-reveal]:not(.is-visible)');
+  items.forEach((el, idx) => {
+    if (!el.style.getPropertyValue('--delay') && idx > 0 && el.parentElement?.children.length > 1) {
+      const siblingIdx = [...el.parentElement.children].indexOf(el);
+      if (siblingIdx > 0 && siblingIdx < 8) {
+        el.style.setProperty('--delay', `${(siblingIdx * 0.055).toFixed(3)}s`);
+      }
+    }
     if (revealer) revealer.observe(el);
     else el.classList.add('is-visible');
   });

@@ -24,6 +24,11 @@
             <li><a href="/track"><span class="caret">›</span> TRACK ORDER</a></li>
             <li><a href="#visit-section"><span class="caret">›</span> VISIT BRANCHES</a></li>
           </ul>
+          <div class="choco-sidebar-hours">
+            <div class="choco-live-pill"><span class="choco-live-dot" aria-hidden="true"></span> OPEN DAILY</div>
+            <p class="choco-hours-text">{{hours}}</p>
+            <span class="choco-branches-tag">Aramoun &middot; Aley</span>
+          </div>
         </aside>
 
         <div class="choco-hero-main">
@@ -179,7 +184,13 @@
           <div class="card panel">
             <h2>Your order</h2>
             <div id="cart-empty" class="empty-state">
-              <div class="icon" aria-hidden="true">🍫</div>
+              <div class="icon" aria-hidden="true">
+                <svg viewBox="0 0 36 36" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="10" width="24" height="20" rx="3"/>
+                  <path d="M13 10V8a5 5 0 0 1 10 0v2"/>
+                  <path d="M12 17h12M12 23h8"/>
+                </svg>
+              </div>
               <p>Your order is empty.<br>Add something delicious from the menu.</p>
             </div>
             <form id="checkout-form" autocomplete="on" hidden>

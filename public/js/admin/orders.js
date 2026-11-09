@@ -184,10 +184,10 @@ function orderCard(o) {
       <div class="order-top">
         <div class="ids">
           <span class="order-code-sm">${esc(o.code)}</span>
-          ${o.type === 'cake' ? '<span class="pill cake">🎂 Custom cake</span>' : '<span class="pill">Menu order</span>'}
-          ${o.branch ? `<span class="pill branch">📍 ${esc(o.branch)}</span>` : ''}
-          ${delivery ? '<span class="pill delivery">🚚 Delivery</span>' : '<span class="pill">Pickup</span>'}
-          ${dietary ? '<span class="pill warn">⚠ Dietary needs</span>' : ''}
+          ${o.type === 'cake' ? '<span class="pill cake"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:4px"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M2 21h20"/><path d="M7 8v3M12 8v3M17 8v3"/></svg>Custom cake</span>' : '<span class="pill">Menu order</span>'}
+          ${o.branch ? `<span class="pill branch"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:3px"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>${esc(o.branch)}</span>` : ''}
+          ${delivery ? '<span class="pill delivery"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:4px"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Delivery</span>' : '<span class="pill">Pickup</span>'}
+          ${dietary ? '<span class="pill warn"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:3px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Dietary needs</span>' : ''}
           <span class="pill st-${o.status}">${STATUS_LABELS[o.status] || o.status}</span>
         </div>
         <div class="when">${flag} ${delivery ? 'Deliver' : 'Pickup'} ${esc(day)} · ${esc(friendlyTime(o.pickup_time))}</div>
@@ -210,8 +210,8 @@ function orderCard(o) {
         <span class="total">Total ${money(o.total_cents)}
           <span class="muted small">${o.delivery_fee_cents ? `incl. ${money(o.delivery_fee_cents)} delivery · ` : ''}pay on ${delivery ? 'delivery' : 'pickup'}</span></span>
         <div class="controls">
-          <button type="button" class="btn btn-outline btn-sm" data-print-order="${o.id}" title="Print kitchen preparation sheet">🖨 Prep sheet</button>
-          ${waHref ? `<a class="btn btn-outline btn-sm" href="${esc(waHref)}" target="_blank" rel="noopener" title="Message customer on WhatsApp with current status">💬 WhatsApp customer</a>` : ''}
+          <button type="button" class="btn btn-outline btn-sm" data-print-order="${o.id}" title="Print kitchen preparation sheet"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Prep sheet</button>
+          ${waHref ? `<a class="btn btn-outline btn-sm" href="${esc(waHref)}" target="_blank" rel="noopener" title="Message customer on WhatsApp with current status"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> WhatsApp customer</a>` : ''}
           ${next ? `<button type="button" class="btn btn-gold btn-sm" data-order="${o.id}" data-set-status="${next[0]}">${next[1]}</button>` : ''}
           <label class="visually-hidden" for="status-${o.id}">Status</label>
           <select id="status-${o.id}" data-order="${o.id}" data-status-select>

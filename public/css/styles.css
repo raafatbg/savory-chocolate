@@ -2964,3 +2964,188 @@ html[dir="rtl"] .arrow {
     display: none;
   }
 }
+
+/* ============================================================================
+   UI/UX PRO MAX PASS — Live Hours Pill, 3-Step Funnel, Motion & Accessibility
+   ============================================================================ */
+
+/* Sidebar Live Opening Hours & Branch Status (Never Hide Hours) */
+.choco-sidebar-hours {
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid rgba(247, 247, 211, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.choco-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(217, 176, 102, 0.16);
+  border: 1px solid rgba(217, 176, 102, 0.35);
+  color: #D9B066;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.choco-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ADE80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25);
+  animation: chocoPulse 2.2s infinite ease-in-out;
+}
+
+@keyframes chocoPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.22); opacity: 0.75; }
+}
+
+.choco-hours-text {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: rgba(247, 247, 211, 0.88);
+  white-space: pre-line;
+}
+
+.choco-branches-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #D9B066;
+}
+
+@media (max-width: 980px) {
+  .choco-sidebar-hours {
+    margin-top: 12px;
+    padding-top: 12px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+}
+
+/* 3-Step Conversion Funnel Bar (3D Cake Studio Hero) */
+.choco-funnel-bar {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 24px;
+  padding: 10px 16px;
+  background: #FFFFFF;
+  border: 1px solid rgba(76, 32, 7, 0.14);
+  border-radius: 12px;
+  box-shadow: 0 14px 32px -18px rgba(59, 23, 4, 0.22);
+}
+
+.choco-funnel-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #3B1704;
+  text-align: left;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+
+.choco-funnel-step:hover {
+  background: rgba(76, 32, 7, 0.06);
+  transform: translateY(-1px);
+}
+
+.choco-funnel-step strong {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #3B1704;
+}
+
+.choco-funnel-step small {
+  display: block;
+  font-size: 0.72rem;
+  color: #6E462C;
+}
+
+.choco-funnel-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #3B1704;
+  color: #F7F7D3;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.choco-funnel-step.active .choco-funnel-num {
+  background: #D9B066;
+  color: #2B1003;
+}
+
+.choco-funnel-sep {
+  color: rgba(76, 32, 7, 0.35);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 680px) {
+  .choco-funnel-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .choco-funnel-sep {
+    display: none;
+  }
+}
+
+/* Pro Max Motion Choreography: Stagger Reveal & Keyboard Focus */
+[data-reveal] {
+  transition:
+    opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1) var(--delay, 0s),
+    transform 0.42s cubic-bezier(0.34, 1.4, 0.64, 1) var(--delay, 0s);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #D9B066;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

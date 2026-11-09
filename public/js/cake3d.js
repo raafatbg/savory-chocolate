@@ -52,7 +52,7 @@ export function webglAvailable() {
 // ---------------------------------------------------------------- stage
 
 export function createCakeStage(container, {
-  autoRotate = true, interactive = finePointer, sparkles = false, float = false, scrollSpin = false,
+  autoRotate = true, interactive = true, sparkles = false, float = false, scrollSpin = false,
 } = {}) {
   if (!webglAvailable()) return null;
 
@@ -67,7 +67,8 @@ export function createCakeStage(container, {
   // Shadows are redrawn only when something changes (see loop), not every frame.
   renderer.shadowMap.autoUpdate = false;
   renderer.domElement.setAttribute('role', 'img');
-  renderer.domElement.setAttribute('aria-label', 'A 3D preview of the cake');
+  renderer.domElement.setAttribute('aria-label', 'Interactive 3D SAVORY cake viewer. Drag or touch to rotate.');
+  renderer.domElement.style.touchAction = 'pan-y';
   container.appendChild(renderer.domElement);
 
   const scene = setupScene(renderer);
