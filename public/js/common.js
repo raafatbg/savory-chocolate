@@ -299,6 +299,8 @@ if (toggle) {
   };
   toggle.addEventListener('click', () => setOpen(!document.body.classList.contains('nav-open')));
   document.getElementById('site-nav')?.addEventListener('click', (e) => { if (e.target.closest('a')) setOpen(false); });
+  document.getElementById('drawer-close')?.addEventListener('click', () => setOpen(false));
+  document.getElementById('nav-scrim')?.addEventListener('click', () => setOpen(false));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
 }
 

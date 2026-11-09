@@ -4,13 +4,71 @@
     <a class="brand" href="/" aria-label="{{shop_name}} menu home">
       {{> brand-logo}}
     </a>
-    <nav class="site-nav" id="site-nav" aria-label="Main">
-      <a href="/" data-page="menu" data-i18n="nav_menu">Menu</a>
-      <a href="/#box-banner" data-i18n="nav_boxes">Gift Boxes</a>
-      <a href="/#what-we-make" data-i18n="nav_specialties">Specialties</a>
-      <a href="/track" data-page="track" data-i18n="nav_track">Track Order</a>
-      <a href="/#visit-section" data-i18n="foot_visit">Visit Us</a>
+
+    <div class="nav-scrim" id="nav-scrim" aria-hidden="true"></div>
+
+    <nav class="site-nav" id="site-nav" aria-label="Main Navigation">
+      <div class="drawer-header" aria-hidden="true">
+        <div class="drawer-brand">
+          {{> brand-logo}}
+        </div>
+        <button type="button" class="drawer-close" id="drawer-close" aria-label="Close menu">✕</button>
+      </div>
+
+      <div class="drawer-sister-banner">
+        <a class="drawer-sister-card" href="{{cakes_site_url}}" target="_blank" rel="noopener">
+          <div class="sister-icon-wrap">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M2 21h20"/><path d="M7 8v3M12 8v3M17 8v3"/></svg>
+          </div>
+          <div>
+            <span class="sister-sub">SAVORY 3D Custom Studio</span>
+            <strong class="sister-title">3D Cake Studio ↗</strong>
+          </div>
+        </a>
+      </div>
+
+      <div class="site-nav-links">
+        <a href="/" data-page="menu" data-i18n="nav_menu">
+          <span class="nav-num">01</span>
+          <span class="nav-text">Full Menu</span>
+          <span class="nav-desc">Chocolates, crepes, flurry &amp; bakes</span>
+        </a>
+        <a href="/#box-banner" data-i18n="nav_boxes">
+          <span class="nav-num">02</span>
+          <span class="nav-text">Curate Gift Boxes</span>
+          <span class="nav-desc">9, 16 or 25-piece luxury boxes</span>
+        </a>
+        <a href="/#what-we-make" data-i18n="nav_specialties">
+          <span class="nav-num">03</span>
+          <span class="nav-text">Specialties</span>
+          <span class="nav-desc">Pistachio kunafa &amp; Belgian dark</span>
+        </a>
+        <a href="/track?site=menu" data-page="track" data-i18n="nav_track">
+          <span class="nav-num">04</span>
+          <span class="nav-text">Track Order</span>
+          <span class="nav-desc">Live kitchen preparation status</span>
+        </a>
+        <a href="/#visit-section" data-i18n="foot_visit">
+          <span class="nav-num">05</span>
+          <span class="nav-text">Visit Branches</span>
+          <span class="nav-desc">Aramoun &amp; Aley locations</span>
+        </a>
+      </div>
+
+      <div class="drawer-footer">
+        <div class="drawer-hours">
+          <span class="drawer-hours-dot"></span>
+          <span>Open Daily · Aramoun &amp; Aley</span>
+        </div>
+        {{#whatsapp}}<div class="drawer-concierge">
+          <a class="drawer-wa-btn" href="{{whatsapp_href}}" target="_blank" rel="noopener">
+            {{> whatsapp-icon}}
+            <span>WhatsApp Concierge</span>
+          </a>
+        </div>{{/whatsapp}}
+      </div>
     </nav>
+
     <div class="header-actions">
       <a class="sister-site-pill" href="{{cakes_site_url}}" target="_blank" rel="noopener" title="Design a Custom 3D Cake at SAVORY Cake Studio">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M2 21h20"/><path d="M7 8v3M12 8v3M17 8v3"/></svg>
@@ -20,6 +78,7 @@
       <button type="button" class="lang-toggle" id="lang-toggle" aria-label="Switch language / تغيير اللغة" title="Switch language / تغيير اللغة">عربي</button>
       <a class="btn btn-gold btn-sm header-cta" href="/#cart" data-i18n="cta_order">Your order</a>
     </div>
+
     <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
       <span></span><span></span><span></span>
     </button>
