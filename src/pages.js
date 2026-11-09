@@ -65,6 +65,18 @@ function footerVisit(list) {
         </div>`).join('');
 }
 
+// Home page "Visit us" columns, one per branch.
+function visitCards(list) {
+  return list.map((b) => `
+        <div class="at-branch">
+          <h3>${esc(b.name || b.shop)}</h3>
+          ${b.address ? `<p class="pre-line">${esc(b.address)}</p>` : ''}
+          ${b.phone ? `<a href="${esc(telHref(b.phone))}">${esc(b.phone)}</a>` : ''}
+          ${b.whatsapp ? `<a href="${esc(waHref(b.whatsapp, b.shop))}" target="_blank" rel="noopener">WhatsApp ${esc(b.whatsapp)}</a>` : ''}
+          ${mapsHref(b) ? `<a href="${esc(mapsHref(b))}" target="_blank" rel="noopener">Directions</a>` : ''}
+        </div>`).join('');
+}
+
 // Floating WhatsApp button; with several branches it opens a small menu to pick one.
 function whatsappFloat(list, s) {
   const chats = list.filter((b) => b.whatsapp);
@@ -97,6 +109,12 @@ function omviContacts() {
   }).join('');
 }
 
+function leadNotice(value) {
+  const days = Number(value) || 0;
+  if (days <= 0) return 'Order cakes the same day';
+  return `Custom cakes need ${days} day${days === 1 ? '' : 's'}' notice`;
+}
+
 export function renderPage(name, options = {}) {
   const siteMode = options.siteMode || 'cakes';
   const s = getSettings();
@@ -111,6 +129,7 @@ export function renderPage(name, options = {}) {
     whatsapp_href: s.whatsapp ? waHref(s.whatsapp, s.shop_name) : '',
     has_social: s.instagram || s.facebook || s.whatsapp ? '1' : '',
     has_places: places.length ? '1' : '',
+    lead_notice: leadNotice(s.cake_lead_days),
     omvi_name: OMVI.name,
     omvi_tagline: OMVI.tagline,
     omvi_about: OMVI.about,
@@ -122,6 +141,7 @@ export function renderPage(name, options = {}) {
   };
   const blocks = {
     visit_rows: visitRows(places),
+    visit_cards: visitCards(places),
     footer_visit: footerVisit(places),
     whatsapp_float: whatsappFloat(places, s),
     omvi_services: OMVI.services.map((x) => `<span class="chip">${esc(x)}</span>`).join(''),

@@ -1,41 +1,36 @@
-<footer class="site-footer">
-  <div class="container">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <a class="brand brand-stacked" href="/" aria-label="{{shop_name}} cake studio home">{{> brand-logo}}</a>
-        <p>{{tagline}}</p>
-        {{#has_social}}<div class="social">
-          {{#instagram}}<a href="{{instagram}}" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 3.9 3.9 2.4 7.2 2.3 8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-2.4.1-3.5 1.2-3.6 3.6-.1 1.2-.1 1.6-.1 4.7s0 3.5.1 4.7c.1 2.4 1.2 3.5 3.6 3.6 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c2.4-.1 3.5-1.2 3.6-3.6.1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c-.1-2.4-1.2-3.5-3.6-3.6-1.2-.1-1.6-.1-4.7-.1zm0 3.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8zm0 8.1a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zm5.1-9.4a1.2 1.2 0 1 1 0 2.3 1.2 1.2 0 0 1 0-2.3z"/></svg></a>{{/instagram}}
-          {{#facebook}}<a href="{{facebook}}" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 21.9v-8.2h2.8l.4-3.2h-3.2V8.4c0-.9.3-1.6 1.6-1.6h1.7V4c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.4H7.3v3.2h2.8v8.2h3.4z"/></svg></a>{{/facebook}}
-          {{#whatsapp}}<a href="{{whatsapp_href}}" target="_blank" rel="noopener" aria-label="WhatsApp">{{> whatsapp-icon}}</a>{{/whatsapp}}
-        </div>{{/has_social}}
-      </div>
-      <div>
-        <h4 data-i18n="foot_order">Cake Studio</h4>
-        <a href="/cakes" data-i18n="nav_cakes">3D Cake Builder</a>
-        <a href="/#signature">Signature Designs</a>
-        <a href="/track" data-i18n="nav_track">Track order</a>
-        <a href="/gallery" data-i18n="nav_gallery">Gallery</a>
-      </div>
-      <div>
-        <h4 data-i18n="foot_bakery">Patisserie</h4>
-        <a href="{{menu_site_url}}" target="_blank" rel="noopener">Chocolates &amp; Cafe Menu ↗</a>
-        <a href="/about" data-i18n="nav_about">Our story</a>
-        <a href="/faq" data-i18n="nav_faq">FAQ</a>
-        <a href="/contact" data-i18n="nav_contact">Contact</a>
-      </div>
-      <div>
-        <h4 data-i18n="foot_visit">Visit</h4>
-        <p class="pre-line">{{hours}}</p>
-        {{{footer_visit}}}
-        {{#email}}<a href="mailto:{{email}}">{{email}}</a>{{/email}}
-      </div>
+<footer class="at-footer">
+  <div class="at-wrap at-footer-grid">
+    <div class="at-footer-brand">
+      <a class="at-footer-word" href="/">{{shop_name}}</a>
+      <p>{{tagline}}</p>
+      {{#has_social}}<div class="at-social">
+        {{#instagram}}<a href="{{instagram}}" target="_blank" rel="noopener" aria-label="Instagram">{{> instagram-icon}}</a>{{/instagram}}
+        {{#facebook}}<a href="{{facebook}}" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21.9v-8.2h2.8l.4-3.2h-3.2V8.4c0-.9.3-1.6 1.6-1.6h1.7V4c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.4H7.3v3.2h2.8v8.2h3.4z"/></svg></a>{{/facebook}}
+        {{#whatsapp}}<a href="{{whatsapp_href}}" target="_blank" rel="noopener" aria-label="WhatsApp">{{> whatsapp-icon}}</a>{{/whatsapp}}
+      </div>{{/has_social}}
     </div>
-    <div class="footer-bottom">
-      <span>&copy; {{year}} {{shop_name}}. All rights reserved. &middot; Pay on pickup or delivery</span>
-      <a class="credit" href="/contact#omvi">Website crafted by <span class="omvi">{{omvi_name}}</span></a>
+    <nav class="at-footer-col" aria-label="Shop">
+      <h2 data-i18n="foot_shop">Shop</h2>
+      <a href="/cakes" data-i18n="nav_cakes_short">Cakes</a>
+      <a href="{{menu_site_url}}" data-i18n="nav_menu_cafe">Chocolates &amp; Café</a>
+      <a href="/gallery" data-i18n="nav_gallery">Gallery</a>
+      <a href="/about" data-i18n="nav_about">Our story</a>
+    </nav>
+    <nav class="at-footer-col" aria-label="Help">
+      <h2 data-i18n="foot_help">Help</h2>
+      <a href="/track" data-i18n="nav_track">Track an order</a>
+      <a href="/faq" data-i18n="nav_faq">FAQ</a>
+      <a href="/contact" data-i18n="nav_contact">Contact</a>
+    </nav>
+    <div class="at-footer-col">
+      <h2 data-i18n="foot_visit">Visit</h2>
+      <p class="pre-line">{{hours}}</p>
+      {{{footer_visit}}}
     </div>
-    <div class="footer-wordmark" aria-hidden="true">{{shop_name}}</div>
+  </div>
+  <div class="at-wrap at-footer-bottom">
+    <span>&copy; {{year}} {{shop_name}}</span>
+    <a href="/contact#omvi">Website by {{omvi_name}}</a>
   </div>
 </footer>
 {{{whatsapp_float}}}

@@ -171,6 +171,30 @@ const I18N = {
     foot_order: 'Order',
     foot_bakery: 'Bakery',
     foot_visit: 'Visit',
+    nav_cakes_short: 'Cakes',
+    nav_menu_cafe: 'Chocolates & Café',
+    nav_visit: 'Visit',
+    cta_order_cake: 'Order a cake',
+    cta_see_menu: 'See the menu',
+    notice_pay: 'Pay on pickup or delivery',
+    foot_shop: 'Shop',
+    foot_help: 'Help',
+    home_ways: 'Two ways to order',
+    home_cakes_title: 'Celebration cakes',
+    home_cakes_note: 'Design yours in 3D and we bake it fresh.',
+    home_menu_title: 'Chocolates & café',
+    home_menu_note: 'Bars, bark, crepes and shakes, for pickup or delivery.',
+    home_loved: 'Most loved',
+    home_full_menu: 'Full menu',
+    home_builder_kicker: 'Cake builder',
+    home_builder_title: 'See your cake before we bake it.',
+    home_step1: 'Shape, size and tiers',
+    home_step2: 'Flavour, filling and frosting',
+    home_step3: 'Drip, toppings and your message',
+    home_start_designing: 'Start designing',
+    home_recent: 'Recent creations',
+    home_view_gallery: 'View the gallery',
+    home_visit: 'Visit us',
   },
   ar: {
     nav_home: 'استوديو الكيك',
@@ -188,6 +212,30 @@ const I18N = {
     foot_order: 'الطلب',
     foot_bakery: 'المتجر',
     foot_visit: 'فروعنا',
+    nav_cakes_short: 'الكيك',
+    nav_menu_cafe: 'الشوكولا والمقهى',
+    nav_visit: 'زورونا',
+    cta_order_cake: 'اطلب قالب كيك',
+    cta_see_menu: 'تصفّح القائمة',
+    notice_pay: 'الدفع عند الاستلام أو التوصيل',
+    foot_shop: 'المتجر',
+    foot_help: 'المساعدة',
+    home_ways: 'طريقتان للطلب',
+    home_cakes_title: 'كيك المناسبات',
+    home_cakes_note: 'صمّم قالبك بتقنية 3D ونخبزه لك طازجاً.',
+    home_menu_title: 'الشوكولا والمقهى',
+    home_menu_note: 'ألواح، شوكولا بالمكسرات، كريب وميلك شيك، استلام أو توصيل.',
+    home_loved: 'الأكثر طلباً',
+    home_full_menu: 'القائمة كاملة',
+    home_builder_kicker: 'صمّم قالبك',
+    home_builder_title: 'شاهد قالبك قبل أن نخبزه.',
+    home_step1: 'الشكل والحجم والطبقات',
+    home_step2: 'النكهة والحشوة والتغطية',
+    home_step3: 'الصوص والزينة ورسالتك',
+    home_start_designing: 'ابدأ التصميم',
+    home_recent: 'أحدث إبداعاتنا',
+    home_view_gallery: 'شاهد المعرض',
+    home_visit: 'تفضّل بزيارتنا',
   },
 };
 
@@ -257,6 +305,17 @@ function applyLanguage(lang) {
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     const k = el.dataset.i18n;
     if (dict[k]) el.textContent = dict[k];
+  });
+
+  // The header notice carries the shop's days of notice for cakes.
+  document.querySelectorAll('[data-lead-days]').forEach((el) => {
+    if (!origTextMap.has(el)) origTextMap.set(el, el.textContent);
+    const days = Number(el.dataset.leadDays) || 0;
+    if (!isAr) el.textContent = origTextMap.get(el);
+    else {
+      const span = days === 1 ? 'يوم' : days === 2 ? 'يومين' : days <= 10 ? `${days} أيام` : `${days} يوماً`;
+      el.textContent = days > 0 ? `اطلب قالب الكيك قبل ${span}` : 'اطلب الكيك في اليوم نفسه';
+    }
   });
 
   // Translate matching standalone phrases cleanly and reversibly

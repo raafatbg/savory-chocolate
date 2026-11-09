@@ -44,7 +44,7 @@ Orders also open WhatsApp with the order written out, ready to send to the chose
 - **Messages**: from the Contact page. Reply by email, mark as read, delete.
 - **Menu**: items with photos, categories and **add-ons**. For example, a "Size" group (pick one, required: Regular / Large +$1.00) or "Extras" (pick any: whipped cream +$0.50).
 - **Cake builder**: every choice in the builder, with its price. Colors and drips have a color picker; shapes, tiers, toppings and extras have a **3D look** that controls what the live preview draws.
-- **Gallery**: upload photos (several at once) and add captions.
+- **Gallery**: upload photos (several at once) and add captions. The **first three photos** (in gallery order) also fill the home page: the big photo at the top, then the "Celebration cakes" and "Chocolates & café" tiles. Until there are photos, the home page shows the live 3D cake and drawings instead.
 - **Reviews**: real customer reviews for the home page. The section stays hidden until you add one.
 - **FAQ**: questions for the FAQ page. Six starter questions are included; edit them to match how you work.
 - **Settings**: shop details, home page headline, your story, Instagram/Facebook links, pausing orders, days of notice for cakes, currency, **delivery** (on/off, fee, minimum order, area), and your password.

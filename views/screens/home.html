@@ -1,207 +1,107 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <title>{{shop_name}} · 3D Custom Cake Studio</title>
+  <title>{{shop_name}} · Chocolates &amp; Celebration Cakes</title>
   <meta name="description" content="{{tagline}}">
   {{> head}}
 </head>
-<body class="has-hero">
+<body class="at-page">
   {{> header}}
 
   <main id="main">
-    <section class="hero luxury-hero">
-      <div class="container hero-grid">
-        <div class="hero-copy" data-reveal>
-          <div class="hero-kicker">
-            <span class="kicker-line"></span>
-            <span>SAVORY · 3D CUSTOM CAKE STUDIO · LEBANON</span>
-            <span class="kicker-line"></span>
-          </div>
-          {{#slogan}}<span class="script hero-script">{{slogan}}</span>{{/slogan}}
-          <h1 id="hero-title">{{hero_title}}</h1>
-          <p class="hero-lead">{{tagline}}</p>
-          <div class="hero-actions">
-            <a class="btn btn-gold btn-lg hero-cta-primary" href="/cakes">
-              <span data-i18n="cta_design_cake">Design Your Cake</span>
-              <span class="btn-arrow" aria-hidden="true">→</span>
-            </a>
-            <a class="btn btn-outline btn-lg" href="#signature">Signature Designs</a>
-          </div>
-          <div class="trust-strip">
-            <div class="trust-item"><span class="trust-icon" aria-hidden="true">✦</span><span>Baked fresh to order</span></div>
-            <div class="trust-item"><span class="trust-icon" aria-hidden="true">✦</span><span>Live 3D slice inspection</span></div>
-            <div class="trust-item"><span class="trust-icon" aria-hidden="true">✦</span><span>Aramoun &amp; Aley pickup or delivery</span></div>
-          </div>
-          <a class="omvi-badge" href="/contact#omvi">
-            <span class="omvi-badge-label">Interactive 3D experience by</span>
-            <span class="omvi">{{omvi_name}}</span>
-          </a>
+    <section class="at-hero at-wrap">
+      <div class="at-hero-copy" data-reveal>
+        {{#slogan}}<p class="at-slogan">{{slogan}}</p>{{/slogan}}
+        <h1>{{hero_title}}</h1>
+        <p class="at-lead">{{tagline}}</p>
+        <div class="at-cta-row">
+          <a class="at-btn" href="/cakes" data-i18n="cta_order_cake">Order a cake</a>
+          <a class="at-link" href="{{menu_site_url}}" data-i18n="cta_see_menu">See the menu</a>
         </div>
+      </div>
+      <figure class="at-hero-media" data-reveal style="--delay: 0.1s">
+        <div class="at-media at-media-dark at-hero-frame" id="hero-media">
+          <div class="at-stage" id="hero-stage">
+            <img class="fallback" src="/img/cake.svg" alt="A three-tier chocolate cake">
+          </div>
+        </div>
+        <figcaption class="at-caption" id="hero-caption"><span class="at-drag">Drag to spin · </span>Royal Ganache Crown</figcaption>
+      </figure>
+    </section>
 
-        <div class="hero-stage-column" data-reveal style="--delay: 0.12s">
-          <div class="hero-plinth-glow" aria-hidden="true"></div>
-          <div class="stage-wrap luxury-stage-wrap">
-            <div class="stage" id="hero-stage">
-              <img class="fallback" src="/img/cake.svg" alt="A three-tier chocolate cake">
-              <span class="stage-hint"><span class="drag">Drag to spin &middot; </span><span id="hero-cake-name">Royal Ganache Crown</span></span>
-            </div>
-            <div class="hero-slider-nav" aria-label="Switch 3D showcase cake">
-              <button type="button" class="hero-nav-btn" id="hero-prev" aria-label="Previous 3D cake">‹</button>
-              <div class="hero-nav-pill">
-                <span class="hero-nav-dot" aria-hidden="true"></span>
-                <span>3D Showcase</span>
-              </div>
-              <button type="button" class="hero-nav-btn" id="hero-next" aria-label="Next 3D cake">›</button>
-            </div>
-          </div>
-        </div>
+    <section class="at-section at-wrap" id="ways" aria-labelledby="ways-title">
+      <h2 class="at-h2" id="ways-title" data-i18n="home_ways">Two ways to order</h2>
+      <div class="at-ways">
+        <a class="at-tile" href="/cakes" data-reveal>
+          <div class="at-media at-media-dark at-tile-media" id="tile-cakes-media"></div>
+          <h3 data-i18n="home_cakes_title">Celebration cakes</h3>
+          <p id="tile-cakes-note" data-i18n="home_cakes_note">Design yours in 3D and we bake it fresh.</p>
+        </a>
+        <a class="at-tile" href="{{menu_site_url}}" data-reveal>
+          <div class="at-media at-media-deep at-tile-media" id="tile-menu-media"></div>
+          <h3 data-i18n="home_menu_title">Chocolates &amp; café</h3>
+          <p data-i18n="home_menu_note">Bars, bark, crepes and shakes, for pickup or delivery.</p>
+        </a>
       </div>
     </section>
 
-    <div class="marquee luxury-marquee" aria-hidden="true">
-      <div class="marquee-track">
-        <span>3D Custom Cakes</span><span class="marquee-sep">✦</span><span>Wedding Tiers</span><span class="marquee-sep">✦</span><span>Birthday Celebrations</span><span class="marquee-sep">✦</span><span>Heart &amp; Square Cakes</span><span class="marquee-sep">✦</span><span>Gold Leaf &amp; Macarons</span><span class="marquee-sep">✦</span><span>Handcrafted Belgian Chocolate Plaques</span><span class="marquee-sep">✦</span><span>Engagement &amp; Baby Showers</span><span class="marquee-sep">✦</span>
-        <span>3D Custom Cakes</span><span class="marquee-sep">✦</span><span>Wedding Tiers</span><span class="marquee-sep">✦</span><span>Birthday Celebrations</span><span class="marquee-sep">✦</span><span>Heart &amp; Square Cakes</span><span class="marquee-sep">✦</span><span>Gold Leaf &amp; Macarons</span><span class="marquee-sep">✦</span><span>Handcrafted Belgian Chocolate Plaques</span><span class="marquee-sep">✦</span><span>Engagement &amp; Baby Showers</span><span class="marquee-sep">✦</span>
+    <section class="at-section at-wrap at-rule" id="loved" aria-labelledby="loved-title" hidden>
+      <div class="at-section-head">
+        <h2 class="at-h2" id="loved-title" data-i18n="home_loved">Most loved</h2>
+        <a class="at-link" href="{{menu_site_url}}" data-i18n="home_full_menu">Full menu</a>
       </div>
-    </div>
+      <div class="at-products" id="loved-grid"></div>
+    </section>
 
-    <section class="section" id="signature">
-      <div class="container">
-        <div class="section-head luxury-section-head" data-reveal>
-          <span class="eyebrow">CUSTOM &amp; STANDARD ORDERS</span>
-          <h2>Signature <em class="gold-text">3D Creations</em></h2>
-          <p>Our favorite creations, rendered live by the same 3D engine as the cake builder. Click any creation to customize its size, layers, and message.</p>
+    <section class="at-band" id="builder" aria-labelledby="builder-title">
+      <div class="at-wrap at-band-inner">
+        <div class="at-band-copy" data-reveal>
+          <p class="at-kicker" data-i18n="home_builder_kicker">Cake builder</p>
+          <h2 id="builder-title" data-i18n="home_builder_title">See your cake before we bake it.</h2>
+          <ol class="at-steps">
+            <li><span>1</span><span data-i18n="home_step1">Shape, size and tiers</span></li>
+            <li><span>2</span><span data-i18n="home_step2">Flavour, filling and frosting</span></li>
+            <li><span>3</span><span data-i18n="home_step3">Drip, toppings and your message</span></li>
+          </ol>
+          <a class="at-btn at-btn-gold" href="/cakes" data-i18n="home_start_designing">Start designing</a>
         </div>
-        <div class="designs luxury-showcase-grid" id="designs"></div>
+        <div class="at-designs" id="designs" aria-label="Signature cake designs"></div>
       </div>
     </section>
 
-    <section class="section section-cocoa-luxury" id="ways">
-      <div class="container">
-        <div class="section-head" data-reveal>
-          <span class="eyebrow">FEATURED EXPERIENCES</span>
-          <h2>Crafted for every <em>celebration</em></h2>
-          <p>Design from scratch in our interactive 3D studio or customize a signature patisserie centerpiece.</p>
-        </div>
-        <div class="paths">
-          <a class="card spotlight path-card luxury-feature-card" href="/cakes" data-reveal>
-            <span class="num">01 &mdash; Interactive Studio</span>
-            <h3>3D Cake Builder</h3>
-            <p>Choose the shape, tiers, flavors, frosting, drip and toppings, cut a 3D slice to inspect your layers, and watch your cake come to life as you design it. <span id="lead-note"></span></p>
-            <span class="luxury-buy-pill">OPEN 3D BUILDER →</span>
-          </a>
-          <a class="card spotlight path-card luxury-feature-card" href="#signature" data-reveal style="--delay: 0.12s">
-            <span class="num">02 &mdash; Chef Curated</span>
-            <h3>Signature Cakes</h3>
-            <p>Start from one of our pastry chef’s signature 3D creations and customize the size, flavors, colors, and chocolate plaque message in seconds.</p>
-            <span class="luxury-buy-pill">BROWSE CREATIONS →</span>
-          </a>
-        </div>
-
-        <div class="steps" style="margin-top: 36px;">
-          <div class="card spotlight step luxury-feature-card" data-reveal>
-            <span class="n">01</span>
-            <h3>Design in 3D</h3>
-            <p>Customize every tier, flavor, frosting, and message in our live 3D studio.</p>
-          </div>
-          <div class="card spotlight step luxury-feature-card" data-reveal style="--delay: 0.1s">
-            <span class="n">02</span>
-            <h3>Pick a time</h3>
-            <p>Tell us when you'd like it, and whether you'll collect it or want it delivered.</p>
-          </div>
-          <div class="card spotlight step luxury-feature-card" data-reveal style="--delay: 0.2s">
-            <span class="n">03</span>
-            <h3>Enjoy</h3>
-            <p>We bake it fresh for your celebration. Pay when you collect it or when it arrives.</p>
-          </div>
-        </div>
-
-        <div class="luxury-wide-banner" data-reveal style="margin-top: 36px;">
-          <div class="luxury-wide-left">
-            <span class="luxury-wide-tag">BESPOKE PATISSERIE</span>
-            <div class="luxury-wide-title">Custom 3D Celebration Cake</div>
-            <p class="luxury-wide-desc">From single-tier birthdays to 3-tier grand weddings, baked fresh from scratch in Lebanon.</p>
-          </div>
-          <div class="luxury-wide-right">
-            <div class="luxury-wide-price">FROM $45.00</div>
-            <a class="btn btn-gold btn-lg" href="/cakes">Design in 3D →</a>
-          </div>
-        </div>
+    <section class="at-section at-quote-wrap" id="review-section" hidden aria-label="Customer review">
+      <figure class="at-quote">
+        <blockquote id="review-text"></blockquote>
+        <figcaption id="review-name"></figcaption>
+      </figure>
+      <div class="at-quote-nav" id="review-nav" hidden>
+        <button type="button" class="at-icon-btn" id="review-prev" aria-label="Previous review">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <span id="review-count"></span>
+        <button type="button" class="at-icon-btn" id="review-next" aria-label="Next review">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
       </div>
     </section>
 
-    <section class="section" id="flavor-palette">
-      <div class="container showcase">
-        <div data-reveal>
-          <span class="eyebrow left">Made your way</span>
-          <h2>Design every detail</h2>
-          <p class="muted">Our cake builder puts the whole patisserie at your fingertips. Every choice updates a live 3D preview, so you'll know exactly what you're ordering.</p>
-          <ul class="feature-list">
-            <li>Shapes, tiers and guest portion recommendations</li>
-            <li>Cut a 3D slice to preview your sponge &amp; filling layers</li>
-            <li>Glossy drips, toppings and candlelit wish mode</li>
-            <li>A personal message on a SAVORY chocolate plaque</li>
-          </ul>
-          <a class="btn btn-gold btn-lg" href="/cakes" style="margin-top: 18px;">
-            <span>Open Cake Builder</span>
-            <span class="btn-arrow" aria-hidden="true">→</span>
-          </a>
-        </div>
-        <div class="card option-cloud" id="option-cloud" data-reveal style="padding: 36px; --delay: 0.1s;"></div>
+    <section class="at-section at-wrap at-rule" id="gallery-section" hidden aria-labelledby="gallery-title">
+      <div class="at-section-head">
+        <h2 class="at-h2" id="gallery-title" data-i18n="home_recent">Recent creations</h2>
+        <a class="at-link" href="/gallery" data-i18n="home_view_gallery">View the gallery</a>
       </div>
+      <div class="at-strip" id="gallery-strip"></div>
     </section>
 
-    <section class="section" id="reviews-section" hidden style="padding-top: 0;">
-      <div class="container">
-        <div class="section-head" data-reveal>
-          <span class="eyebrow">Kind words</span>
-          <h2>Loved by our customers</h2>
+    <section class="at-visit" id="visit" aria-labelledby="visit-title">
+      <div class="at-wrap at-visit-inner">
+        <div class="at-visit-intro">
+          <h2 class="at-h2" id="visit-title" data-i18n="home_visit">Visit us</h2>
+          <p class="pre-line">{{hours}}</p>
+          {{#instagram}}<a class="at-link" href="{{instagram}}" target="_blank" rel="noopener">@{{instagram_handle}} on Instagram</a>{{/instagram}}
         </div>
-        <div class="reviews" id="reviews"></div>
-      </div>
-    </section>
-
-    <section class="section" id="gallery-section" hidden style="padding-top: 0;">
-      <div class="container">
-        <div class="section-head" data-reveal>
-          <span class="eyebrow">From our kitchen</span>
-          <h2>Recent creations</h2>
-        </div>
-        <div class="gallery-strip" id="gallery-strip"></div>
-        <p style="text-align: center; margin-top: 40px;"><a class="btn btn-outline" href="/gallery">View the gallery</a></p>
-      </div>
-    </section>
-
-    {{#instagram}}<section class="section" style="padding-top: 0;">
-      <div class="container">
-        <div class="card insta-card" data-reveal>
-          <div>
-            <span class="eyebrow left">#SavoryMoment</span>
-            <h2>Follow us on Instagram</h2>
-            <p class="muted">New cake creations, fresh designs and moments from our kitchen.</p>
-          </div>
-          <a class="btn btn-gold btn-lg" href="{{instagram}}" target="_blank" rel="noopener">{{> instagram-icon}} @{{instagram_handle}}</a>
-        </div>
-      </div>
-    </section>{{/instagram}}
-
-    {{> omvi-band}}
-
-    <section class="section" style="padding-top: 0;">
-      <div class="container visit">
-        <div class="card" data-reveal>
-          <span class="eyebrow left">Our story</span>
-          <h2>Made from scratch, with love</h2>
-          <p class="muted pre-line">{{about}}</p>
-          <a class="btn btn-outline" href="/about">Read our story</a>
-        </div>
-        <div class="card" data-reveal style="--delay: 0.1s">
-          <span class="eyebrow left">Visit us</span>
-          <dl class="info-list">
-            <div><dt>Opening hours</dt><dd>{{hours}}</dd></div>
-            {{{visit_rows}}}
-            {{#email}}<div><dt>Email</dt><dd><a href="mailto:{{email}}">{{email}}</a></dd></div>{{/email}}
-          </dl>
+        <div class="at-branches">
+          {{{visit_cards}}}
         </div>
       </div>
     </section>
