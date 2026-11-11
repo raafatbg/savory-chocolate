@@ -225,8 +225,75 @@
             </div>
           </div>
 
-          <nav class="category-nav" id="category-nav" aria-label="Menu categories"></nav>
-          <div id="menu"><p class="loading">Loading the menu…</p></div>
+          <!-- Breadcrumb Navigation -->
+          <nav class="menu-breadcrumb" id="menu-breadcrumb" aria-label="Menu navigation" hidden>
+            <a href="#folders" class="bc-link" id="bc-home">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <span>All Categories</span>
+            </a>
+            <span class="bc-sep" id="bc-sep-cat" aria-hidden="true">/</span>
+            <a href="#category" class="bc-link" id="bc-cat"></a>
+            <span class="bc-sep" id="bc-sep-prod" aria-hidden="true" hidden>/</span>
+            <span class="bc-current" id="bc-prod" hidden></span>
+          </nav>
+
+          <div id="menu-stage-wrapper">
+            <span id="menu" style="display:block; position:relative; top:-80px; visibility:hidden;"></span>
+            <!-- View 1: Category Folders Grid (Root / Default) -->
+            <div class="menu-view" id="view-folders">
+              <div class="folders-intro">
+                <span class="eyebrow left">Atelier Collections</span>
+                <h2 class="folders-heading">Browse by Category</h2>
+                <p class="muted small">Select an atelier category to view all hand-crafted creations, signature recipes, and tasting portions.</p>
+              </div>
+              <div class="menu-folders-grid" id="folders-grid"></div>
+            </div>
+
+            <!-- View 2: Category Products Drill-Down (Inside the Folder) -->
+            <div class="menu-view" id="view-category" hidden>
+              <div class="category-banner-card card" id="cat-banner">
+                <div class="cat-banner-body">
+                  <button type="button" class="btn btn-outline btn-xs cat-back-btn" id="cat-back-btn">
+                    <span>← All Categories</span>
+                  </button>
+                  <h2 id="cat-banner-title"></h2>
+                  <p class="muted" id="cat-banner-desc"></p>
+                </div>
+                <div class="cat-banner-icon-wrap" id="cat-banner-icon" aria-hidden="true"></div>
+              </div>
+
+              <div class="cat-products-meta">
+                <span class="cat-products-count" id="cat-products-count"></span>
+                <button type="button" class="btn btn-ghost btn-xs" id="cat-switch-btn">Browse other categories →</button>
+              </div>
+
+              <div class="menu-rows-list" id="category-rows-list"></div>
+            </div>
+
+            <!-- View 3: Dedicated Product Page -->
+            <div class="menu-view" id="view-product" hidden>
+              <div class="product-page-back-bar">
+                <button type="button" class="btn btn-outline btn-sm" id="prod-back-btn">
+                  <span>← Back to <strong id="prod-back-cat-name">Category</strong></span>
+                </button>
+                <div class="product-page-badge" id="prod-header-badge">✦ SAVORY Signature</div>
+              </div>
+
+              <div class="product-page-card card" id="product-page-card"></div>
+            </div>
+
+            <!-- View 4: Filter / Search Results List -->
+            <div class="menu-view" id="view-search" hidden>
+              <div class="search-results-head">
+                <div>
+                  <span class="eyebrow left">Search Filter</span>
+                  <h3 id="search-title">Showing results</h3>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" id="clear-search-btn">Back to Categories</button>
+              </div>
+              <div class="menu-rows-list" id="search-rows-list"></div>
+            </div>
+          </div>
         </div>
 
         <aside class="sticky-panel" id="cart">
