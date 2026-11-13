@@ -201,6 +201,9 @@ const I18N = {
     home_recent: 'Recent creations',
     home_view_gallery: 'View the gallery',
     home_visit: 'Visit us',
+    home_visit_note: 'Drop in for single-origin espresso, warm crepes, or a celebration tasting.',
+    drag_to_spin: 'Drag to spin · ',
+    hero_cake_name: 'Royal Ganache Crown',
   },
   ar: {
     nav_home: 'استوديو الكيك',
@@ -248,6 +251,9 @@ const I18N = {
     home_recent: 'أحدث إبداعاتنا',
     home_view_gallery: 'شاهد المعرض',
     home_visit: 'تفضّل بزيارتنا',
+    home_visit_note: 'تفضلوا لاحتساء الإسبريسو أو تذوّق الكريب الدافئ وقوالب المناسبات.',
+    drag_to_spin: 'اسحب للتدوير · ',
+    hero_cake_name: 'تاج الغاناش الملكي',
   },
 };
 
@@ -301,7 +307,8 @@ const PHRASE_AR = new Map([
   ['Explore Collection', 'استعرض التشكيلة'],
   ['Pairs Beautifully With', 'يتناسق بشكل رائع مع'],
   ['All Creations', 'كافة الإبداعات'],
-  ["★ Chef's Picks", '★ مختارات الشيف'],
+  ["Chef's Picks", 'مختارات الشيف'],
+  ["★ Chef's Picks", 'مختارات الشيف'],
   ['Pistachio & Kunafa', 'فستق وكنافة'],
   ['Belgian Dark', 'شوكولاتة داكنة بلجيكية'],
   ['Under $10', 'أقل من 10$'],
@@ -310,12 +317,24 @@ const PHRASE_AR = new Map([
   ['Tasting Note', 'ملاحظة التذوّق'],
   ['Richness', 'كثافة النكهة'],
   ['Sweetness', 'درجة الحلاوة'],
-  ['✦ Complete your treat', '✦ أكمل تحليتك'],
+  ['Complete your treat', 'أكمل تحليتك'],
   ['Add gift box to order', 'إضافة علبة الهدايا للطلب'],
   ['OPEN DAILY', 'يومياً نفتح أبوابنا'],
   ['Wedding & 3-Tier', 'أعراس وتصاميم متعددة الطبقات'],
   ['Chocolate & Pistachio', 'شوكولاتة وفستق'],
   ['Heart & Celebration', 'قلوب ومناسبات خاصة'],
+  ['Ready when you are', 'جاهزون لاحتفالك'],
+  ['Message our team', 'تواصل مع فريقنا'],
+  ['Back to home', 'العودة للرئيسية'],
+  ['WhatsApp branch desk', 'تواصل مع الفرع عبر واتساب'],
+  ['Bespoke Studio', 'استوديو الهدايا'],
+  ['Customizable', 'قابل للتخصيص'],
+  ['Ready to order', 'جاهز للطلب'],
+  ['Handcrafted to Order', 'محضّر يدوياً عند الطلب'],
+  ['Explore', 'استعرض'],
+  ['Where every bite is a Savory moment', 'حيث كل قضمة لحظة لا تُنسى من SAVORY'],
+  ['Cakes as beautiful as your moments', 'قوالب كيك بجمال لحظاتكم'],
+  ['Chocolates, cakes and ice cream, made in Aramoun, Aley.', 'شوكولا فاخرة، قوالب كيك وبوظة، تُحضّر يومياً في عرمون وعاليه.'],
 ]);
 
 const origTextMap = new WeakMap();
@@ -350,15 +369,23 @@ export function applyLanguage(lang = activeLang) {
     }
   });
 
-  // Translate matching standalone phrases cleanly and reversibly
-  document.querySelectorAll('.eyebrow, .trust span, .step h3, .section-head h2, .card h2, .card h3, .btn, .cat-back-btn span, dt, .tool-btn span, .menu-filter-pill, .recent-orders-label, .portion-badge, .cart-upsell-head, .occasion-label, .folder-action span:first-child, .box-cta-btn span:first-child, .onboarding-order-btn span:first-child, .product-related-head h3').forEach((el) => {
+  // Translate matching standalone phrases cleanly and reversibly without overwriting dynamic English strings
+  document.querySelectorAll('.at-slogan, .at-hero h1, .at-lead, .eyebrow, .trust span, .step h3, .section-head h2, .card h2, .card h3, .btn, .cat-back-btn span, dt, .tool-btn span, .menu-filter-pill, .recent-orders-label, .portion-badge, .cart-upsell-head, .occasion-label, .folder-action span:first-child, .box-cta-btn span:first-child, .onboarding-order-btn span:first-child, .product-related-head h3, .gallery-photos-head h2, .prod-card-opt-tag, .folder-badge-bespoke, .product-page-badge').forEach((el) => {
     if (el.hasAttribute('data-i18n') || el.children.length > 0) return;
-    if (!origTextMap.has(el)) origTextMap.set(el, el.textContent.trim());
-    const orig = origTextMap.get(el);
-    if (isAr && PHRASE_AR.has(orig)) {
-      el.textContent = PHRASE_AR.get(orig);
-    } else if (!isAr && orig) {
-      el.textContent = orig;
+    const arVal = el.dataset.arText;
+    if (isAr) {
+      const current = el.textContent.trim();
+      if (current !== arVal) {
+        origTextMap.set(el, current);
+        if (PHRASE_AR.has(current)) {
+          const translated = PHRASE_AR.get(current);
+          el.dataset.arText = translated;
+          el.textContent = translated;
+        }
+      }
+    } else if (arVal && el.textContent.trim() === arVal && origTextMap.has(el)) {
+      el.textContent = origTextMap.get(el);
+      delete el.dataset.arText;
     }
   });
 }
@@ -397,20 +424,6 @@ if (toggle) {
   document.getElementById('nav-scrim')?.addEventListener('click', () => setOpen(false));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
 }
-
-// Cards with .spotlight glow where the cursor is.
-let spotFrame = 0;
-document.addEventListener('pointermove', (e) => {
-  if (e.pointerType !== 'mouse' || spotFrame) return;
-  spotFrame = requestAnimationFrame(() => {
-    spotFrame = 0;
-    const card = e.target.closest?.('.spotlight');
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    card.style.setProperty('--mx', `${e.clientX - rect.left}px`);
-    card.style.setProperty('--my', `${e.clientY - rect.top}px`);
-  });
-}, { passive: true });
 
 // Splits a heading into words that rise in one after another. The last `accent` words turn gold.
 export function splitHeadline(el, { accent = 1 } = {}) {

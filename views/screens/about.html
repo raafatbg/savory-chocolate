@@ -19,8 +19,14 @@
 
     <section class="section" style="padding-top: 24px;">
       <div class="container story">
-        <div class="stage" id="about-stage" data-reveal>
-          <img class="fallback" src="/img/cake.svg" alt="">
+        <div class="about-visual-col" data-reveal>
+          <div class="stage" id="about-stage">
+            <img class="fallback" src="/img/cake.svg" alt="SAVORY 3D chocolate cake">
+          </div>
+          <figure class="about-workshop-card">
+            <img src="/img/studio-chocolatier-bench.jpg" alt="Pastry chef glazing a chocolate ganache cake in the SAVORY kitchen">
+            <figcaption>Daily chocolate tempering &amp; custom decorating in our kitchen.</figcaption>
+          </figure>
         </div>
         <div class="story-text pre-line" data-reveal style="--delay: 0.1s">{{about_story}}</div>
       </div>
@@ -33,18 +39,18 @@
           <h2>Three little promises</h2>
         </div>
         <div class="values">
-          <div class="card spotlight value" data-reveal>
-            <span class="glyph">✦</span>
+          <div class="card value" data-reveal>
+            <span class="glyph">01</span>
             <h3>Made from scratch</h3>
             <p>Real butter, fresh cream, good chocolate. Every sponge, filling and frosting is made in our kitchen.</p>
           </div>
-          <div class="card spotlight value" data-reveal style="--delay: 0.1s">
-            <span class="glyph">✦</span>
+          <div class="card value" data-reveal style="--delay: 0.1s">
+            <span class="glyph">02</span>
             <h3>Baked to order</h3>
             <p>Nothing sits on a shelf. Your cake is baked for your day, so it's as fresh as it can be.</p>
           </div>
-          <div class="card spotlight value" data-reveal style="--delay: 0.2s">
-            <span class="glyph">✦</span>
+          <div class="card value" data-reveal style="--delay: 0.2s">
+            <span class="glyph">03</span>
             <h3>Made for you</h3>
             <p>Your flavors, your colors, your message. Tell us what you have in mind and we'll bring it to life.</p>
           </div>
@@ -65,10 +71,11 @@
         <div class="card" data-reveal style="--delay: 0.1s">
           <span class="eyebrow left">Celebrating soon?</span>
           <h2>Let's make something beautiful</h2>
-          <p class="muted">Design your cake in our 3D builder, or get in touch and tell us about your idea.</p>
+          <p class="muted">Design your cake in our 3D builder, browse daily chocolates &amp; crepes, or tell us about your idea.</p>
           <div class="hero-actions" style="margin-top: 20px;">
             <a class="btn btn-gold" href="/cakes">Design a cake</a>
-            <a class="btn btn-outline" href="/contact">Contact us</a>
+            <a class="btn btn-outline" href="{{menu_site_url}}">Chocolates &amp; Café</a>
+            <a class="btn btn-ghost" href="/contact">Contact us</a>
           </div>
         </div>
       </div>

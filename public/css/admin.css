@@ -150,8 +150,8 @@ body.admin a { color: var(--gold-light); }
 }
 
 .filters button:hover { border-color: var(--gold-text); }
-.filters button[aria-pressed='true'] { background: #1a100b; border-color: #1a100b; color: #f1d79c; }
-.filters .count { opacity: 0.7; font-weight: 500; margin-left: 4px; }
+.filters button[aria-pressed='true'] { background: #3B1704; border-color: #3B1704; color: #F7F7D3; }
+.filters .count { opacity: 0.78; font-weight: 500; margin-left: 4px; }
 
 .empty-card { text-align: center; padding: 48px 20px; color: var(--muted); }
 .empty-card .icon { font-size: 2.2rem; margin-bottom: 6px; }
@@ -337,12 +337,13 @@ body.admin a { color: var(--gold-light); }
   left: 50%;
   bottom: 24px;
   transform: translate(-50%, 20px);
-  background: #1a100b;
-  color: #f5ebde;
+  background: #3B1704;
+  color: #F7F7D3;
+  border: 1px solid rgba(217, 176, 102, 0.38);
   padding: 12px 22px;
   border-radius: 999px;
   font-weight: 600;
-  box-shadow: 0 10px 30px rgba(26, 16, 11, 0.35);
+  box-shadow: 0 10px 30px rgba(59, 23, 4, 0.32);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s, transform 0.2s;

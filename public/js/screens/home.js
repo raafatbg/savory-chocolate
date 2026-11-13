@@ -17,6 +17,14 @@ const HERO_CAKE = {
 };
 
 const MENU_URL = document.querySelector('#ways a.at-tile:last-child')?.getAttribute('href') || '/menu';
+const STUDIO_CREATIONS = [
+  { image: '/img/studio-cake-craft.jpg', caption: 'Celebration cake finished with chocolate drip and fresh berries' },
+  { image: '/img/studio-chocolatier-bench.jpg', caption: 'Hand-tempered chocolate glaze from our patisserie bench' },
+  { image: '/img/studio-atelier-table.jpg', caption: 'Keepsake gift box, warm crepe, and dark ganache slice' },
+  { image: '/img/onboarding-box.jpg', caption: 'Hand-packed 16-piece artisan praline keepsake box' },
+  { image: '/img/onboarding-kunafa.jpg', caption: 'Pistachio kunafa crunch milk chocolate bar' },
+  { image: '/img/onboarding-crepe.jpg', caption: 'Warm Belgian chocolate signature crepe' },
+];
 const mediaSrc = (value) => {
   const raw = String(value ?? '').trim();
   if (!raw) return '';
@@ -53,7 +61,7 @@ const cakesTile = document.getElementById('tile-cakes-media');
 const menuTile = document.getElementById('tile-menu-media');
 const showcase = SIGNATURE_DESIGNS.find((d) => d.id === 'midnight') || SIGNATURE_DESIGNS[0];
 
-if (gallery[1]) cakesTile.innerHTML = photo(gallery[1]);
+cakesTile.innerHTML = photo(gallery[1] || STUDIO_CREATIONS[0], { eager: true });
 
 // ---------- Most loved: one standout per category, items with photos first ----------
 
@@ -81,14 +89,7 @@ if (picks.length) {
   document.getElementById('loved').hidden = false;
 }
 
-// Without a photo, the chocolates tile shows an illustration the "Most loved" cards don't already use.
-if (gallery[2]) menuTile.innerHTML = photo(gallery[2]);
-else {
-  const used = new Set(picks.filter((p) => !p.image).map((p) => illustrationFor(p)));
-  const pick = menu.find((m) => !used.has(illustrationFor(m)) && /chocolate|bark|bar|kunafa|truffle/i.test(`${m.name} ${m.category}`))
-    || menu.find((m) => !used.has(illustrationFor(m)));
-  menuTile.innerHTML = `<div class="at-art">${illustrationFor(pick || { name: 'Chocolate' })}</div>`;
-}
+menuTile.innerHTML = photo(gallery[2] || STUDIO_CREATIONS[2], { eager: true });
 
 // ---------- Signature designs (rendered once, then cached in the browser) ----------
 
@@ -121,7 +122,6 @@ async function renderDesigns() {
     const img = `<img src="${url}" alt="${esc(d.name)}: ${esc(d.description)}" width="560" height="560">`;
     const slot = designsEl.querySelector(`[data-render="${d.id}"]`);
     if (slot) slot.innerHTML = img;
-    if (d.id === showcase.id && !gallery[1]) cakesTile.innerHTML = `<div class="at-render">${img}</div>`;
     await new Promise((r) => setTimeout(r, 30));
   }
   if (rendered) releaseSnapshots();
@@ -139,10 +139,18 @@ renderWatch.observe(designsEl);
 
 // ---------- One review at a time ----------
 
+const STAR_SVG = '<svg viewBox="0 0 20 20" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M10 1.6l2.45 5.18 5.65.72-4.14 3.92 1.05 5.6L10 14.3l-5.01 2.72 1.05-5.6L1.9 7.5l5.65-.72L10 1.6z"/></svg>';
+
 if (reviews.length) {
   let index = 0;
+  const starsEl = document.getElementById('review-stars');
   const show = () => {
     const r = reviews[index];
+    const rating = Math.max(1, Math.min(5, Number(r.rating) || 5));
+    if (starsEl) {
+      starsEl.innerHTML = STAR_SVG.repeat(rating);
+      starsEl.hidden = false;
+    }
     document.getElementById('review-text').textContent = `“${r.text}”`;
     document.getElementById('review-name').textContent = r.name;
     document.getElementById('review-count').textContent = `${index + 1} / ${reviews.length}`;
@@ -155,9 +163,9 @@ if (reviews.length) {
   document.getElementById('review-section').hidden = false;
 }
 
-// ---------- Recent creations (photos after the three used above) ----------
+// ---------- Recent creations (admin gallery photos after hero/tiles, or studio patisserie set) ----------
 
-const recent = gallery.length > 3 ? gallery.slice(3, 9) : [];
+const recent = gallery.length > 3 ? gallery.slice(3, 9) : STUDIO_CREATIONS;
 if (recent.length) {
   document.getElementById('gallery-strip').innerHTML = recent.map((g) => `
     <a href="/gallery" data-reveal>${photo(g)}</a>`).join('');

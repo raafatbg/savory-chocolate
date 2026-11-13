@@ -4,7 +4,17 @@ import { renderCakeSnapshot, releaseSnapshots } from '/js/cake3d.js';
 
 const grid3d = document.getElementById('gallery-3d-grid');
 const gridPhotos = document.getElementById('gallery');
+const photosHead = document.getElementById('gallery-photos-head');
 const box = document.getElementById('lightbox');
+
+const FALLBACK_PHOTOS = [
+  { src: '/img/studio-cake-craft.jpg', caption: 'Multi-layered celebration sponge finished with glossy dark drip & wild berries' },
+  { src: '/img/studio-chocolatier-bench.jpg', caption: 'Tempering dark couverture and hand-glazing in our pastry kitchen' },
+  { src: '/img/studio-atelier-table.jpg', caption: 'Keepsake linen gift box paired with warm crepes and ganache gateau' },
+  { src: '/img/onboarding-box.jpg', caption: 'Assorted artisanal pralines in our satin-tied keepsake gift box' },
+  { src: '/img/onboarding-kunafa.jpg', caption: 'Handcrafted Pistachio Kunafa Crunch bar roasted daily' },
+  { src: '/img/onboarding-crepe.jpg', caption: 'Warm Belgian chocolate crepe drizzled to order' },
+];
 
 let photos = [];
 try {
@@ -16,6 +26,16 @@ try {
 let activeFilter = 'all';
 const snapCache = new Map();
 
+function getDisplayPhotos() {
+  if (photos.length) {
+    return photos.map((p) => ({
+      src: `/uploads/${p.image}`,
+      caption: p.caption || 'Fresh from the SAVORY kitchen',
+    }));
+  }
+  return FALLBACK_PHOTOS;
+}
+
 function filterDesigns() {
   if (activeFilter === 'all') return SIGNATURE_DESIGNS;
   if (activeFilter === 'romance') return SIGNATURE_DESIGNS.filter((d) => d.category === 'romance' || d.category === 'celebration');
@@ -25,7 +45,7 @@ function filterDesigns() {
 async function renderLookbook() {
   const list = filterDesigns();
   grid3d.innerHTML = list.map((d, i) => `
-    <article class="card spotlight design-card choco-product-card" data-reveal style="--delay: ${(i % 3) * 0.06}s">
+    <article class="card design-card choco-product-card" data-reveal style="--delay: ${(i % 3) * 0.06}s">
       <div class="design-stage choco-product-frame" data-lb-design="${esc(d.id)}" role="button" tabindex="0" aria-label="Inspect ${esc(d.name)}">
         <span class="choco-price-badge">${d.cake.tiers} TIER${d.cake.tiers > 1 ? 'S' : ''}<br><strong>3D STUDIO</strong></span>
         <span class="quickview-hint">Zoom 3D</span>
@@ -53,10 +73,13 @@ async function renderLookbook() {
 
 await renderLookbook();
 
-if (photos.length) {
-  gridPhotos.innerHTML = photos.map((p, i) => `
+const displayPhotos = getDisplayPhotos();
+if (displayPhotos.length) {
+  if (photosHead) photosHead.hidden = false;
+  gridPhotos.hidden = false;
+  gridPhotos.innerHTML = displayPhotos.map((p, i) => `
     <figure tabindex="0" data-index="${i}" data-reveal style="--delay: ${(i % 3) * 0.08}s">
-      <img src="/uploads/${esc(p.image)}" alt="${esc(p.caption || 'Cake from our kitchen')}" loading="lazy">
+      <img src="${esc(p.src)}" alt="${esc(p.caption)}" loading="lazy">
       ${p.caption ? `<figcaption>${esc(p.caption)}</figcaption>` : ''}
     </figure>`).join('');
   reveal(gridPhotos);
@@ -72,7 +95,7 @@ document.getElementById('gallery-filters')?.addEventListener('click', (e) => {
   renderLookbook();
 });
 
-// Unified Lightbox for both 3D Signature Creations and Uploaded Kitchen Photos
+// Unified Lightbox for both 3D Signature Creations and Kitchen Photos
 let lbItems = [];
 let lbIndex = 0;
 
@@ -82,9 +105,9 @@ function rebuildLightboxList() {
     caption: `${d.name} — ${d.description}`,
     cta: `/cakes?design=${encodeURIComponent(d.id)}`,
   }));
-  const photoItems = photos.map((p) => ({
-    src: `/uploads/${p.image}`,
-    caption: p.caption || 'Fresh from the SAVORY kitchen',
+  const photoItems = getDisplayPhotos().map((p) => ({
+    src: p.src,
+    caption: p.caption,
     cta: '/cakes',
   }));
   lbItems = [...designItems, ...photoItems];
@@ -95,8 +118,10 @@ function showLightbox(i) {
   if (!lbItems.length) return;
   lbIndex = (i + lbItems.length) % lbItems.length;
   const item = lbItems[lbIndex];
-  document.getElementById('lb-img').src = item.src;
-  document.getElementById('lb-img').alt = item.caption;
+  const lbImg = document.getElementById('lb-img');
+  lbImg.src = item.src;
+  lbImg.alt = item.caption;
+  lbImg.hidden = false;
   document.getElementById('lb-caption').textContent = item.caption;
   const act = document.getElementById('lb-actions');
   if (act) {
@@ -124,10 +149,25 @@ gridPhotos.addEventListener('click', (e) => {
   }
 });
 
+gridPhotos.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const fig = e.target.closest('figure');
+  if (fig) {
+    e.preventDefault();
+    showLightbox(filterDesigns().length + Number(fig.dataset.index));
+    box.showModal();
+  }
+});
+
 box.addEventListener('click', (e) => {
   if (e.target.closest('[data-close]') || e.target === box) box.close();
   const step = e.target.closest('[data-step]');
   if (step) showLightbox(lbIndex + Number(step.dataset.step));
+});
+
+box.addEventListener('close', () => {
+  const lbImg = document.getElementById('lb-img');
+  if (lbImg) lbImg.hidden = true;
 });
 
 box.addEventListener('keydown', (e) => {

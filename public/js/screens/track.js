@@ -1,4 +1,4 @@
-import { api, esc, money, friendlyDate, getRecentOrders, rememberOrderCode } from '/js/common.js';
+import { api, esc, money, friendlyDate, getRecentOrders, rememberOrderCode, loadSettings } from '/js/common.js';
 
 const STAGES = [
   { key: 'new', label: 'Order received', desc: 'Your order is in our queue and awaiting confirmation from the branch.' },
@@ -12,7 +12,10 @@ const form = document.getElementById('track-form');
 const input = document.getElementById('track-input');
 const errorBox = document.getElementById('track-error');
 const resultCard = document.getElementById('track-result');
+const helpWrap = document.getElementById('t-help-wrap');
 let pollTimer = 0;
+let cachedSettings = null;
+loadSettings().then((s) => { cachedSettings = s; }).catch(() => {});
 
 function friendlyTime(hhmm) {
   if (!hhmm || !hhmm.includes(':')) return hhmm || '';
@@ -117,6 +120,23 @@ function renderOrder(order) {
   }).join('');
 
   document.getElementById('t-total').textContent = money(order.total_cents);
+
+  if (helpWrap) {
+    const waRaw = cachedSettings?.whatsapp || document.querySelector('.wa-menu a')?.getAttribute('href') || document.querySelector('.wa-float')?.getAttribute('href') || '';
+    const waUrl = waRaw.startsWith('http')
+      ? waRaw
+      : waRaw
+        ? `https://wa.me/${waRaw.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello SAVORY! Checking on my order ${order.code}.`)}`
+        : '';
+    if (waUrl) {
+      helpWrap.hidden = false;
+      helpWrap.innerHTML = `
+        <span class="muted small">Need to adjust pickup timing or gift notes?</span>
+        <a class="btn btn-outline btn-sm" href="${esc(waUrl)}" target="_blank" rel="noopener">WhatsApp branch desk</a>`;
+    } else {
+      helpWrap.hidden = true;
+    }
+  }
 }
 
 form.addEventListener('submit', (e) => {

@@ -25,7 +25,7 @@
             <img class="fallback" src="/img/cake.svg" alt="A three-tier chocolate cake">
           </div>
         </div>
-        <figcaption class="at-caption" id="hero-caption"><span class="at-drag">Drag to spin · </span>Royal Ganache Crown</figcaption>
+        <figcaption class="at-caption" id="hero-caption"><span class="at-drag" data-i18n="drag_to_spin">Drag to spin · </span><span data-i18n="hero_cake_name">Royal Ganache Crown</span></figcaption>
       </figure>
     </section>
 
@@ -71,6 +71,7 @@
 
     <section class="at-section at-quote-wrap" id="review-section" hidden aria-label="Customer review">
       <figure class="at-quote">
+        <div class="at-quote-stars" id="review-stars" aria-hidden="true"></div>
         <blockquote id="review-text"></blockquote>
         <figcaption id="review-name"></figcaption>
       </figure>
@@ -97,6 +98,7 @@
       <div class="at-wrap at-visit-inner">
         <div class="at-visit-intro">
           <h2 class="at-h2" id="visit-title" data-i18n="home_visit">Visit us</h2>
+          <p class="at-visit-note" data-i18n="home_visit_note">Drop in for single-origin espresso, warm crepes, or a celebration tasting.</p>
           <p class="pre-line">{{hours}}</p>
           {{#instagram}}<a class="at-link" href="{{instagram}}" target="_blank" rel="noopener">@{{instagram_handle}} on Instagram</a>{{/instagram}}
         </div>

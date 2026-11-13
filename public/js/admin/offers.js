@@ -41,6 +41,8 @@ function targetSummary(offer) {
   return 'Info banner only';
 }
 
+const POD_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c3.8 2.8 6 6.2 6 10s-2.2 7.2-6 10c-3.8-2.8-6-6.2-6-10s2.2-7.2 6-10Z"/><path d="M12 5v14"/></svg>';
+
 function renderOffers() {
   if (!offers.length) {
     $('#offers-list').innerHTML = emptyCard('🏷️', 'No promotional offers yet. Add a slider banner or promote items directly from the Menu tab.',
@@ -54,7 +56,7 @@ function renderOffers() {
           <div class="thumb-sm">
             ${o.image
               ? `<img src="${esc(mediaSrc(o.image))}" alt="">`
-              : '<span aria-hidden="true" style="font-size:1.25rem;">✦</span>'}
+              : POD_ICON}
           </div>
           <div class="row-main">
             <div class="name">
@@ -94,12 +96,12 @@ function renderFeaturedSummary() {
       ${featured.map((m) => `
         <div class="row">
           <div class="thumb-sm">
-            ${m.image ? `<img src="${esc(mediaSrc(m.image))}" alt="">` : '<span aria-hidden="true">★</span>'}
+            ${m.image ? `<img src="${esc(mediaSrc(m.image))}" alt="">` : POD_ICON}
           </div>
           <div class="row-main">
             <div class="name">
               ${esc(m.name)}
-              ${m.offer_badge ? `<span class="pill featured">${esc(m.offer_badge)}</span>` : '<span class="pill featured">★ Slider</span>'}
+              ${m.offer_badge ? `<span class="pill featured">${esc(m.offer_badge)}</span>` : '<span class="pill featured">Featured</span>'}
             </div>
             <div class="desc">${esc(m.category)}</div>
           </div>

@@ -23,6 +23,7 @@
           <input type="text" id="track-input" placeholder="Enter order code (e.g. SAV-7KX3QM)" maxlength="24" required autocomplete="off">
           <button type="submit" class="btn btn-gold" id="track-btn">Track order</button>
         </form>
+        <p class="track-tip muted small">Order codes start with <strong>SAV-</strong> and appear on your confirmation receipt.</p>
         <div class="recent-orders" id="recent-orders" hidden></div>
         <div id="track-error" class="alert alert-error" role="alert" hidden style="margin-top: 16px;"></div>
       </div>
@@ -46,6 +47,7 @@
           <span>Total</span>
           <span class="amount" id="t-total"></span>
         </div>
+        <div class="track-help-bar" id="t-help-wrap" hidden></div>
       </div>
     </div>
   </main>

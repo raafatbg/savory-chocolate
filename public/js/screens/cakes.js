@@ -119,7 +119,7 @@ form.querySelectorAll('[data-groups]').forEach((container) => {
         <div class="group-title"><span class="label">${esc(group.label)}</span><span class="chosen" data-chosen="${key}"></span></div>
         <div class="${layout}">${group.options.map((o, i) => renderChoice(group, o, i)).join('')}</div>
         ${key === 'size' && group.options.some((o) => Number(o.price_scale) !== 1)
-          ? '<p class="size-note">✦ Bigger cakes use more of everything, so toppings, fillings and finishes are priced for the size you choose.</p>' : ''}
+          ? '<p class="size-note">Bigger cakes use more of everything, so toppings, fillings and finishes are priced for the size you choose.</p>' : ''}
       </div>`;
   }).join('') || '<p class="muted">No options available right now.</p>';
 });
@@ -244,6 +244,17 @@ function update({ redraw = true, intro = false } = {}) {
   if (redraw) stage?.setCake(cakeConfig(), { intro });
   updateSliceLegend();
   document.getElementById('message-count').textContent = `${messageInput.value.length} / 60 · shown on a chocolate plaque`;
+  const plaqueText = document.getElementById('plaque-preview-text');
+  const plaqueSlab = document.getElementById('plaque-slab');
+  if (plaqueText) {
+    const rawMsg = messageInput.value.trim();
+    plaqueText.textContent = rawMsg || 'Your piped message appears here';
+    plaqueText.classList.toggle('is-placeholder', !rawMsg);
+  }
+  if (plaqueSlab) {
+    const frostColor = selected('color')[0]?.color || '#E6C27E';
+    plaqueSlab.style.setProperty('--plaque-border', frostColor);
+  }
 
   const size = selected('size')[0];
   const scale = Number(size?.price_scale) || 1;

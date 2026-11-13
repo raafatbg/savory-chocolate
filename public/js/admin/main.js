@@ -32,10 +32,10 @@ async function init() {
 function showAuth(setup) {
   $('#dash-view').hidden = true;
   $('#auth-view').hidden = false;
-  $('#auth-title').textContent = setup ? 'Create your admin account' : 'Admin login';
+  $('#auth-title').textContent = setup ? 'Create your admin account' : 'Kitchen & Patisserie Desk';
   $('#auth-intro').textContent = setup
     ? 'Welcome! Choose a username and password. You\'ll use them to manage your orders, menu, cake builder and pages.'
-    : '';
+    : 'Sign in to manage custom cake orders, menu specials, and branch settings.';
   $('#auth-confirm-field').hidden = !setup;
   $('#auth-confirm').required = setup;
   $('#auth-password').autocomplete = setup ? 'new-password' : 'current-password';

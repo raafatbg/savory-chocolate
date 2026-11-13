@@ -43,7 +43,9 @@
           <span class="brand-chocolate-sub">CHOCOLATE</span>
         </div>
         <div class="onboarding-ornament" aria-hidden="true">
-          <span></span><i>✦</i><span></span>
+          <span></span>
+          <svg class="pod-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c3.8 2.8 6 6.2 6 10s-2.2 7.2-6 10c-3.8-2.8-6-6.2-6-10s2.2-7.2 6-10Z"/><path d="M12 5v14"/></svg>
+          <span></span>
         </div>
         <p class="onboarding-slogan" id="onboarding-slogan">{{slogan}}</p>
         <p class="onboarding-subline">Belgian Couverture &middot; Warm Crepes &middot; Signature Flurries</p>
@@ -117,7 +119,7 @@
             </div>
             <div class="menu-filter-pills" id="menu-filter-pills" role="group" aria-label="Quick dietary and flavor filters">
               <button type="button" class="menu-filter-pill active" data-qfilter="all">All Creations</button>
-              <button type="button" class="menu-filter-pill" data-qfilter="popular">★ Chef's Picks</button>
+              <button type="button" class="menu-filter-pill" data-qfilter="popular">Chef's Picks</button>
               <button type="button" class="menu-filter-pill" data-qfilter="pistachio">Pistachio &amp; Kunafa</button>
               <button type="button" class="menu-filter-pill" data-qfilter="dark">Belgian Dark</button>
               <button type="button" class="menu-filter-pill" data-qfilter="under10">Under $10</button>
@@ -147,7 +149,7 @@
           </section>
 
           <!-- Bespoke Gift Box Studio Banner -->
-          <section class="box-banner-luxury spotlight" id="box-banner">
+          <section class="box-banner-luxury" id="box-banner">
             <div class="box-banner-photo">
               <img src="/img/onboarding-box.jpg" alt="SAVORY keepsake embossed gift box filled with artisan pralines" loading="lazy">
             </div>
@@ -204,7 +206,7 @@
             <button type="button" class="btn btn-outline btn-sm" id="prod-back-btn">
               <span>← Back to <strong id="prod-back-cat-name">Category</strong></span>
             </button>
-            <div class="product-page-badge" id="prod-header-badge">✦ SAVORY Signature</div>
+            <div class="product-page-badge" id="prod-header-badge">SAVORY Signature</div>
           </div>
 
           <div class="product-page-card card" id="product-page-card"></div>
@@ -274,7 +276,7 @@
                 </div>
                 <div id="form-error" class="alert alert-error" role="alert" hidden></div>
                 <button type="submit" class="btn btn-gold btn-lg btn-block" id="submit-btn">Place order</button>
-                <p class="pay-note">Nothing to pay now. Pay on pickup or delivery.</p>
+                <p class="pay-note">Nothing charged online · Confirmed directly via WhatsApp · Pay on pickup or delivery.</p>
               </form>
             </aside>
           </div>
@@ -327,11 +329,15 @@
       </div>
 
       <div class="box-stage-wrap">
+        <div class="box-ribbon-preview" id="box-ribbon-preview" aria-live="polite">
+          <span class="box-ribbon-band" id="box-ribbon-band"></span>
+          <span class="box-card-tag is-empty" id="box-card-tag">Hand-tied keepsake ribbon</span>
+        </div>
         <div class="box-tray" id="box-tray" data-cols="3"></div>
         <div class="box-tray-actions">
           <span class="muted small" id="box-progress">0 / 9 pieces selected</span>
           <div>
-            <button type="button" class="btn btn-ghost btn-sm" id="box-autofill">✦ Chef's assortment</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="box-autofill">Chef's assortment</button>
             <button type="button" class="btn btn-ghost btn-sm" id="box-clear">Clear</button>
           </div>
         </div>

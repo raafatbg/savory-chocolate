@@ -217,12 +217,33 @@
 /* ---------- Review ---------- */
 
 .at-quote-wrap { max-width: 980px; margin-inline: auto; padding-inline: 40px; text-align: center; }
-.at-quote { margin: 0; }
-.at-quote blockquote { margin: 0; font: 500 clamp(28px, 3.3vw, 42px)/1.28 var(--at-serif); color: var(--at-cocoa); }
-.at-quote figcaption { margin-top: 26px; font: 600 13px/1 var(--at-sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--at-muted); }
+.at-quote {
+  margin: 0;
+  padding: clamp(28px, 4.5vw, 52px) clamp(20px, 5vw, 56px);
+  background: var(--at-cream-2);
+  border: 1px solid var(--at-line);
+  border-radius: 6px;
+  box-shadow: 0 20px 50px -34px rgba(59, 23, 4, 0.25);
+}
+.at-quote-stars {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: #B47E28;
+  margin-bottom: 18px;
+}
+.at-quote-stars[hidden] { display: none; }
+.at-quote blockquote { margin: 0; font: 500 clamp(26px, 3.2vw, 40px)/1.3 var(--at-serif); color: var(--at-cocoa); }
+.at-quote figcaption { margin-top: 24px; font: 600 13px/1 var(--at-sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--at-muted); }
 .at-quote-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 24px; font-size: 14px; color: var(--at-muted); }
 .at-quote-nav[hidden] { display: none; }
 [dir="rtl"] .at-quote-nav svg { transform: scaleX(-1); }
+[dir="rtl"] .at-slogan,
+[dir="rtl"] .at-lead,
+[dir="rtl"] .at-quote blockquote,
+[dir="rtl"] .at-branch p,
+[dir="rtl"] .at-visit-note { unicode-bidi: plaintext; }
 
 /* ---------- Recent creations ---------- */
 
@@ -235,7 +256,8 @@
 
 .at-visit { background: var(--at-cream-2); border-top: 1px solid var(--at-line); }
 .at-visit-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 48px; padding-block: 96px; }
-.at-visit-intro p { margin: 16px 0 12px; max-width: 22em; color: var(--at-muted); }
+.at-visit-note { margin: 14px 0 0; max-width: 24em; font: italic 500 19px/1.45 var(--at-serif); color: var(--at-cocoa-mid); }
+.at-visit-intro p:not(.at-visit-note) { margin: 14px 0 12px; max-width: 22em; color: var(--at-muted); }
 .at-branches { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px; }
 .at-branch { border-top: 2px solid var(--at-cocoa); padding-top: 24px; display: flex; flex-direction: column; align-items: flex-start; }
 .at-branch h3 { margin: 0 0 8px; font: 600 30px/1.1 var(--at-serif); }

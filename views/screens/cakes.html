@@ -11,11 +11,7 @@
   <main id="main">
     <section class="page-hero luxury-page-hero" style="padding-bottom: 36px;">
       <div class="container" data-reveal>
-        <div class="luxury-badge" style="margin-bottom: 12px;">
-          <span class="badge-dot" aria-hidden="true"></span>
-          <span>INTERACTIVE 3D STUDIO</span>
-        </div>
-        <span class="eyebrow">CUSTOM CELEBRATIONS</span>
+        <span class="eyebrow">PATISSERIE STUDIO · HANDCRAFTED TO ORDER</span>
         <h1>Design your <em class="gold-text">dream cake</em></h1>
         <p>Every choice updates the live 3D preview. Drag or touch the cake to look around it.</p>
         <div class="luxury-funnel-bar" aria-label="How the 3D cake studio works">
@@ -75,7 +71,7 @@
           </div>
           <nav class="stepper" id="stepper" aria-label="Cake builder steps"></nav>
           <form id="cake-form" autocomplete="on">
-            <section class="card spotlight builder-step" id="step-01" data-step="Shape">
+            <section class="card builder-step" id="step-01" data-step="Shape">
               <div class="step-head"><span class="n">01</span><h2>Shape &amp; size</h2></div>
               <div class="portion-calc" id="portion-calc">
                 <div class="portion-calc-top">
@@ -94,29 +90,36 @@
               <div data-groups="shape,size,tiers"><p class="loading">Loading options…</p></div>
             </section>
 
-            <section class="card spotlight builder-step" id="step-02" data-step="Flavor">
+            <section class="card builder-step" id="step-02" data-step="Flavor">
               <div class="step-head"><span class="n">02</span><h2>Flavor</h2></div>
               <div data-groups="flavor,filling"></div>
               <div class="tasting-profile" id="tasting-profile"></div>
             </section>
 
-            <section class="card spotlight builder-step" id="step-03" data-step="Finish">
+            <section class="card builder-step" id="step-03" data-step="Finish">
               <div class="step-head"><span class="n">03</span><h2>Frosting &amp; finish</h2></div>
               <div data-groups="frosting,color,drip"></div>
             </section>
 
-            <section class="card spotlight builder-step" id="step-04" data-step="Toppings">
+            <section class="card builder-step" id="step-04" data-step="Toppings">
               <div class="step-head"><span class="n">04</span><h2>Toppings &amp; extras</h2></div>
               <p class="step-intro">Optional. Pick as many as you like.</p>
               <div data-groups="toppings,extras,dietary"></div>
             </section>
 
-            <section class="card spotlight builder-step" id="step-05" data-step="Message">
+            <section class="card builder-step" id="step-05" data-step="Message">
               <div class="step-head"><span class="n">05</span><h2>Personal touch</h2></div>
               <div class="field" style="margin-top: 14px;">
                 <label for="message">Message on the cake <span class="optional">(optional)</span></label>
                 <input type="text" id="message" name="message" maxlength="60" placeholder="Happy Birthday, Sam!">
                 <span class="char-count" id="message-count">0 / 60 · shown on a chocolate plaque</span>
+                <div class="plaque-preview" id="plaque-preview" aria-live="polite">
+                  <div class="plaque-slab" id="plaque-slab">
+                    <span class="plaque-screw" aria-hidden="true"></span>
+                    <span class="plaque-piped is-placeholder" id="plaque-preview-text">Your piped message appears here</span>
+                    <span class="plaque-screw" aria-hidden="true"></span>
+                  </div>
+                </div>
               </div>
               <div class="field">
                 <span class="label">Inspiration photo <span class="optional">(optional)</span></span>
@@ -140,17 +143,17 @@
               </div>
             </section>
 
-            <section class="card spotlight builder-step" id="step-06" data-step="Delivery">
+            <section class="card builder-step" id="step-06" data-step="Delivery">
               <div class="step-head"><span class="n">06</span><h2>Pickup or delivery</h2></div>
               <div style="margin-top: 16px;">{{> fulfillment}}</div>
             </section>
 
-            <section class="card spotlight builder-step" id="step-07" data-step="Details">
+            <section class="card builder-step" id="step-07" data-step="Details">
               <div class="step-head"><span class="n">07</span><h2>Your details</h2></div>
               <div style="margin-top: 16px;">{{> customer}}</div>
             </section>
 
-            <section class="card spotlight builder-step" id="summary-step" data-step="Order">
+            <section class="card builder-step" id="summary-step" data-step="Order">
               <div class="step-head"><span class="n">08</span><h2>Review &amp; order</h2></div>
               <ul class="summary-list" id="summary" style="margin-top: 16px;"></ul>
               <div class="sum-rows" id="fee-rows"></div>

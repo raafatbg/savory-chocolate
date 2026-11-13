@@ -829,7 +829,7 @@ function renderCart() {
     if (picks.length && count > 0) {
       upsellEl.hidden = false;
       upsellEl.innerHTML = `
-        <div class="cart-upsell-head">✦ Complete your treat</div>
+        <div class="cart-upsell-head">Complete your treat</div>
         <div class="cart-upsell-list">
           ${picks.map((u) => `
             <div class="cart-upsell-item">
@@ -1039,7 +1039,7 @@ function showMenuHomeView({ scrollTarget = null, scrollTop = true } = {}) {
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13"/><path d="M3 12h18"/><path d="M12 8C10.5 5 8 5 8 6.5s2 1.5 4 1.5c2 0 4 0 4-1.5S13.5 5 12 8z"/></svg>
             </span>
             <div class="folder-meta-pills">
-              <span class="folder-count-badge folder-badge-bespoke">✦ Bespoke Studio</span>
+              <span class="folder-count-badge folder-badge-bespoke">Bespoke Studio</span>
               <span class="folder-price-badge">from $18.00</span>
             </div>
           </div>
@@ -1074,7 +1074,7 @@ function renderRowCard(item) {
   const from = item.options.length && fromPrice(item) !== item.price_cents;
   const displayPrice = from ? fromPrice(item) : item.price_cents;
   const badges = inferMenuBadges(item);
-  const optTag = item.options.length ? '✦ Customizable' : '✦ Ready to order';
+  const optTag = item.options.length ? 'Customizable' : 'Ready to order';
   const showCompare = item.compare_price_cents > item.price_cents;
   const canQuickAdd = ordersOpen && !item.options.some((g) => g.required);
 
@@ -1118,7 +1118,7 @@ function renderCategoryPills(activeCat) {
     ...categories.map((cat) => `
       <a href="#category/${encodeURIComponent(cat)}" class="cat-pill${cat === activeCat ? ' active' : ''}">${esc(cat)}</a>
     `),
-    '<a href="#gift-box" class="cat-pill cat-pill-box">✦ Gift Boxes</a>',
+    '<a href="#gift-box" class="cat-pill cat-pill-box">Gift Boxes</a>',
   ].join('');
 
   const activePill = catPillsNav.querySelector('.cat-pill.active');
@@ -1237,7 +1237,7 @@ function showProductView(productId) {
 
   if (prodBackCatName) prodBackCatName.textContent = item.category;
   if (prodHeaderBadge) {
-    prodHeaderBadge.textContent = '✦ Handcrafted to Order';
+    prodHeaderBadge.textContent = 'Handcrafted to Order';
   }
 
   const badges = inferMenuBadges(item);
@@ -1297,13 +1297,13 @@ function showProductView(productId) {
     <div class="product-page-grid">
       <div class="product-page-visual-col">
         <div class="product-page-visual">
-          ${item.offer_badge ? `<span class="product-visual-ribbon">✦ ${esc(item.offer_badge)}</span>` : ''}
+          ${item.offer_badge ? `<span class="product-visual-ribbon">${esc(item.offer_badge)}</span>` : ''}
           ${item.image ? `<img src="${esc(mediaSrc(item.image))}" alt="${esc(item.name)}">` : illustrationFor(item)}
         </div>
         <div class="product-craft-strip">
-          <span>✦ Freshly Prepared</span>
-          <span>✦ Belgian Couverture</span>
-          <span>✦ Aramoun &amp; Aley</span>
+          <span>Freshly Prepared</span>
+          <span>Belgian Couverture</span>
+          <span>Aramoun &amp; Aley</span>
         </div>
       </div>
 
@@ -1321,7 +1321,7 @@ function showProductView(productId) {
         <p class="product-page-desc">${esc(item.description)}</p>
 
         <div class="product-tasting-box">
-          <strong>✦ Tasting Note:</strong> ${esc(inferPairing(item))}
+          <strong>Tasting Note:</strong> ${esc(inferPairing(item))}
         </div>
 
         <div id="product-options-root">
@@ -1479,9 +1479,13 @@ function renderSearchView() {
 
   if (searchRowsList) {
     if (!filtered.length) {
+      const catLinks = [...getCategoryMap().keys()].slice(0, 5).map((cat) =>
+        `<a class="cat-pill" href="#category/${encodeURIComponent(cat)}">${esc(cat)}</a>`).join('');
       searchRowsList.innerHTML = `
-        <div class="card empty-state" style="grid-column: 1 / -1; padding: 36px 20px; text-align: center;">
-          <p style="margin-bottom: 14px;">No creations match your current search or filter.</p>
+        <div class="card empty-state" style="grid-column: 1 / -1; padding: 36px 24px; text-align: center;">
+          <h3 style="margin-bottom: 6px; font-size: 1.45rem;">Nothing matched that craving</h3>
+          <p class="muted" style="margin-bottom: 18px;">Try another keyword or jump straight into one of our fresh kitchen collections.</p>
+          <div class="menu-search-empty-chips">${catLinks}</div>
           <button type="button" class="btn btn-outline btn-sm" id="reset-empty-search">Show All Categories</button>
         </div>`;
       document.getElementById('reset-empty-search')?.addEventListener('click', resetSearchAndFilters);
@@ -1685,8 +1689,33 @@ const boxFlavors = document.getElementById('box-flavors');
 const boxProgress = document.getElementById('box-progress');
 const boxPriceLabel = document.getElementById('box-price-label');
 const boxError = document.getElementById('box-error');
+const boxRibbonSelect = document.getElementById('box-ribbon');
+const boxNoteInput = document.getElementById('box-note');
+const boxRibbonBand = document.getElementById('box-ribbon-band');
+const boxCardTag = document.getElementById('box-card-tag');
+const RIBBON_STYLES = {
+  'Deep Cocoa Satin': { bg: '#2B1002', sheen: 'rgba(217, 176, 102, 0.32)', border: '#D9B066' },
+  'Champagne Gold': { bg: '#D9B066', sheen: 'rgba(255, 255, 255, 0.45)', border: '#FFFDF3' },
+  'Butter Cream Silk': { bg: '#F7F7D3', sheen: 'rgba(255, 255, 255, 0.6)', border: '#D9B066' },
+  'Berry Velvet': { bg: '#6E182B', sheen: 'rgba(247, 210, 218, 0.28)', border: '#D9B066' },
+};
 let activeBoxSize = 9;
 let boxSlots = [];
+
+function renderRibbonPreview() {
+  if (boxRibbonBand && boxRibbonSelect) {
+    const tone = RIBBON_STYLES[boxRibbonSelect.value] || RIBBON_STYLES['Deep Cocoa Satin'];
+    boxRibbonBand.style.setProperty('--ribbon-bg', tone.bg);
+    boxRibbonBand.style.setProperty('--ribbon-sheen', tone.sheen);
+    boxRibbonBand.style.setProperty('--ribbon-border', tone.border);
+    boxRibbonBand.title = boxRibbonSelect.value;
+  }
+  if (boxCardTag && boxNoteInput) {
+    const note = boxNoteInput.value.trim();
+    boxCardTag.textContent = note || `${boxRibbonSelect?.value || 'Hand-tied keepsake'} ribbon`;
+    boxCardTag.classList.toggle('is-empty', !note);
+  }
+}
 
 function renderBoxFlavors() {
   if (!boxFlavors) return;
@@ -1735,11 +1764,15 @@ function openBoxBuilderModal(requestedSize = null) {
     boxSlots = Array.from({ length: activeBoxSize }, (_, i) => TRUFFLES[i % TRUFFLES.length]);
   }
   renderBoxTray();
+  renderRibbonPreview();
   if (!boxDialog.open) boxDialog.showModal();
 }
 
 renderBoxFlavors();
 renderBoxTray();
+renderRibbonPreview();
+boxRibbonSelect?.addEventListener('change', renderRibbonPreview);
+boxNoteInput?.addEventListener('input', renderRibbonPreview);
 
 document.getElementById('open-box-builder')?.addEventListener('click', () => openBoxBuilderModal());
 
@@ -1800,8 +1833,8 @@ document.getElementById('box-form')?.addEventListener('submit', (e) => {
   const customBox = {
     size: activeBoxSize,
     pieces: boxSlots.map((t) => t.name),
-    ribbon: document.getElementById('box-ribbon').value,
-    note: document.getElementById('box-note').value.trim(),
+    ribbon: boxRibbonSelect.value,
+    note: boxNoteInput.value.trim(),
   };
   boxDialog.close();
   addToCart(0, [], 1, document.getElementById('open-box-builder') || headerCartBtn, customBox);
