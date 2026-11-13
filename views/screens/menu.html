@@ -27,7 +27,7 @@
         </div>
         <div class="onboard-util-actions">
           <a class="onboard-util-btn onboard-cart-pill" href="#cart" id="onboard-cart-btn" hidden>
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
             <span data-i18n="nav_cart">Cart</span>
             <span class="onboard-cart-badge" id="onboard-cart-count">0</span>
           </a>
@@ -37,11 +37,16 @@
       </div>
 
       <div class="onboarding-center container">
+        <div class="onboarding-halo" aria-hidden="true"></div>
         <div class="onboarding-logo-lockup" dir="ltr" aria-label="{{shop_name}} Chocolate">
           {{> brand-logo}}
           <span class="brand-chocolate-sub">CHOCOLATE</span>
         </div>
+        <div class="onboarding-ornament" aria-hidden="true">
+          <span></span><i>✦</i><span></span>
+        </div>
         <p class="onboarding-slogan" id="onboarding-slogan">{{slogan}}</p>
+        <p class="onboarding-subline">Belgian Couverture &middot; Warm Crepes &middot; Signature Flurries</p>
         <div class="onboarding-cta-row">
           <a class="btn onboarding-order-btn" href="#menu" id="order-now-btn">
             <span data-i18n="cta_order_now">Order Now</span>
@@ -88,10 +93,11 @@
           <section class="featured-slider-section" id="featured-slider" hidden>
             <div class="slider-header-bar">
               <div>
-                <span class="eyebrow left" style="margin-bottom:2px;">Chef's Selection &amp; Offers</span>
+                <span class="eyebrow left" style="margin-bottom:4px;">Chef's Selection &amp; Offers</span>
                 <h2 class="slider-section-title" data-i18n="featured_title">Featured &amp; Offers</h2>
               </div>
               <div class="slider-controls-group">
+                <span class="slider-counter" id="slider-counter" aria-live="polite">01 / 07</span>
                 <button type="button" class="slider-nav-btn" id="slider-prev" aria-label="Previous offer">‹</button>
                 <button type="button" class="slider-nav-btn" id="slider-next" aria-label="Next offer">›</button>
               </div>
@@ -103,10 +109,10 @@
           </section>
 
           <!-- Search & Quick Filter Toolbar -->
-          <div class="menu-toolbar" id="menu-toolbar">
+          <div class="menu-toolbar menu-toolbar-streamlined" id="menu-toolbar">
             <div class="menu-search-wrap">
               <svg class="menu-search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="search" id="menu-search" placeholder="Search chocolates, kunafa, crepes, flurry, shakes…" aria-label="Search menu items" autocomplete="off">
+              <input type="search" id="menu-search" placeholder="Search Belgian chocolates, kunafa bars, crepes, flurry, shakes…" aria-label="Search menu items" autocomplete="off">
               <button type="button" class="menu-search-clear" id="menu-search-clear" hidden aria-label="Clear search">✕</button>
             </div>
             <div class="menu-filter-pills" id="menu-filter-pills" role="group" aria-label="Quick dietary and flavor filters">
@@ -127,7 +133,7 @@
               </div>
               <button type="button" class="btn btn-outline btn-sm" id="clear-search-btn">← Back to Categories</button>
             </div>
-            <div class="menu-rows-list" id="search-rows-list"></div>
+            <div class="menu-products-grid" id="search-rows-list"></div>
           </div>
 
           <!-- Categories Selection Grid -->
@@ -135,33 +141,33 @@
             <div class="folders-intro">
               <span class="eyebrow left">Atelier Collections</span>
               <h2 class="folders-heading" data-i18n="categories_heading">Choose a Category</h2>
-              <p class="muted small">Tap any category below to browse handcrafted items and customize your order.</p>
+              <p class="muted small">Explore handcrafted chocolates, warm crepes, chilled flurries and signature gateaux.</p>
             </div>
             <div class="menu-folders-grid" id="folders-grid"></div>
           </section>
 
           <!-- Bespoke Gift Box Studio Banner -->
-          <section class="card spotlight box-banner luxury-box-banner" id="box-banner">
+          <section class="box-banner-luxury spotlight" id="box-banner">
+            <div class="box-banner-photo">
+              <img src="/img/onboarding-box.jpg" alt="SAVORY keepsake embossed gift box filled with artisan pralines" loading="lazy">
+            </div>
             <div class="box-banner-copy">
               <span class="eyebrow left">Signature Gifting</span>
-              <h2>Build Your Own <em class="gold-text">SAVORY</em> Chocolate Box</h2>
-              <p class="muted">Curate a 9, 16, or 25-piece luxury gift box filled with handmade pralines, pistachio kunafa truffles, and dark ganaches, tied with a satin ribbon.</p>
-              <button type="button" class="btn btn-gold btn-lg" id="open-box-builder">
-                <span>Curate a Gift Box</span>
-                <span class="arrow" aria-hidden="true">→</span>
-              </button>
-            </div>
-            <div class="box-banner-art" aria-hidden="true">
-              <div class="mini-box-grid">
-                <span style="background:#4C2007"></span>
-                <span style="background:#96bc61"></span>
-                <span style="background:#c67d2d"></span>
-                <span style="background:#d9b066"></span>
-                <span style="background:#8c1832"></span>
-                <span style="background:#6e4226"></span>
-                <span style="background:#f3dfba"></span>
-                <span style="background:#4b220e"></span>
-                <span style="background:#4C2007"></span>
+              <h2>Build Your Own <em class="box-em">SAVORY</em> Gift Box</h2>
+              <p>Hand-pick 9, 16, or 25 artisan pralines, pistachio kunafa truffles, and 70% dark ganaches into our signature keepsake box with a satin ribbon.</p>
+              <div class="box-truffle-swatches" aria-hidden="true">
+                <span class="swatch-dot" style="background:#96bc61" title="Pistachio Kunafa"></span>
+                <span class="swatch-dot" style="background:#5c2c12" title="Hazelnut Praline"></span>
+                <span class="swatch-dot" style="background:#c67d2d" title="Salted Caramel"></span>
+                <span class="swatch-dot" style="background:#2b1206" title="70% Dark Ganache"></span>
+                <span class="swatch-dot" style="background:#8c1832" title="Raspberry Velvet"></span>
+                <span class="swatch-note">8 artisan truffles &middot; 3 box sizes</span>
+              </div>
+              <div class="box-banner-actions">
+                <button type="button" class="btn box-cta-btn btn-lg" id="open-box-builder">
+                  <span>Curate a Gift Box</span>
+                  <span class="arrow" aria-hidden="true">→</span>
+                </button>
               </div>
             </div>
           </section>
@@ -171,24 +177,23 @@
              SCREEN 2: CATEGORY PRODUCTS LIST (#category/{name})
              ============================================================ -->
         <div class="menu-view" id="view-category" hidden>
-          <div class="category-banner-card card" id="cat-banner">
+          <div class="category-banner-hero" id="cat-banner">
             <div class="cat-banner-body">
-              <button type="button" class="btn btn-outline btn-xs cat-back-btn" id="cat-back-btn">
+              <button type="button" class="btn cat-back-pill" id="cat-back-btn">
                 <span>← All Categories</span>
               </button>
               <h1 id="cat-banner-title" class="cat-title-heading"></h1>
-              <p class="muted" id="cat-banner-desc"></p>
+              <p class="cat-banner-lead" id="cat-banner-desc"></p>
+              <div class="cat-products-meta">
+                <span class="cat-products-count" id="cat-products-count"></span>
+              </div>
             </div>
-            <div class="cat-banner-icon-wrap" id="cat-banner-icon" aria-hidden="true"></div>
+            <div class="cat-banner-photo-wrap" id="cat-banner-icon" aria-hidden="true"></div>
           </div>
 
           <nav class="cat-pills-nav" id="cat-pills-nav" aria-label="Switch category"></nav>
 
-          <div class="cat-products-meta">
-            <span class="cat-products-count" id="cat-products-count"></span>
-          </div>
-
-          <div class="menu-rows-list" id="category-rows-list"></div>
+          <div class="menu-products-grid" id="category-rows-list"></div>
         </div>
 
         <!-- ============================================================
@@ -203,6 +208,14 @@
           </div>
 
           <div class="product-page-card card" id="product-page-card"></div>
+
+          <section class="product-related-section" id="product-related-section" hidden>
+            <div class="product-related-head">
+              <span class="eyebrow left" style="margin-bottom:4px;">Sommelier Pairing</span>
+              <h3>Pairs Beautifully With</h3>
+            </div>
+            <div class="product-related-grid" id="product-related-grid"></div>
+          </section>
         </div>
 
         <!-- ============================================================
@@ -214,7 +227,14 @@
               <a class="btn btn-outline btn-sm" href="#menu" id="cart-continue-btn">← Continue Shopping</a>
               <h1 class="cart-page-title" data-i18n="cart_title">Your Cart</h1>
             </div>
-            <button type="button" class="btn btn-ghost btn-sm" id="clear-cart-btn" hidden>Clear cart</button>
+            <div class="cart-head-right">
+              <ol class="cart-steps-trail" aria-label="Order progress">
+                <li class="is-active"><span>1</span> Selection</li>
+                <li><span>2</span> Branch &amp; Timing</li>
+                <li><span>3</span> Confirm</li>
+              </ol>
+              <button type="button" class="btn btn-ghost btn-sm" id="clear-cart-btn" hidden>Clear cart</button>
+            </div>
           </div>
 
           <div id="cart-confirmation" hidden></div>
@@ -226,8 +246,8 @@
                 <path d="M13 10V7a5 5 0 0 1 10 0v3"/>
               </svg>
             </div>
-            <h2 style="font-size:1.7rem;margin:6px 0 6px;">Your cart is empty</h2>
-            <p class="muted" style="margin-bottom:20px;">Explore featured offers, handcrafted chocolates, crepes, and flurries to start your order.</p>
+            <h2 style="font-size:1.85rem;margin:6px 0 8px;">Your cart is empty</h2>
+            <p class="muted" style="max-width:42ch;margin:0 auto 22px;">Explore chef offers, pistachio kunafa bars, warm crepes, and artisanal gift boxes to begin your order.</p>
             <a class="btn btn-gold" href="#menu">Browse Categories →</a>
           </div>
 
@@ -265,12 +285,12 @@
       <section class="section" id="visit-section">
         <div class="container">
           <div class="visit">
-            <div class="card" data-reveal>
+            <div class="card">
               <span class="eyebrow left">Chocolatier &amp; Cafe</span>
               <h2>Made fresh every day</h2>
               <p class="muted pre-line">{{about}}</p>
             </div>
-            <div class="card" data-reveal style="--delay: 0.1s">
+            <div class="card">
               <span class="eyebrow left">Visit our branches</span>
               <dl class="info-list">
                 <div><dt>Opening hours</dt><dd>{{hours}}</dd></div>

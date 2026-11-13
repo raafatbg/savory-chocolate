@@ -56,6 +56,26 @@ const CATEGORY_META = {
   },
 };
 
+const CATEGORY_PRIORITY = [
+  'Chocolates & Bark',
+  'Crepes & Waffles',
+  'Savory Flurry & Shakes',
+  'Signature Gateaux & Bakes',
+  'Cakes by the slice',
+  'Bakes',
+  'Drinks',
+];
+
+const CATEGORY_COVER = {
+  'Chocolates & Bark': '/img/onboarding-kunafa.jpg',
+  'Crepes & Waffles': '/img/onboarding-crepe.jpg',
+  'Savory Flurry & Shakes': '/img/onboarding-flurry.jpg',
+  'Signature Gateaux & Bakes': '/img/menu-lava-crown.jpg',
+  'Cakes by the slice': '/img/menu-fudge-slice.jpg',
+  Bakes: '/img/menu-brownie.jpg',
+  Drinks: '/img/menu-hot-choc.jpg',
+};
+
 const DEFAULT_CATEGORY_ICON = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
 
 function mediaSrc(value) {
@@ -92,6 +112,7 @@ const viewSearch = document.getElementById('view-search');
 const featuredSliderEl = document.getElementById('featured-slider');
 const sliderViewport = document.getElementById('slider-viewport');
 const sliderTrack = document.getElementById('slider-track');
+const sliderCounter = document.getElementById('slider-counter');
 const sliderPrev = document.getElementById('slider-prev');
 const sliderNext = document.getElementById('slider-next');
 const sliderDots = document.getElementById('slider-dots');
@@ -109,6 +130,8 @@ const foldersGrid = document.getElementById('folders-grid');
 const categoryRowsList = document.getElementById('category-rows-list');
 const searchRowsList = document.getElementById('search-rows-list');
 const productPageCard = document.getElementById('product-page-card');
+const productRelatedSection = document.getElementById('product-related-section');
+const productRelatedGrid = document.getElementById('product-related-grid');
 
 const catBannerTitle = document.getElementById('cat-banner-title');
 const catBannerDesc = document.getElementById('cat-banner-desc');
@@ -212,6 +235,9 @@ function fromPrice(item) {
 function inferMenuBadges(item) {
   const text = `${item.name} ${item.description} ${item.category}`.toLowerCase();
   const badges = [];
+  if (item.compare_price_cents > item.price_cents) {
+    badges.push({ label: `Save ${money(item.compare_price_cents - item.price_cents)}`, cls: 'badge-offer' });
+  }
   if (item.offer_badge) {
     badges.push({ label: item.offer_badge, cls: 'badge-chef' });
   } else if (/lava|mirror|kunafa|gift box|fettuccine|flurry/i.test(text)) {
@@ -234,13 +260,13 @@ function inferMenuBadges(item) {
 function inferPairing(item) {
   const text = `${item.name} ${item.category}`.toLowerCase();
   if (/crepe|waffle|lava|brownie/.test(text)) {
-    return 'Enjoy warm with a scoop of Madagascar vanilla gelato or double espresso.';
+    return 'Enjoy warm with a scoop of Madagascar vanilla gelato or a cup of velvety Belgian hot chocolate.';
   }
   if (/flurry|shake/.test(text)) {
-    return 'Pairs effortlessly with a warm Belgian chocolate brownie or pistachio kunafa bar.';
+    return 'Pairs effortlessly with a warm fudge brownie or hand-broken roasted almond bark.';
   }
-  if (/box|praline|truffle|bark/.test(text)) {
-    return 'Hand-tempered for gifting — pairs beautifully with roasted Arabic coffee.';
+  if (/box|praline|truffle|bark|nut/.test(text)) {
+    return 'Hand-tempered in small batches — pairs wonderfully with freshly roasted Arabic coffee.';
   }
   return 'Freshly crafted to order in our Aramoun & Aley kitchens.';
 }
@@ -387,10 +413,14 @@ function buildSliderCard(entry) {
     const o = entry.data;
     const badgeText = o.badge || 'LIMITED OFFER';
     const targetProduct = o.target_type === 'product' ? itemsById.get(Number(o.target_value)) : null;
+    const savingsCents = targetProduct && targetProduct.compare_price_cents > targetProduct.price_cents
+      ? targetProduct.compare_price_cents - targetProduct.price_cents
+      : 0;
     const priceSnippet = targetProduct
       ? `<div class="slider-price-row">
            ${targetProduct.compare_price_cents > targetProduct.price_cents ? `<del class="slider-compare-price">${money(targetProduct.compare_price_cents)}</del>` : ''}
            <span class="slider-live-price">${money(targetProduct.price_cents)}</span>
+           ${savingsCents > 0 ? `<span class="slider-save-pill">Save ${money(savingsCents)}</span>` : ''}
          </div>`
       : '';
 
@@ -405,9 +435,11 @@ function buildSliderCard(entry) {
 
     const visualHtml = o.image
       ? `<img src="${esc(mediaSrc(o.image))}" alt="${esc(o.title)}" loading="eager">`
-      : targetProduct
-        ? illustrationFor(targetProduct)
-        : `<img src="/img/onboarding-box.jpg" alt="${esc(o.title)}" loading="eager">`;
+      : targetProduct?.image
+        ? `<img src="${esc(mediaSrc(targetProduct.image))}" alt="${esc(targetProduct.name)}" loading="eager">`
+        : targetProduct
+          ? illustrationFor(targetProduct)
+          : `<img src="/img/onboarding-box.jpg" alt="${esc(o.title)}" loading="eager">`;
 
     return `
       <article class="slider-slide">
@@ -433,6 +465,9 @@ function buildSliderCard(entry) {
   const displayPrice = from ? fromPrice(item) : item.price_cents;
   const canQuickAdd = ordersOpen && !item.options.some((g) => g.required);
   const badgeText = item.offer_badge || "★ Chef's Signature";
+  const savingsCents = item.compare_price_cents > item.price_cents
+    ? item.compare_price_cents - item.price_cents
+    : 0;
 
   return `
     <article class="slider-slide">
@@ -446,6 +481,7 @@ function buildSliderCard(entry) {
         <div class="slider-price-row">
           ${item.compare_price_cents > item.price_cents ? `<del class="slider-compare-price">${money(item.compare_price_cents)}</del>` : ''}
           <span class="slider-live-price">${from ? '<small>from </small>' : ''}${money(displayPrice)}</span>
+          ${savingsCents > 0 ? `<span class="slider-save-pill">Save ${money(savingsCents)}</span>` : ''}
         </div>
         <div class="slider-actions">
           <a href="#product/${item.id}" class="btn btn-gold slider-cta-btn" data-open-product="${item.id}">
@@ -465,6 +501,10 @@ function setSliderIndex(idx) {
   if (!sliderSlides.length || !sliderTrack) return;
   sliderIdx = ((idx % sliderSlides.length) + sliderSlides.length) % sliderSlides.length;
   sliderTrack.style.transform = `translateX(-${sliderIdx * 100}%)`;
+  if (sliderCounter) {
+    const pad = (n) => String(n).padStart(2, '0');
+    sliderCounter.textContent = `${pad(sliderIdx + 1)} / ${pad(sliderSlides.length)}`;
+  }
   sliderDots?.querySelectorAll('.slider-dot').forEach((d, i) => {
     const active = i === sliderIdx;
     d.classList.toggle('is-active', active);
@@ -704,11 +744,25 @@ function renderCartThumb(line) {
   return illustrationFor(item);
 }
 
+let cartFormInteracted = false;
+
+function syncCartProgressSteps(confirmationVisible) {
+  const steps = document.querySelectorAll('#view-cart .cart-steps-trail li');
+  if (!steps.length) return;
+  const currentStep = confirmationVisible ? 3 : cartFormInteracted ? 2 : 1;
+  steps.forEach((li, idx) => {
+    const stepNum = idx + 1;
+    li.classList.toggle('is-active', stepNum === currentStep);
+    li.classList.toggle('is-done', stepNum < currentStep);
+  });
+}
+
 function renderCart() {
   const count = cart.reduce((n, l) => n + l.quantity, 0);
   const subtotal = cart.reduce((sum, l) => sum + l.quantity * lineUnitPrice(l), 0);
   const fee = deliveryFee(settings, fulfillment());
   const confirmationVisible = Boolean(cartConfirmation && !cartConfirmation.hidden);
+  if (count === 0 && !confirmationVisible) cartFormInteracted = false;
 
   // Sync header badge & onboarding utility cart pill
   if (headerCartCount) {
@@ -728,9 +782,12 @@ function renderCart() {
 
   // Also refresh product page inline View Cart pill if open
   const prodViewCartBtn = document.getElementById('prod-view-cart-btn');
-  if (prodViewCartBtn && count > 0) {
-    prodViewCartBtn.textContent = `View Cart (${count}) →`;
+  if (prodViewCartBtn) {
+    prodViewCartBtn.hidden = count === 0;
+    if (count > 0) prodViewCartBtn.textContent = `View Cart (${count}) →`;
   }
+
+  syncCartProgressSteps(confirmationVisible);
 
   if (cartEmpty) cartEmpty.hidden = count > 0 || confirmationVisible;
   if (cartContent) cartContent.hidden = count === 0 || confirmationVisible;
@@ -738,21 +795,26 @@ function renderCart() {
   if (cartLinesEl) {
     cartLinesEl.innerHTML = cart.map((l) => {
       const { name, extras } = lineDisplay(l);
+      const unitCents = lineUnitPrice(l);
       return `
         <li class="cart-line-item">
-          <div class="cart-line-thumb">
+          <a class="cart-line-thumb" href="${l.custom_box ? '#gift-box' : `#product/${l.id}`}" aria-label="View ${esc(name)}">
             ${renderCartThumb(l)}
-          </div>
+          </a>
           <div class="cart-line-info">
             <div class="cart-line-head">
               <span class="name">${esc(name)}</span>
-              <span class="line-total">${money(lineUnitPrice(l) * l.quantity)}</span>
+              <span class="line-total">${money(unitCents * l.quantity)}</span>
             </div>
+            ${l.quantity > 1 ? `<div class="cart-line-unit">${money(unitCents)} each</div>` : ''}
             ${extras ? `<div class="choices">${esc(extras)}</div>` : ''}
             ${l.note ? `<div class="cart-line-note">Note: “${esc(l.note)}”</div>` : ''}
             <div class="cart-line-actions">
               ${stepper(l.key, l.quantity, name)}
-              <button type="button" class="cart-remove-btn" data-remove-line="${esc(l.key)}" aria-label="Remove ${esc(name)}">Remove</button>
+              <div class="cart-line-btns">
+                ${!l.custom_box ? `<a href="#product/${l.id}" class="cart-edit-link">Edit</a>` : ''}
+                <button type="button" class="cart-remove-btn" data-remove-line="${esc(l.key)}" aria-label="Remove ${esc(name)}">Remove</button>
+              </div>
             </div>
           </div>
         </li>`;
@@ -771,10 +833,15 @@ function renderCart() {
         <div class="cart-upsell-list">
           ${picks.map((u) => `
             <div class="cart-upsell-item">
-              <div class="cart-upsell-info">
-                <strong>${esc(u.name)}</strong>
-                <span>${money(u.price_cents)}</span>
-              </div>
+              <a href="#product/${u.id}" class="cart-upsell-left" data-open-product="${u.id}">
+                <span class="cart-upsell-thumb">
+                  ${u.image ? `<img src="${esc(mediaSrc(u.image))}" alt="${esc(u.name)}" loading="lazy">` : illustrationFor(u)}
+                </span>
+                <span class="cart-upsell-info">
+                  <strong>${esc(u.name)}</strong>
+                  <span>${money(u.price_cents)}</span>
+                </span>
+              </a>
               <button type="button" class="btn btn-outline btn-sm" data-add-quick="${u.id}">+ Add</button>
             </div>
           `).join('')}
@@ -902,12 +969,25 @@ function updateBreadcrumbs(state) {
 // ---------- Screen 1: Inside Menu Home (Slider + Search + Categories) ----------
 
 function getCategoryMap() {
-  const categories = new Map();
+  const raw = new Map();
   for (const item of items) {
-    if (!categories.has(item.category)) categories.set(item.category, []);
-    categories.get(item.category).push(item);
+    if (!raw.has(item.category)) raw.set(item.category, []);
+    raw.get(item.category).push(item);
   }
-  return categories;
+  const sorted = new Map();
+  for (const catName of CATEGORY_PRIORITY) {
+    if (raw.has(catName)) sorted.set(catName, raw.get(catName));
+  }
+  const extras = [...raw.keys()].filter((k) => !sorted.has(k)).sort((a, b) => a.localeCompare(b));
+  for (const catName of extras) {
+    sorted.set(catName, raw.get(catName));
+  }
+  return sorted;
+}
+
+function getCategoryCover(catName, catItems) {
+  const withImg = catItems.find((i) => i.image)?.image;
+  return withImg || CATEGORY_COVER[catName] || '';
 }
 
 function showMenuHomeView({ scrollTarget = null, scrollTop = true } = {}) {
@@ -921,38 +1001,56 @@ function showMenuHomeView({ scrollTarget = null, scrollTop = true } = {}) {
         desc: 'Handcrafted atelier specialties and gourmet recipes.',
         icon: DEFAULT_CATEGORY_ICON,
       };
+      const coverSrc = getCategoryCover(catName, catItems);
+      const minPrice = Math.min(...catItems.map(fromPrice));
       return `
         <a class="folder-card" href="#category/${encodeURIComponent(catName)}" data-nav-cat="${esc(catName)}">
-          <div class="folder-card-top">
-            <div class="folder-icon">${meta.icon}</div>
-            <span class="folder-count-badge">${catItems.length} item${catItems.length === 1 ? '' : 's'}</span>
+          <div class="folder-cover">
+            ${coverSrc
+              ? `<img src="${esc(mediaSrc(coverSrc))}" alt="${esc(catName)}" loading="lazy">`
+              : `<div class="folder-cover-fallback">${meta.icon}</div>`}
+            <div class="folder-cover-scrim" aria-hidden="true"></div>
+            <div class="folder-cover-top">
+              <span class="folder-icon">${meta.icon}</span>
+              <div class="folder-meta-pills">
+                <span class="folder-count-badge">${catItems.length} item${catItems.length === 1 ? '' : 's'}</span>
+                <span class="folder-price-badge">from ${money(minPrice)}</span>
+              </div>
+            </div>
           </div>
-          <div>
+          <div class="folder-card-body">
             <h3 class="folder-title">${esc(catName)}</h3>
             <p class="folder-desc">${esc(meta.desc)}</p>
-          </div>
-          <div class="folder-action">
-            <span>Explore Category</span>
-            <span class="folder-arrow" aria-hidden="true">→</span>
+            <div class="folder-action">
+              <span>Explore Collection</span>
+              <span class="folder-arrow arrow" aria-hidden="true">→</span>
+            </div>
           </div>
         </a>`;
     }).join('');
 
     const boxCardHtml = `
       <a class="folder-card folder-card-bespoke" href="#gift-box" id="folder-box-builder">
-        <div class="folder-card-top">
-          <div class="folder-icon folder-icon-bespoke">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13"/><path d="M3 12h18"/><path d="M12 8C10.5 5 8 5 8 6.5s2 1.5 4 1.5c2 0 4 0 4-1.5S13.5 5 12 8z"/></svg>
+        <div class="folder-cover">
+          <img src="/img/onboarding-box.jpg" alt="SAVORY Luxury Gift Boxes" loading="lazy">
+          <div class="folder-cover-scrim" aria-hidden="true"></div>
+          <div class="folder-cover-top">
+            <span class="folder-icon folder-icon-bespoke">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13"/><path d="M3 12h18"/><path d="M12 8C10.5 5 8 5 8 6.5s2 1.5 4 1.5c2 0 4 0 4-1.5S13.5 5 12 8z"/></svg>
+            </span>
+            <div class="folder-meta-pills">
+              <span class="folder-count-badge folder-badge-bespoke">✦ Bespoke Studio</span>
+              <span class="folder-price-badge">from $18.00</span>
+            </div>
           </div>
-          <span class="folder-count-badge folder-badge-bespoke">✦ Bespoke Studio</span>
         </div>
-        <div>
+        <div class="folder-card-body">
           <h3 class="folder-title">Luxury Gift Boxes</h3>
           <p class="folder-desc">Hand-pick 9, 16, or 25 artisan truffles in an embossed keepsake box with personalized satin ribbon.</p>
-        </div>
-        <div class="folder-action">
-          <span>Build Your Box</span>
-          <span class="folder-arrow" aria-hidden="true">→</span>
+          <div class="folder-action">
+            <span>Curate a Gift Box</span>
+            <span class="folder-arrow arrow" aria-hidden="true">→</span>
+          </div>
         </div>
       </a>`;
 
@@ -976,32 +1074,39 @@ function renderRowCard(item) {
   const from = item.options.length && fromPrice(item) !== item.price_cents;
   const displayPrice = from ? fromPrice(item) : item.price_cents;
   const badges = inferMenuBadges(item);
-  const optTag = item.options.length ? '✦ Customizable options' : '✦ Single portion';
+  const optTag = item.options.length ? '✦ Customizable' : '✦ Ready to order';
   const showCompare = item.compare_price_cents > item.price_cents;
+  const canQuickAdd = ordersOpen && !item.options.some((g) => g.required);
 
   return `
-    <article class="menu-row-card" data-open-product="${item.id}" role="button" tabindex="0" aria-label="View ${esc(item.name)} details">
-      <div class="row-card-left">
-        <div class="row-card-title-row">
-          <h3 class="row-card-title">${esc(item.name)}</h3>
-          ${badges.length ? `<span class="menu-badge ${badges[0].cls}">${esc(badges[0].label)}</span>` : ''}
-        </div>
-        <p class="row-card-desc">${esc(item.description)}</p>
-        <div class="row-card-footer">
-          <span class="row-card-price">
-            ${showCompare ? `<del class="row-compare-price">${money(item.compare_price_cents)}</del>` : ''}
-            ${from ? '<span class="from">from</span>' : ''}${money(displayPrice)}
-          </span>
-          <span class="row-card-opt-tag">${optTag}</span>
-        </div>
+    <article class="menu-product-card" data-open-product="${item.id}" role="button" tabindex="0" aria-label="View ${esc(item.name)} details">
+      <div class="prod-card-media">
+        ${item.image
+          ? `<img src="${esc(mediaSrc(item.image))}" alt="${esc(item.name)}" loading="lazy">`
+          : `<div class="prod-card-svg-fallback">${illustrationFor(item)}</div>`}
+        <div class="prod-card-media-scrim" aria-hidden="true"></div>
+        ${badges.length ? `
+          <div class="prod-card-badges">
+            ${badges.slice(0, 2).map((b) => `<span class="menu-badge ${b.cls}">${esc(b.label)}</span>`).join('')}
+          </div>` : ''}
       </div>
-      <div class="row-card-right">
-        <div class="row-card-thumb">
-          ${item.image ? `<img src="${esc(mediaSrc(item.image))}" alt="${esc(item.name)}" loading="lazy">` : illustrationFor(item)}
+      <div class="prod-card-body">
+        <div class="prod-card-kicker">${esc(item.category)}</div>
+        <h3 class="prod-card-title">${esc(item.name)}</h3>
+        <p class="prod-card-desc">${esc(item.description)}</p>
+        <div class="prod-card-meta">
+          <div class="prod-card-price-wrap">
+            ${showCompare ? `<del class="row-compare-price">${money(item.compare_price_cents)}</del>` : ''}
+            <span class="prod-card-price">${from ? '<small>from </small>' : ''}${money(displayPrice)}</span>
+          </div>
+          <span class="prod-card-opt-tag">${optTag}</span>
         </div>
-        <button type="button" class="row-card-btn" data-open-product="${item.id}">
-          ${item.options.length ? 'Customize →' : 'Select →'}
-        </button>
+        <div class="prod-card-actions">
+          <a href="#product/${item.id}" class="btn btn-gold btn-sm prod-card-cta" data-open-product="${item.id}">
+            ${item.options.length ? 'Customize &amp; Order →' : 'View Details →'}
+          </a>
+          ${canQuickAdd ? `<button type="button" class="btn btn-outline btn-sm prod-card-quick" data-add-quick="${item.id}" aria-label="Quick add ${esc(item.name)} to cart">+ Add</button>` : ''}
+        </div>
       </div>
     </article>`;
 }
@@ -1036,12 +1141,18 @@ function showCategoryView(catName) {
     desc: 'Handcrafted atelier specialties and gourmet recipes.',
     icon: DEFAULT_CATEGORY_ICON,
   };
+  const coverSrc = getCategoryCover(catName, catItems);
+  const minPrice = Math.min(...catItems.map(fromPrice));
 
   if (catBannerTitle) catBannerTitle.textContent = catName;
   if (catBannerDesc) catBannerDesc.textContent = meta.desc;
-  if (catBannerIcon) catBannerIcon.innerHTML = meta.icon;
+  if (catBannerIcon) {
+    catBannerIcon.innerHTML = coverSrc
+      ? `<img src="${esc(mediaSrc(coverSrc))}" alt="${esc(catName)}" loading="eager">`
+      : meta.icon;
+  }
   if (catProductsCount) {
-    catProductsCount.textContent = `${catItems.length} creation${catItems.length === 1 ? '' : 's'} available to order`;
+    catProductsCount.textContent = `${catItems.length} creation${catItems.length === 1 ? '' : 's'} · from ${money(minPrice)}`;
   }
 
   renderCategoryPills(catName);
@@ -1053,6 +1164,58 @@ function showCategoryView(catName) {
 }
 
 // ---------- Screen 3: Dedicated Product Page ----------
+
+function renderRelatedProducts(item) {
+  if (!productRelatedSection || !productRelatedGrid) return;
+  const related = [];
+  const pickedIds = new Set([item.id]);
+  const usedCats = new Set();
+
+  for (const candidate of items) {
+    if (pickedIds.has(candidate.id) || candidate.category === item.category || usedCats.has(candidate.category)) continue;
+    usedCats.add(candidate.category);
+    pickedIds.add(candidate.id);
+    related.push(candidate);
+    if (related.length === 3) break;
+  }
+  for (const candidate of items) {
+    if (related.length >= 3) break;
+    if (pickedIds.has(candidate.id)) continue;
+    pickedIds.add(candidate.id);
+    related.push(candidate);
+  }
+
+  if (!related.length) {
+    productRelatedSection.hidden = true;
+    productRelatedGrid.innerHTML = '';
+    return;
+  }
+
+  productRelatedSection.hidden = false;
+  productRelatedGrid.innerHTML = related.map((r) => {
+    const rFrom = r.options.length && fromPrice(r) !== r.price_cents;
+    const rPrice = rFrom ? fromPrice(r) : r.price_cents;
+    const rQuick = ordersOpen && !r.options.some((g) => g.required);
+    return `
+      <article class="related-pair-card" data-open-product="${r.id}" role="button" tabindex="0">
+        <div class="related-pair-media">
+          ${r.image
+            ? `<img src="${esc(mediaSrc(r.image))}" alt="${esc(r.name)}" loading="lazy">`
+            : `<div class="prod-card-svg-fallback">${illustrationFor(r)}</div>`}
+        </div>
+        <div class="related-pair-body">
+          <span class="related-pair-cat">${esc(r.category)}</span>
+          <h4>${esc(r.name)}</h4>
+          <div class="related-pair-foot">
+            <span class="related-pair-price">${rFrom ? '<small>from </small>' : ''}${money(rPrice)}</span>
+            ${rQuick
+              ? `<button type="button" class="btn btn-outline btn-xs" data-add-quick="${r.id}">+ Quick Add</button>`
+              : `<span class="related-pair-link">Explore →</span>`}
+          </div>
+        </div>
+      </article>`;
+  }).join('');
+}
 
 function showProductView(productId) {
   const item = itemsById.get(Number(productId));
@@ -1074,11 +1237,13 @@ function showProductView(productId) {
 
   if (prodBackCatName) prodBackCatName.textContent = item.category;
   if (prodHeaderBadge) {
-    prodHeaderBadge.textContent = item.offer_badge ? `✦ ${item.offer_badge}` : '✦ SAVORY Signature';
+    prodHeaderBadge.textContent = '✦ Handcrafted to Order';
   }
 
   const badges = inferMenuBadges(item);
   const showCompare = item.compare_price_cents > item.price_cents;
+  const savingsCents = showCompare ? item.compare_price_cents - item.price_cents : 0;
+  const cartCountNow = cart.reduce((n, l) => n + l.quantity, 0);
 
   const optionsHtml = item.options.map((g, gi) => {
     const isSingle = g.type === 'single';
@@ -1113,23 +1278,33 @@ function showProductView(productId) {
           <span class="option-group-req">${note}</span>
         </div>
         <div class="addon-options-list">
-          ${g.choices.map((c, ci) => `
-            <label class="addon-option-row">
-              <span>
-                <input type="checkbox" data-addon-group="${gi}" data-addon-choice="${ci}" ${currentProductPicks[gi].includes(ci) ? 'checked' : ''}>
-                <span>${esc(c.name)}</span>
-              </span>
-              <span class="addon-option-price">${c.price_cents ? `+${money(c.price_cents)}` : 'Included'}</span>
-            </label>`).join('')}
+          ${g.choices.map((c, ci) => {
+            const isChecked = currentProductPicks[gi].includes(ci);
+            return `
+              <label class="addon-option-row${isChecked ? ' is-checked' : ''}">
+                <span>
+                  <input type="checkbox" data-addon-group="${gi}" data-addon-choice="${ci}" ${isChecked ? 'checked' : ''}>
+                  <span>${esc(c.name)}</span>
+                </span>
+                <span class="addon-option-price">${c.price_cents ? `+${money(c.price_cents)}` : 'Included'}</span>
+              </label>`;
+          }).join('')}
         </div>
       </div>`;
   }).join('');
 
   productPageCard.innerHTML = `
     <div class="product-page-grid">
-      <div class="product-page-visual">
-        <span class="choco-price-badge">PRICE<br><strong>${money(item.price_cents)}</strong></span>
-        ${item.image ? `<img src="${esc(mediaSrc(item.image))}" alt="${esc(item.name)}">` : illustrationFor(item)}
+      <div class="product-page-visual-col">
+        <div class="product-page-visual">
+          ${item.offer_badge ? `<span class="product-visual-ribbon">✦ ${esc(item.offer_badge)}</span>` : ''}
+          ${item.image ? `<img src="${esc(mediaSrc(item.image))}" alt="${esc(item.name)}">` : illustrationFor(item)}
+        </div>
+        <div class="product-craft-strip">
+          <span>✦ Freshly Prepared</span>
+          <span>✦ Belgian Couverture</span>
+          <span>✦ Aramoun &amp; Aley</span>
+        </div>
       </div>
 
       <div class="product-page-body">
@@ -1139,7 +1314,8 @@ function showProductView(productId) {
         <div class="product-page-price-row">
           <span class="product-live-price" id="prod-live-price">${money(unitPrice(item, currentProductPicks) * currentProductQty)}</span>
           ${showCompare ? `<del class="product-compare-price">${money(item.compare_price_cents)}</del>` : ''}
-          ${badges.map((b) => `<span class="menu-badge ${b.cls}">${esc(b.label)}</span>`).join('')}
+          ${savingsCents > 0 ? `<span class="menu-badge badge-offer">Save ${money(savingsCents)}</span>` : ''}
+          ${badges.filter((b) => b.cls !== 'badge-offer' && b.label !== item.offer_badge).map((b) => `<span class="menu-badge ${b.cls}">${esc(b.label)}</span>`).join('')}
         </div>
 
         <p class="product-page-desc">${esc(item.description)}</p>
@@ -1171,8 +1347,8 @@ function showProductView(productId) {
             ${ordersOpen ? `Add to Order · ${money(unitPrice(item, currentProductPicks) * currentProductQty)}` : 'Atelier Closed'}
           </button>
 
-          <a href="#cart" class="btn btn-outline product-view-cart-btn" id="prod-view-cart-btn" hidden>
-            View Cart →
+          <a href="#cart" class="btn btn-outline product-view-cart-btn" id="prod-view-cart-btn" ${cartCountNow > 0 ? '' : 'hidden'}>
+            ${cartCountNow > 0 ? `View Cart (${cartCountNow}) →` : 'View Cart →'}
           </a>
         </div>
       </div>
@@ -1209,6 +1385,7 @@ function showProductView(productId) {
       const gi = Number(chk.dataset.addonGroup);
       currentProductPicks[gi] = [...productPageCard.querySelectorAll(`[data-addon-group="${gi}"]:checked`)]
         .map((c) => Number(c.dataset.addonChoice));
+      chk.closest('.addon-option-row')?.classList.toggle('is-checked', chk.checked);
       playClick();
       updateProductLiveDisplay();
     });
@@ -1250,6 +1427,7 @@ function showProductView(productId) {
     }, 1500);
   });
 
+  renderRelatedProducts(item);
   updateBreadcrumbs({ view: 'product', category: item.category, product: item });
   switchStageView('view-product');
   applyLanguage();
@@ -1302,7 +1480,7 @@ function renderSearchView() {
   if (searchRowsList) {
     if (!filtered.length) {
       searchRowsList.innerHTML = `
-        <div class="card empty-state" style="padding: 36px 20px; text-align: center;">
+        <div class="card empty-state" style="grid-column: 1 / -1; padding: 36px 20px; text-align: center;">
           <p style="margin-bottom: 14px;">No creations match your current search or filter.</p>
           <button type="button" class="btn btn-outline btn-sm" id="reset-empty-search">Show All Categories</button>
         </div>`;
@@ -1312,6 +1490,7 @@ function renderSearchView() {
     }
   }
   updateBreadcrumbs({ view: 'menu' });
+  applyLanguage();
 }
 
 function resetSearchAndFilters({ navigate = true } = {}) {
@@ -1452,11 +1631,12 @@ prodBackBtn?.addEventListener('click', () => {
 
 // Delegated interactions across all screens
 document.addEventListener('click', (e) => {
-  const rowBtn = e.target.closest('[data-open-product]');
-  if (rowBtn) {
+  const quickAdd = e.target.closest('[data-add-quick]');
+  if (quickAdd && ordersOpen) {
     e.preventDefault();
-    const id = Number(rowBtn.dataset.openProduct);
-    window.location.hash = `#product/${id}`;
+    e.stopPropagation();
+    const id = Number(quickAdd.dataset.addQuick);
+    addToCart(id, [], 1, quickAdd);
     return;
   }
 
@@ -1468,10 +1648,11 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  const quickAdd = e.target.closest('[data-add-quick]');
-  if (quickAdd && ordersOpen) {
-    const id = Number(quickAdd.dataset.addQuick);
-    addToCart(id, [], 1, quickAdd);
+  const rowBtn = e.target.closest('[data-open-product]');
+  if (rowBtn) {
+    e.preventDefault();
+    const id = Number(rowBtn.dataset.openProduct);
+    window.location.hash = `#product/${id}`;
     return;
   }
 
@@ -1489,7 +1670,7 @@ document.addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter' && e.key !== ' ') return;
-  const card = e.target.closest('.menu-row-card[data-open-product]');
+  const card = e.target.closest('.menu-product-card[data-open-product], .related-pair-card[data-open-product], .menu-row-card[data-open-product]');
   if (!card || e.target.closest('button, a, input, label')) return;
   e.preventDefault();
   const id = Number(card.dataset.openProduct);
@@ -1630,6 +1811,15 @@ document.getElementById('box-form')?.addEventListener('submit', (e) => {
 
 fulfillment = setupFulfillment(form, settings, renderCart);
 const branchOf = await setupBranches(form);
+
+const markFormStep = () => {
+  if (!cartFormInteracted) {
+    cartFormInteracted = true;
+    syncCartProgressSteps(false);
+  }
+};
+form?.addEventListener('focusin', markFormStep);
+form?.addEventListener('change', markFormStep);
 
 renderCart();
 handleHashRouting();

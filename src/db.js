@@ -99,6 +99,7 @@ const MIGRATIONS = [
   migrateToVersion5,
   migrateToVersion6,
   migrateToVersion7,
+  migrateToVersion8,
 ];
 const LATEST = MIGRATIONS.length;
 
@@ -118,6 +119,35 @@ function backup(fromVersion) {
   if (!fs.existsSync(target)) {
     db.exec(`VACUUM INTO '${target.replace(/'/g, "''")}'`);
     console.log(`Backed up the database to ${target} before upgrading it.`);
+  }
+}
+
+// Version 8: attach bespoke culinary photography to every signature menu item where absent.
+function migrateToVersion8() {
+  const attachImg = db.prepare(`
+    UPDATE menu_items
+    SET image = ?
+    WHERE name = ? AND (image IS NULL OR image = '')
+  `);
+  const pairs = [
+    ['/img/menu-fudge-slice.jpg', 'Chocolate fudge slice'],
+    ['/img/menu-carrot-slice.jpg', 'Carrot cake slice'],
+    ['/img/menu-brownie.jpg', 'Brownie'],
+    ['/img/menu-cookie.jpg', 'Chocolate chip cookie'],
+    ['/img/menu-hot-choc.jpg', 'Hot chocolate'],
+    ['/img/menu-lava-crown.jpg', 'Molten Chocolate Lava Crown'],
+    ['/img/menu-mirror-torte.jpg', 'Mirror-Glaze Orange & Dark Torte'],
+    ['/img/onboarding-kunafa.jpg', 'Pistachio Kunafa Chocolate Bar'],
+    ['/img/menu-bark.jpg', 'Loaded Roasted Almond & Pistachio Bark'],
+    ['/img/onboarding-crepe.jpg', 'Triple Belgian Chocolate Crepe'],
+    ['/img/menu-kunafa-crepe.jpg', 'Pistachio & Kunafa Crunch Crepe'],
+    ['/img/onboarding-flurry.jpg', 'Savory Oreo & Brownie Flurry'],
+    ['/img/menu-shake.jpg', 'Ferrero & Hazelnut Thick Shake'],
+    ['/img/menu-eclair.jpg', 'Belgian Chocolate Éclair'],
+    ['/img/menu-nuts.jpg', 'Smoked & Roasted Mixed Nuts'],
+  ];
+  for (const [img, name] of pairs) {
+    attachImg.run(img, name);
   }
 }
 

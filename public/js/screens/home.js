@@ -17,7 +17,13 @@ const HERO_CAKE = {
 };
 
 const MENU_URL = document.querySelector('#ways a.at-tile:last-child')?.getAttribute('href') || '/menu';
-const photo = (g, { eager = false } = {}) => `<img src="/uploads/${esc(g.image)}" alt="${esc(g.caption || '')}"${eager ? '' : ' loading="lazy"'}>`;
+const mediaSrc = (value) => {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+  if (raw.startsWith('/') || /^https?:\/\//i.test(raw)) return raw;
+  return `/uploads/${raw}`;
+};
+const photo = (g, { eager = false } = {}) => `<img src="${esc(mediaSrc(g.image))}" alt="${esc(g.caption || '')}"${eager ? '' : ' loading="lazy"'}>`;
 
 // loadSettings also sets the shop's currency for money().
 const [, gallery, menu, reviews] = await Promise.all([
@@ -64,7 +70,7 @@ if (picks.length) {
   document.getElementById('loved-grid').innerHTML = picks.map((item) => `
     <a class="at-product" href="${esc(MENU_URL)}" data-reveal>
       <div class="at-media at-media-dark at-product-media">${item.image
-        ? `<img src="/uploads/${esc(item.image)}" alt="" loading="lazy">`
+        ? `<img src="${esc(mediaSrc(item.image))}" alt="${esc(item.name)}" loading="lazy">`
         : `<div class="at-art">${illustrationFor(item)}</div>`}</div>
       <div class="at-product-row">
         <h3>${esc(item.name)}</h3>

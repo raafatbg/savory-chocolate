@@ -174,9 +174,9 @@ const I18N = {
     featured_title: 'Featured & Offers',
     categories_heading: 'Choose a Category',
     cart_title: 'Your Cart',
-    foot_order: 'Order',
-    foot_bakery: 'Bakery',
-    foot_visit: 'Visit',
+    foot_order: 'Menu & Gifting',
+    foot_bakery: 'Specialties',
+    foot_visit: 'Branches & Hours',
     nav_cakes_short: 'Cakes',
     nav_menu_cafe: 'Chocolates & Café',
     nav_visit: 'Visit',
@@ -221,9 +221,9 @@ const I18N = {
     featured_title: 'العروض والمميزة',
     categories_heading: 'اختر التصنيف',
     cart_title: 'سلّة التسوّق',
-    foot_order: 'الطلب',
-    foot_bakery: 'المتجر',
-    foot_visit: 'فروعنا',
+    foot_order: 'القائمة والهدايا',
+    foot_bakery: 'أصنافنا المميزة',
+    foot_visit: 'الفروع وساعات العمل',
     nav_cakes_short: 'الكيك',
     nav_menu_cafe: 'الشوكولا والمقهى',
     nav_visit: 'زورونا',
@@ -297,6 +297,9 @@ const PHRASE_AR = new Map([
   ['Track order', 'تتبّع الطلب'],
   ['Curate a gift box →', 'صمّم علبة هدايا ←'],
   ['Curate a gift box', 'صمّم علبة هدايا'],
+  ['Curate a Gift Box', 'صمّم علبة هدايا'],
+  ['Explore Collection', 'استعرض التشكيلة'],
+  ['Pairs Beautifully With', 'يتناسق بشكل رائع مع'],
   ['All Creations', 'كافة الإبداعات'],
   ["★ Chef's Picks", '★ مختارات الشيف'],
   ['Pistachio & Kunafa', 'فستق وكنافة'],
@@ -348,7 +351,7 @@ export function applyLanguage(lang = activeLang) {
   });
 
   // Translate matching standalone phrases cleanly and reversibly
-  document.querySelectorAll('.eyebrow, .trust span, .step h3, .section-head h2, .card h2, .card h3, .btn, .cat-back-btn span, dt, .tool-btn span, .menu-filter-pill, .recent-orders-label, .portion-badge, .cart-upsell-head, .occasion-label').forEach((el) => {
+  document.querySelectorAll('.eyebrow, .trust span, .step h3, .section-head h2, .card h2, .card h3, .btn, .cat-back-btn span, dt, .tool-btn span, .menu-filter-pill, .recent-orders-label, .portion-badge, .cart-upsell-head, .occasion-label, .folder-action span:first-child, .box-cta-btn span:first-child, .onboarding-order-btn span:first-child, .product-related-head h3').forEach((el) => {
     if (el.hasAttribute('data-i18n') || el.children.length > 0) return;
     if (!origTextMap.has(el)) origTextMap.set(el, el.textContent.trim());
     const orig = origTextMap.get(el);

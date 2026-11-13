@@ -1,6 +1,6 @@
 // Service Worker for SAVORY Standalone Progressive Web Apps (PWA)
 // The Firebase build replaces this name with a per-build version, so each deploy clears the old cache.
-const CACHE_NAME = 'savory-pwa-v3';
+const CACHE_NAME = 'savory-pwa-v4';
 
 const STATIC_ASSETS = [
   '/',

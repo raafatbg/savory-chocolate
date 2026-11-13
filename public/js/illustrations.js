@@ -265,19 +265,19 @@ ART.crescent = ART.gift;
 
 const RULES = [
   [/\b(lava|muffins?|cupcakes?|molten)\b/i, 'cupcake'],
-  [/\b(torte|mirror|orange|gateaux?|cakes?)\b/i, 'cake'],
+  [/\bslices?\b/i, 'slice'],
+  [/\b(cookies?|biscuits?)\b/i, 'cookie'],
+  [/[ée]clairs?/i, 'eclair'],
+  [/\b(brownies?|blondies?|fudge)\b/i, 'brownie'],
+  [/\b(coffee|latte|tea|hot chocolate|cocoa|drinks?|espresso|mocha)\b/i, 'cup'],
   [/\b(milkshakes?|shakes?|freakshakes?|frapp[eé]s?|smoothies?)\b/i, 'shake'],
   [/\b(crepes?|crêpes?|pancakes?|waffles?)\b/i, 'crepe'],
   [/\bflurr(y|ies)\b/i, 'icecream'],
-  [/\b(bark|pralines?|truffles?|bonbons?|chocolates?|kunafa)\b/i, 'chocolate'],
-  [/\b(coffee|latte|tea|hot chocolate|cocoa|drinks?|espresso|mocha)\b/i, 'cup'],
-  [/[ée]clairs?/i, 'eclair'],
-  [/\b(cookies?|biscuits?)\b/i, 'cookie'],
-  [/\bslices?\b/i, 'slice'],
-  [/\b(brownies?|blondies?|fudge)\b/i, 'brownie'],
-  [/\b(ice ?creams?|gelato|sorbet)\b/i, 'icecream'],
+  [/\b(torte|mirror|orange|gateaux?|cakes?)\b/i, 'cake'],
   [/\b(nuts|almonds?|pistachios?|cashews?|hazelnuts?)\b/i, 'nuts'],
   [/\b(favou?rs?|gifts?|boxes|box|weddings?)\b/i, 'gift'],
+  [/\b(bark|pralines?|truffles?|bonbons?|chocolates?|kunafa)\b/i, 'chocolate'],
+  [/\b(ice ?creams?|gelato|sorbet)\b/i, 'icecream'],
 ];
 
 export const art = (name) => ART[name] || ART.chocolate;
