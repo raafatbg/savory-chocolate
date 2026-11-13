@@ -145,22 +145,22 @@ if (initialCode) {
 
 // Keep Menu Website customers inside the Menu navigation experience when tracking their order
 function applyMenuSiteChrome() {
-  const nav = document.getElementById('site-nav');
-  if (nav) {
-    nav.innerHTML = `
-      <a href="/" data-i18n="nav_menu">Menu</a>
-      <a href="/#box-banner" data-i18n="nav_boxes">Gift Boxes</a>
-      <a href="/#what-we-make" data-i18n="nav_specialties">Specialties</a>
-      <a href="/track" aria-current="page" data-i18n="nav_track">Track Order</a>
-      <a href="/#visit-section" data-i18n="foot_visit">Visit Us</a>
+  const navLinks = document.querySelector('#site-nav .site-nav-links') || document.getElementById('site-nav');
+  if (navLinks) {
+    navLinks.innerHTML = `
+      <a href="/#menu" data-i18n="nav_menu"><span class="nav-num">01</span><span class="nav-text">Menu</span><span class="nav-desc">Featured offers &amp; categories</span></a>
+      <a href="/#gift-box" data-i18n="nav_boxes"><span class="nav-num">02</span><span class="nav-text">Gift Boxes</span><span class="nav-desc">9, 16 or 25-piece luxury boxes</span></a>
+      <a href="/#cart" data-i18n="nav_cart"><span class="nav-num">03</span><span class="nav-text">Cart</span><span class="nav-desc">Review items &amp; checkout</span></a>
+      <a href="/track?site=menu" aria-current="page" data-i18n="nav_track"><span class="nav-num">04</span><span class="nav-text">Track Order</span><span class="nav-desc">Live kitchen preparation status</span></a>
+      <a href="/#visit" data-i18n="foot_visit"><span class="nav-num">05</span><span class="nav-text">Branches</span><span class="nav-desc">Aramoun &amp; Aley locations</span></a>
     `;
   }
-  const cta = document.querySelector('.header-cta');
+  const cta = document.querySelector('.header-cta') || document.getElementById('header-cart-btn');
   if (cta) {
-    cta.href = '/';
-    cta.textContent = 'Back to menu';
+    cta.href = '/#menu';
+    cta.textContent = 'Back to Menu';
   }
-  document.querySelectorAll('.brand').forEach((b) => { b.href = '/'; });
+  document.querySelectorAll('.brand').forEach((b) => { b.href = '/#welcome'; });
 }
 
 if (new URLSearchParams(location.search).get('site') === 'menu') {

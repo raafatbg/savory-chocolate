@@ -124,7 +124,9 @@ export function createApp(forcedSiteMode = '') {
     let message = err.message;
     if (err instanceof multer.MulterError) {
       status = 400;
-      message = err.code === 'LIMIT_FILE_SIZE' ? 'Image must be 8 MB or smaller.' : 'Could not upload that image.';
+      message = err.code === 'LIMIT_FILE_SIZE'
+        ? 'Uploaded file is too large (max 8 MB for photos, 25 MB for onboarding media).'
+        : 'Could not upload that file.';
     } else if (err.type === 'entity.parse.failed') {
       message = 'Request was not valid JSON.';
     } else if (status >= 500) {

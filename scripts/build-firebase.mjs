@@ -28,6 +28,8 @@ function buildSeed() {
     settings: getSettings(),
     branches: db.prepare('SELECT * FROM branches ORDER BY sort_order, id').all(),
     menu_items: db.prepare('SELECT * FROM menu_items ORDER BY sort_order, name').all(),
+    offers: db.prepare('SELECT * FROM offers ORDER BY sort_order, id').all(),
+    onboarding_slides: db.prepare('SELECT * FROM onboarding_slides ORDER BY sort_order, id').all(),
     cake_groups: CAKE_GROUPS,
     cake_options: db.prepare('SELECT * FROM cake_options ORDER BY sort_order, id').all(),
     gallery_images: db.prepare('SELECT * FROM gallery_images ORDER BY sort_order, id DESC').all(),

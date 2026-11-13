@@ -3,13 +3,14 @@ import { $, $$, esc, formError, busy, adminApi, loadSettings, setUnauthorizedHan
 import * as orders from './orders.js';
 import * as messages from './messages.js';
 import * as menu from './menu-items.js';
+import * as offers from './offers.js';
 import * as cakes from './cake-options.js';
 import * as gallery from './gallery.js';
 import * as reviews from './reviews.js';
 import * as faq from './faq.js';
 import * as settingsPanel from './settings.js';
 
-const PANELS = { orders, messages, menu, cakes, gallery, reviews, faq, settings: settingsPanel };
+const PANELS = { orders, messages, menu, offers, cakes, gallery, reviews, faq, settings: settingsPanel };
 export const state = { tab: 'orders', settings: {} };
 
 setUnauthorizedHandler(() => showAuth(false));

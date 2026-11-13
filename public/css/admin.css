@@ -399,3 +399,18 @@ body.admin ::-webkit-scrollbar-thumb { background: #d6c3ad; border-color: var(--
 .sound-toggle-btn.muted { opacity: 0.5; filter: grayscale(0.85); text-decoration: line-through; }
 .orders-tools input[type="search"] { padding: 7px 10px; font-size: 0.88rem; border-radius: 8px; border: 1px solid var(--line); }
 @media (max-width: 760px) { .admin-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* Featured Offers & Onboarding Start Screen Media */
+.pill.featured { background: #3B1704; color: #F7F7D3; border: 1px solid rgba(217, 176, 102, 0.45); }
+.subpanel-heading { font-size: 1.35rem; margin: 0 0 10px; color: var(--text); }
+.preset-chips-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
+.media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.media-card { overflow: hidden; display: flex; flex-direction: column; }
+.media-card.is-hidden { opacity: 0.55; }
+.media-thumb { position: relative; aspect-ratio: 16 / 9; background: #1d0c04; overflow: hidden; }
+.media-thumb img, .media-thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.media-type-pill { position: absolute; top: 10px; left: 10px; z-index: 2; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); }
+.media-card-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.media-card-body input[type="text"] { padding: 8px 10px; font-size: 0.88rem; }
+.media-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+

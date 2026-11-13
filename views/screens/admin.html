@@ -50,6 +50,7 @@
         <button type="button" role="tab" data-tab="orders">Orders <span class="badge" id="badge-orders" hidden></span></button>
         <button type="button" role="tab" data-tab="messages">Messages <span class="badge" id="badge-messages" hidden></span></button>
         <button type="button" role="tab" data-tab="menu">Menu</button>
+        <button type="button" role="tab" data-tab="offers">Offers &amp; Start</button>
         <button type="button" role="tab" data-tab="cakes">Cake builder</button>
         <button type="button" role="tab" data-tab="gallery">Gallery</button>
         <button type="button" role="tab" data-tab="reviews">Reviews</button>
@@ -97,6 +98,71 @@
           <button type="button" class="btn btn-gold btn-sm" id="add-item-btn">+ Add item</button>
         </div>
         <div id="items-list"></div>
+      </section>
+
+      <section data-panel="offers" hidden>
+        <div class="panel-head">
+          <div>
+            <h1>Offers &amp; Start Screen</h1>
+            <p class="muted small">Control promotional banners &amp; featured items in the top menu slider, plus the looping videos and photos behind the landing screen.</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline btn-sm" id="jump-settings-slogan">Edit slogan</button>
+            <button type="button" class="btn btn-gold btn-sm" id="add-offer-btn">+ Add offer</button>
+          </div>
+        </div>
+
+        <h2 class="subpanel-heading">Top Menu Slider Offers</h2>
+        <div id="offers-list"></div>
+        <div id="featured-summary"></div>
+
+        <h2 class="subpanel-heading" style="margin-top: 30px;">Start Screen Background (Videos &amp; Photos)</h2>
+        <p class="muted small" style="margin: 0 0 12px;">These cycle softly behind the SAVORY logo &amp; slogan on the opening screen before visitors tap “Order Now”.</p>
+
+        <form class="card form-card upload-card" id="slide-form">
+          <div class="field" style="margin: 0; min-width: 210px; flex: 1;">
+            <label for="sl-file">Upload video or photo <span class="optional">(MP4, WebM, MOV, JPG, PNG · max 25 MB)</span></label>
+            <input type="file" id="sl-file" name="media" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime">
+          </div>
+          <div class="field" style="margin: 0; min-width: 210px; flex: 1;">
+            <label for="sl-url">Or preset / external URL</label>
+            <input type="text" id="sl-url" name="media_url" list="onboarding-preset-list" placeholder="/img/onboarding-reel.mp4 or https://…">
+            <datalist id="onboarding-preset-list">
+              <option value="/img/onboarding-reel.mp4">Atelier Video Reel (MP4)</option>
+              <option value="/img/onboarding-box.jpg">Luxury Truffle Box</option>
+              <option value="/img/onboarding-kunafa.jpg">Pistachio Kunafa Bar</option>
+              <option value="/img/onboarding-crepe.jpg">Belgian Chocolate Crepe</option>
+              <option value="/img/onboarding-flurry.jpg">Savory Flurry</option>
+            </datalist>
+          </div>
+          <div class="field" style="margin: 0; width: 130px;">
+            <label for="sl-type">Type</label>
+            <select id="sl-type" name="media_type">
+              <option value="auto">Auto</option>
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
+          <div class="field" style="margin: 0; min-width: 170px; flex: 1;">
+            <label for="sl-caption">Caption <span class="optional">(optional)</span></label>
+            <input type="text" id="sl-caption" name="caption" maxlength="140" placeholder="e.g. Handcrafted in Aley">
+          </div>
+          <div class="field" style="margin: 0; width: 92px;">
+            <label for="sl-sort">Order</label>
+            <input type="number" id="sl-sort" name="sort_order" min="0" max="9999" value="0">
+          </div>
+          <button type="submit" class="btn btn-gold">+ Add slide</button>
+          <div class="preset-chips-row" data-slide-presets style="flex-basis: 100%; margin-top: 2px;">
+            <span class="small muted">Quick presets:</span>
+            <button type="button" class="btn btn-ghost btn-sm" data-preset-url="/img/onboarding-reel.mp4">▶ Atelier Video Reel</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-preset-url="/img/onboarding-box.jpg">Truffle Box</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-preset-url="/img/onboarding-kunafa.jpg">Kunafa Bar</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-preset-url="/img/onboarding-crepe.jpg">Chocolate Crepe</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-preset-url="/img/onboarding-flurry.jpg">Savory Flurry</button>
+          </div>
+        </form>
+        <div class="form-error alert alert-error" id="slide-error" role="alert" hidden></div>
+        <div id="slides-list"></div>
       </section>
 
       <section data-panel="cakes" hidden>
@@ -179,8 +245,8 @@
             <div class="field"><label for="s-maps_link">Google Maps link</label><input type="url" id="s-maps_link" name="maps_link" maxlength="300" placeholder="https://maps.google.com/…"><span class="hint">Used for "Get directions". Leave empty to search for the address instead.</span></div>
             <div class="field"><label for="s-hours">Opening hours</label><textarea id="s-hours" name="hours" maxlength="500" rows="3"></textarea><span class="hint">One line per day or group of days.</span></div>
 
-            <h2>Home &amp; About pages</h2>
-            <div class="field"><label for="s-slogan">Slogan</label><input type="text" id="s-slogan" name="slogan" maxlength="120"><span class="hint">The handwritten line above the home page headline.</span></div>
+            <h2>Home &amp; Start Screen</h2>
+            <div class="field"><label for="s-slogan">Slogan</label><input type="text" id="s-slogan" name="slogan" maxlength="120"><span class="hint">Shown below the SAVORY logo on the Menu onboarding screen and above the Cake Studio headline.</span></div>
             <div class="field"><label for="s-hero_title">Home page headline</label><input type="text" id="s-hero_title" name="hero_title" maxlength="120"></div>
             <div class="field"><label for="s-tagline">Tagline</label><input type="text" id="s-tagline" name="tagline" maxlength="200"></div>
             <div class="field"><label for="s-about">Short introduction</label><textarea id="s-about" name="about" maxlength="2000" rows="3"></textarea><span class="hint">Shown on the home page.</span></div>
@@ -248,6 +314,11 @@
         </div>
         <div class="field"><label for="i-price">Price</label><input type="text" id="i-price" name="price" inputmode="decimal" placeholder="4.50" required pattern="\$?\d{1,6}(\.\d{1,2})?"></div>
       </div>
+      <div class="field-row">
+        <div class="field"><label for="i-compare">Original / compare price <span class="optional">(optional)</span></label><input type="text" id="i-compare" name="compare_price" inputmode="decimal" placeholder="e.g. 9.00" pattern="\$?\d{1,6}(\.\d{1,2})?"><span class="hint">Crossed out next to the sale price.</span></div>
+        <div class="field"><label for="i-offer-badge">Offer badge <span class="optional">(optional)</span></label><input type="text" id="i-offer-badge" name="offer_badge" maxlength="40" placeholder="e.g. Chef's Pick or 15% OFF"></div>
+      </div>
+      <div class="field"><label class="checkbox"><input type="checkbox" name="featured" id="i-featured"> Feature in top menu slider &amp; offers</label></div>
       <div class="field"><label for="i-description">Description</label><textarea id="i-description" name="description" maxlength="500" rows="2"></textarea></div>
       <div class="field">
         <label for="i-image">Photo <span class="optional">(optional, max 8 MB)</span></label>
@@ -255,6 +326,13 @@
           <div class="image-preview" id="i-preview"></div>
           <div style="flex: 1;">
             <input type="file" id="i-image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+            <input type="text" id="i-image-url" name="image_url" list="preset-image-list" placeholder="Or preset /img/… or https://… URL" style="margin-top: 8px;">
+            <datalist id="preset-image-list">
+              <option value="/img/onboarding-kunafa.jpg">Pistachio Kunafa Bar Photo</option>
+              <option value="/img/onboarding-crepe.jpg">Belgian Chocolate Crepe Photo</option>
+              <option value="/img/onboarding-flurry.jpg">Savory Flurry Photo</option>
+              <option value="/img/onboarding-box.jpg">Luxury Truffle Box Photo</option>
+            </datalist>
             <label class="checkbox small" id="i-remove-wrap" hidden style="margin-top: 8px;"><input type="checkbox" name="remove_image" id="i-remove"> Remove current photo</label>
           </div>
         </div>
@@ -273,6 +351,54 @@
       <div class="dialog-actions">
         <button type="button" class="btn btn-ghost" data-close>Cancel</button>
         <button type="submit" class="btn btn-gold">Save item</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Featured Offer editor -->
+  <dialog id="offer-dialog" class="admin-dialog">
+    <form id="offer-form" class="dialog-body">
+      <h2 id="offer-dialog-title">Add offer</h2>
+      <div class="field"><label for="of-title">Headline</label><input type="text" id="of-title" name="title" maxlength="100" required placeholder="e.g. Pistachio Kunafa Collection"></div>
+      <div class="field-row">
+        <div class="field"><label for="of-badge">Badge <span class="optional">(optional)</span></label><input type="text" id="of-badge" name="badge" maxlength="40" placeholder="e.g. SIGNATURE OFFER"></div>
+        <div class="field"><label for="of-cta">Button label</label><input type="text" id="of-cta" name="cta_text" maxlength="40" value="Explore" placeholder="e.g. Order Bar"></div>
+      </div>
+      <div class="field"><label for="of-subtitle">Subtitle / offer details</label><textarea id="of-subtitle" name="subtitle" maxlength="300" rows="2"></textarea></div>
+      <div class="field-row">
+        <div class="field">
+          <label for="of-target-type">Clicking CTA opens</label>
+          <select id="of-target-type" name="target_type">
+            <option value="product">Specific product page</option>
+            <option value="category">Category products list</option>
+            <option value="box">Gift Box Builder</option>
+            <option value="none">Banner only (scrolls to categories)</option>
+          </select>
+        </div>
+        <div class="field" id="of-target-value-wrap">
+          <label for="of-target-value">Destination</label>
+          <select id="of-target-value" name="target_value"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="of-image">Banner photo <span class="optional">(optional, max 8 MB)</span></label>
+        <div class="image-row">
+          <div class="image-preview" id="of-preview"></div>
+          <div style="flex: 1;">
+            <input type="file" id="of-image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+            <input type="text" id="of-image-url" name="image_url" list="preset-image-list" placeholder="Or preset /img/… or https://… URL" style="margin-top: 8px;">
+            <label class="checkbox small" id="of-remove-wrap" hidden style="margin-top: 8px;"><input type="checkbox" name="remove_image" id="of-remove"> Remove current photo</label>
+          </div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="of-sort">Sort order</label><input type="number" id="of-sort" name="sort_order" min="0" max="9999" value="0"></div>
+        <div class="field" style="justify-content: center;"><label class="checkbox"><input type="checkbox" name="available" id="of-available" checked> Show in menu slider</label></div>
+      </div>
+      <div class="form-error alert alert-error" role="alert" hidden></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-gold">Save offer</button>
       </div>
     </form>
   </dialog>

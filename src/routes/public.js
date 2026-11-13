@@ -23,11 +23,27 @@ router.get('/settings', (req, res) => {
 
 router.get('/menu', (req, res) => {
   const items = db.prepare(`
-    SELECT id, name, description, category, price_cents, image, options
+    SELECT id, name, description, category, price_cents, compare_price_cents, featured, offer_badge, image, options
     FROM menu_items WHERE available = 1
     ORDER BY sort_order, name
   `).all();
   res.json(items.map((i) => ({ ...i, options: parseOptions(i.options) })));
+});
+
+router.get('/offers', (req, res) => {
+  res.json(db.prepare(`
+    SELECT id, title, subtitle, badge, image, cta_text, target_type, target_value, sort_order
+    FROM offers WHERE available = 1
+    ORDER BY sort_order, id
+  `).all());
+});
+
+router.get('/onboarding', (req, res) => {
+  res.json(db.prepare(`
+    SELECT id, media_type, media_url, caption, sort_order
+    FROM onboarding_slides WHERE available = 1
+    ORDER BY sort_order, id
+  `).all());
 });
 
 router.get('/cake-options', (req, res) => {
@@ -170,6 +186,8 @@ router.post('/orders/menu', (req, res) => {
     const item = find.get(int(line?.id, 'Item'));
     if (!item) throw bad('One of the items in your order is no longer available. Please refresh the menu.');
     const { extra, summary } = priceChoices(item.name, parseOptions(item.options), line.choices);
+    const itemNote = text(line?.note, 'Item note', { max: 200 });
+    if (itemNote) summary.Note = itemNote;
     return { name: item.name, unit_price_cents: item.price_cents + extra, quantity, details: summary };
   });
 

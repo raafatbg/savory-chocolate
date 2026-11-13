@@ -3,7 +3,7 @@
 // the full SAVORY database (seeded from /seed.json + localStorage) so all 3 sites
 // (Cake Studio, Menu, and Admin) work out of the box on *.web.app.
 
-const DB_KEY = 'savory_static_db_v2';
+const DB_KEY = 'savory_static_db_v3';
 const SESSION_KEY = 'savory_admin_session_v1';
 
 const BOX_TIERS = {
@@ -29,6 +29,8 @@ async function getDb() {
     settings: { shop_name: 'SAVORY', currency: 'USD', orders_open: '1', delivery_enabled: '1', delivery_fee: '500', delivery_min: '0', cake_lead_days: '2', whatsapp: '+961 79 167 464', phone: '05 411 405' },
     branches: [],
     menu_items: [],
+    offers: [],
+    onboarding_slides: [],
     cake_groups: [],
     cake_options: [],
     gallery_images: [],
@@ -98,8 +100,17 @@ export async function serverlessApi(rawPath, { method = 'GET', body, form } = {}
       .filter((i) => i.available !== 0)
       .map((i) => ({
         ...i,
+        featured: i.featured ? 1 : 0,
+        offer_badge: i.offer_badge || '',
+        compare_price_cents: Number(i.compare_price_cents) || 0,
         options: typeof i.options === 'string' ? JSON.parse(i.options || '[]') : (i.options || []),
       }));
+  }
+  if (method === 'GET' && path === '/api/offers') {
+    return sortRows((state.offers || []).filter((o) => o.available !== 0));
+  }
+  if (method === 'GET' && path === '/api/onboarding') {
+    return sortRows((state.onboarding_slides || []).filter((s) => s.available !== 0));
   }
   if (method === 'GET' && path === '/api/cake-options') {
     const rows = (state.cake_options || []).filter((r) => r.available !== 0);
@@ -233,18 +244,43 @@ export async function serverlessApi(rawPath, { method = 'GET', body, form } = {}
 
     for (const line of data.items || []) {
       const qty = Math.max(1, Number(line.quantity) || 1);
-      if (line.custom_box) {
+      if (line.custom_box && typeof line.custom_box === 'object') {
         const tier = BOX_TIERS[Number(line.custom_box.size)] || BOX_TIERS[9];
-        const details = { Assortment: String(line.custom_box.flavors || '').trim() };
-        if (line.custom_box.ribbon) details.Ribbon = String(line.custom_box.ribbon).trim();
-        if (line.custom_box.card) details['Gift Card'] = String(line.custom_box.card).trim();
+        const pieces = Array.isArray(line.custom_box.pieces) ? line.custom_box.pieces : [];
+        const counts = new Map();
+        for (const p of pieces) counts.set(p, (counts.get(p) || 0) + 1);
+        const assortment = [...counts.entries()].map(([n, c]) => `${c}× ${n}`).join(', ')
+          || str(line.custom_box.flavors);
+        const details = { Assortment: assortment };
+        if (line.custom_box.ribbon) details.Ribbon = str(line.custom_box.ribbon);
+        if (line.custom_box.note || line.custom_box.card) {
+          details['Gift card'] = `“${str(line.custom_box.note || line.custom_box.card)}”`;
+        }
         orderItems.push({ name: tier.name, unit_price_cents: tier.price_cents, quantity: qty, details });
         subtotal += tier.price_cents * qty;
       } else {
         const item = menuById.get(Number(line.id));
         if (!item) continue;
-        orderItems.push({ name: item.name, unit_price_cents: item.price_cents, quantity: qty, details: line.choices || {} });
-        subtotal += item.price_cents * qty;
+        const groups = parseOptions(item.options);
+        const picks = Array.isArray(line.choices) ? line.choices : [];
+        let extra = 0;
+        const details = {};
+        groups.forEach((g, gi) => {
+          const chosen = Array.isArray(picks[gi]) ? [...new Set(picks[gi])] : [];
+          if (!chosen.length) return;
+          const names = chosen
+            .filter((idx) => Number.isInteger(idx) && g.choices?.[idx])
+            .sort((a, b) => a - b)
+            .map((idx) => {
+              extra += Number(g.choices[idx].price_cents) || 0;
+              return g.choices[idx].name;
+            });
+          if (names.length) details[g.name] = names.join(', ');
+        });
+        if (line.note && str(line.note)) details.Note = str(line.note);
+        const unitPrice = (Number(item.price_cents) || 0) + extra;
+        orderItems.push({ name: item.name, unit_price_cents: unitPrice, quantity: qty, details });
+        subtotal += unitPrice * qty;
       }
     }
 
@@ -440,16 +476,55 @@ const COLLECTIONS = {
         description: str(d.description),
         category: str(d.category) || 'Other',
         price_cents: toCents(d.price),
+        compare_price_cents: d.compare_price !== undefined && str(d.compare_price) !== '' ? toCents(d.compare_price) : 0,
+        featured: bool(d.featured) ? 1 : 0,
+        offer_badge: str(d.offer_badge),
         available: bool(d.available) ? 1 : 0,
         sort_order: toInt(d.sort_order),
         options: parseOptions(d.options),
-        image: bool(d.remove_image) ? null : (existing?.image ?? null),
+        image: bool(d.remove_image) ? null : (str(d.image_url) || existing?.image || null),
       };
       if (!f.name) fail(400, 'Name is required.');
       if (f.available && f.price_cents === 0) fail(400, `Set a price for "${f.name}" before showing it on the menu.`);
       return f;
     },
     out: (item) => ({ ...item, options: parseOptions(item.options) }),
+  },
+  offers: {
+    key: 'offers',
+    label: 'Offer',
+    fields: (d, existing) => {
+      const target_type = ['product', 'category', 'box', 'none'].includes(str(d.target_type)) ? str(d.target_type) : 'category';
+      const f = {
+        title: str(d.title),
+        subtitle: str(d.subtitle),
+        badge: str(d.badge),
+        cta_text: str(d.cta_text) || 'Explore',
+        target_type,
+        target_value: target_type === 'none' ? '' : str(d.target_value),
+        image: bool(d.remove_image) ? '' : (str(d.image_url) || existing?.image || ''),
+        available: bool(d.available) ? 1 : 0,
+        sort_order: toInt(d.sort_order),
+      };
+      if (!f.title) fail(400, 'Offer title is required.');
+      return f;
+    },
+  },
+  onboarding: {
+    key: 'onboarding_slides',
+    label: 'Onboarding slide',
+    fields: (d, existing) => {
+      const media_url = str(d.media_url) || existing?.media_url || '';
+      if (!media_url) fail(400, 'Please enter a media URL or preset path.');
+      const media_type = str(d.media_type) === 'video' || /\.(mp4|webm|mov)$/i.test(media_url) ? 'video' : 'image';
+      return {
+        media_type,
+        media_url,
+        caption: str(d.caption),
+        available: d.available === undefined ? (existing?.available ?? 1) : (bool(d.available) ? 1 : 0),
+        sort_order: d.sort_order !== undefined ? toInt(d.sort_order) : (existing?.sort_order ?? 0),
+      };
+    },
   },
   'cake-options': {
     key: 'cake_options',

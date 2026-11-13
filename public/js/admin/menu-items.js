@@ -1,4 +1,4 @@
-import { $, $$, esc, money, adminApi, toast, formError, busy, cents, errorBlock, emptyCard } from './core.js';
+import { $, $$, esc, money, mediaSrc, adminApi, toast, formError, busy, cents, errorBlock, emptyCard } from './core.js';
 import { illustrationFor } from '/js/illustrations.js';
 
 let items = [];
@@ -29,15 +29,19 @@ function render() {
       <div class="list-head"><h2>${esc(category)}</h2><span class="hint">${list.length} item${list.length === 1 ? '' : 's'}</span></div>
       ${list.map((item) => `
         <div class="row ${item.available ? '' : 'is-hidden'}">
-          <div class="thumb-sm">${item.image ? `<img src="/uploads/${esc(item.image)}" alt="">` : illustrationFor(item)}</div>
+          <div class="thumb-sm">${item.image ? `<img src="${esc(mediaSrc(item.image))}" alt="">` : illustrationFor(item)}</div>
           <div class="row-main">
             <div class="name">${esc(item.name)}
               ${item.available ? '' : '<span class="pill">Hidden</span>'}
+              ${item.featured ? `<span class="pill featured">★ Slider${item.offer_badge ? ` · ${esc(item.offer_badge)}` : ''}</span>` : ''}
               ${item.options.length ? `<span class="pill cake">${item.options.length} option group${item.options.length === 1 ? '' : 's'}</span>` : ''}
             </div>
             <div class="desc">${esc(item.description)}</div>
           </div>
-          <div class="price">${money(item.price_cents)}</div>
+          <div class="price">
+            ${item.compare_price_cents > item.price_cents ? `<del class="muted small" style="display:block;font-weight:500;">${money(item.compare_price_cents)}</del>` : ''}
+            ${money(item.price_cents)}
+          </div>
           <div class="row-actions">
             <label class="switch" title="Show on the menu"><input type="checkbox" data-toggle="${item.id}" ${item.available ? 'checked' : ''}> Shown</label>
             <button type="button" class="btn btn-ghost btn-sm" data-edit="${item.id}">Edit</button>
@@ -53,6 +57,9 @@ function itemFormData(item, { available = Boolean(item.available) } = {}) {
   fd.append('description', item.description);
   fd.append('category', item.category);
   fd.append('price', cents(item.price_cents));
+  if (item.compare_price_cents) fd.append('compare_price', cents(item.compare_price_cents));
+  if (item.featured) fd.append('featured', 'on');
+  fd.append('offer_badge', item.offer_badge || '');
   fd.append('sort_order', item.sort_order);
   fd.append('options', JSON.stringify(item.options));
   if (available) fd.append('available', 'on');
@@ -75,11 +82,15 @@ function open(item = null) {
   $('#i-name').value = item?.name ?? '';
   $('#i-category').value = item?.category ?? '';
   $('#i-price').value = item ? cents(item.price_cents) : '';
+  if ($('#i-compare')) $('#i-compare').value = item?.compare_price_cents ? cents(item.compare_price_cents) : '';
+  if ($('#i-featured')) $('#i-featured').checked = Boolean(item?.featured);
+  if ($('#i-offer-badge')) $('#i-offer-badge').value = item?.offer_badge ?? '';
+  if ($('#i-image-url')) $('#i-image-url').value = item?.image && (item.image.startsWith('/') || item.image.startsWith('http')) ? item.image : '';
   $('#i-description').value = item?.description ?? '';
   $('#i-sort').value = item?.sort_order ?? 0;
   $('#i-available').checked = item ? Boolean(item.available) : true;
   $('#i-remove-wrap').hidden = !item?.image;
-  setPreview(item?.image ? `/uploads/${item.image}` : null);
+  setPreview(item?.image ? mediaSrc(item.image) : null);
   editor.innerHTML = '';
   (item?.options || []).forEach(addGroup);
   dialog.showModal();
@@ -91,7 +102,14 @@ function setPreview(src) {
 
 $('#i-image').addEventListener('change', (e) => {
   const file = e.target.files[0];
-  setPreview(file ? URL.createObjectURL(file) : editing?.image ? `/uploads/${editing.image}` : null);
+  const urlVal = $('#i-image-url')?.value.trim();
+  setPreview(file ? URL.createObjectURL(file) : urlVal ? mediaSrc(urlVal) : editing?.image ? mediaSrc(editing.image) : null);
+});
+
+$('#i-image-url')?.addEventListener('input', (e) => {
+  if ($('#i-image').files[0]) return;
+  const val = e.target.value.trim();
+  setPreview(val ? mediaSrc(val) : editing?.image ? mediaSrc(editing.image) : null);
 });
 
 // ---------- add-on editor ----------

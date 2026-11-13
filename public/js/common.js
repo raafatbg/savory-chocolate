@@ -160,6 +160,7 @@ const I18N = {
     nav_cakes: '3D Cake Builder',
     nav_menu: 'Menu',
     nav_boxes: 'Gift Boxes',
+    nav_cart: 'Cart',
     nav_specialties: 'Specialties',
     nav_gallery: 'Gallery',
     nav_track: 'Track Order',
@@ -168,6 +169,11 @@ const I18N = {
     nav_contact: 'Contact',
     cta_design: 'Design a cake',
     cta_order: 'Your order',
+    cta_order_now: 'Order Now',
+    bc_menu: 'Menu',
+    featured_title: 'Featured & Offers',
+    categories_heading: 'Choose a Category',
+    cart_title: 'Your Cart',
     foot_order: 'Order',
     foot_bakery: 'Bakery',
     foot_visit: 'Visit',
@@ -201,6 +207,7 @@ const I18N = {
     nav_cakes: 'صمّم قالبك 3D',
     nav_menu: 'القائمة',
     nav_boxes: 'علب الهدايا',
+    nav_cart: 'السلّة',
     nav_specialties: 'أصنافنا',
     nav_gallery: 'المعرض',
     nav_track: 'تتبّع طلبك',
@@ -209,6 +216,11 @@ const I18N = {
     nav_contact: 'تواصل معنا',
     cta_design: 'صمّم قالبك',
     cta_order: 'سلّة الطلب',
+    cta_order_now: 'اطلب الآن',
+    bc_menu: 'القائمة',
+    featured_title: 'العروض والمميزة',
+    categories_heading: 'اختر التصنيف',
+    cart_title: 'سلّة التسوّق',
     foot_order: 'الطلب',
     foot_bakery: 'المتجر',
     foot_visit: 'فروعنا',
@@ -271,6 +283,17 @@ const PHRASE_AR = new Map([
   ['Place cake order', 'تأكيد طلب الكيك'],
   ['Place order', 'تأكيد الطلب'],
   ['Your order', 'طلبك'],
+  ['Your Cart', 'سلّة التسوّق'],
+  ['Checkout Details', 'تفاصيل الطلب'],
+  ['Clear cart', 'إفراغ السلّة'],
+  ['Your cart is empty', 'سلّة التسوّق فارغة'],
+  ['← Continue Shopping', '← متابعة التسوّق'],
+  ['Browse Categories →', 'تصفّح التصنيفات ←'],
+  ['← All Categories', '← جميع التصنيفات'],
+  ['← Back to Categories', '← العودة للتصنيفات'],
+  ['Order Now', 'اطلب الآن'],
+  ['Featured & Offers', 'العروض والمميزة'],
+  ['Choose a Category', 'اختر التصنيف'],
   ['Track order', 'تتبّع الطلب'],
   ['Curate a gift box →', 'صمّم علبة هدايا ←'],
   ['Curate a gift box', 'صمّم علبة هدايا'],
@@ -294,17 +317,23 @@ const PHRASE_AR = new Map([
 
 const origTextMap = new WeakMap();
 
-function applyLanguage(lang) {
+export function applyLanguage(lang = activeLang) {
   const isAr = lang === 'ar';
   document.documentElement.lang = isAr ? 'ar' : 'en';
   document.documentElement.dir = isAr ? 'rtl' : 'ltr';
+  const nextLabel = isAr ? 'EN' : 'عربي';
   const langBtn = document.getElementById('lang-toggle');
-  if (langBtn) langBtn.textContent = isAr ? 'EN' : 'عربي';
+  if (langBtn) langBtn.textContent = nextLabel;
+  const onboardLangBtn = document.getElementById('onboard-lang-btn');
+  if (onboardLangBtn) onboardLangBtn.textContent = nextLabel;
 
   const dict = I18N[isAr ? 'ar' : 'en'];
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     const k = el.dataset.i18n;
-    if (dict[k]) el.textContent = dict[k];
+    if (!dict[k]) return;
+    const textSpan = el.querySelector('.nav-text');
+    if (textSpan) textSpan.textContent = dict[k];
+    else el.textContent = dict[k];
   });
 
   // The header notice carries the shop's days of notice for cakes.
@@ -319,7 +348,7 @@ function applyLanguage(lang) {
   });
 
   // Translate matching standalone phrases cleanly and reversibly
-  document.querySelectorAll('.eyebrow, .trust span, .step h3, .section-head h2, .card h2, .card h3, .btn, dt, .tool-btn span, .menu-filter-pill, .recent-orders-label, .portion-badge, .cart-upsell-head, .occasion-label').forEach((el) => {
+  document.querySelectorAll('.eyebrow, .trust span, .step h3, .section-head h2, .card h2, .card h3, .btn, .cat-back-btn span, dt, .tool-btn span, .menu-filter-pill, .recent-orders-label, .portion-badge, .cart-upsell-head, .occasion-label').forEach((el) => {
     if (el.hasAttribute('data-i18n') || el.children.length > 0) return;
     if (!origTextMap.has(el)) origTextMap.set(el, el.textContent.trim());
     const orig = origTextMap.get(el);
@@ -334,11 +363,14 @@ function applyLanguage(lang) {
 let activeLang = storage.get('sc_lang', 'en');
 applyLanguage(activeLang);
 
-document.getElementById('lang-toggle')?.addEventListener('click', () => {
+function toggleLanguage() {
   activeLang = activeLang === 'ar' ? 'en' : 'ar';
   storage.set('sc_lang', activeLang);
   applyLanguage(activeLang);
-});
+}
+
+document.getElementById('lang-toggle')?.addEventListener('click', toggleLanguage);
+document.getElementById('onboard-lang-btn')?.addEventListener('click', toggleLanguage);
 
 // ---------- Page chrome ----------
 

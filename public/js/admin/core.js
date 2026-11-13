@@ -50,6 +50,13 @@ export async function busy(button, work) {
 
 export const cents = (value) => (Number(value || 0) / 100).toFixed(2);
 
+export function mediaSrc(value) {
+  const s = String(value || '').trim();
+  if (!s) return '';
+  if (s.startsWith('/') || /^https?:\/\//i.test(s)) return s;
+  return `/uploads/${s}`;
+}
+
 export function errorBlock(err) {
   return `<p class="alert alert-error">${String(err.message).replace(/[<>&]/g, '')}</p>`;
 }

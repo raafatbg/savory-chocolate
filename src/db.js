@@ -98,6 +98,7 @@ const MIGRATIONS = [
   migrateToVersion4,
   migrateToVersion5,
   migrateToVersion6,
+  migrateToVersion7,
 ];
 const LATEST = MIGRATIONS.length;
 
@@ -117,6 +118,104 @@ function backup(fromVersion) {
   if (!fs.existsSync(target)) {
     db.exec(`VACUUM INTO '${target.replace(/'/g, "''")}'`);
     console.log(`Backed up the database to ${target} before upgrading it.`);
+  }
+}
+
+// Version 7: featured item flags on menu_items, admin-managed offers slider, and onboarding background media slides.
+function migrateToVersion7() {
+  const cols = new Set(db.prepare('PRAGMA table_info(menu_items)').all().map((c) => c.name));
+  if (!cols.has('featured')) db.exec('ALTER TABLE menu_items ADD COLUMN featured INTEGER NOT NULL DEFAULT 0');
+  if (!cols.has('offer_badge')) db.exec("ALTER TABLE menu_items ADD COLUMN offer_badge TEXT NOT NULL DEFAULT ''");
+  if (!cols.has('compare_price_cents')) db.exec('ALTER TABLE menu_items ADD COLUMN compare_price_cents INTEGER NOT NULL DEFAULT 0');
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS offers (
+      id           INTEGER PRIMARY KEY,
+      title        TEXT NOT NULL,
+      subtitle     TEXT NOT NULL DEFAULT '',
+      badge        TEXT NOT NULL DEFAULT '',
+      image        TEXT NOT NULL DEFAULT '',
+      cta_text     TEXT NOT NULL DEFAULT 'Explore',
+      target_type  TEXT NOT NULL DEFAULT 'category' CHECK (target_type IN ('product', 'category', 'box', 'none')),
+      target_value TEXT NOT NULL DEFAULT '',
+      available    INTEGER NOT NULL DEFAULT 1,
+      sort_order   INTEGER NOT NULL DEFAULT 0,
+      created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS onboarding_slides (
+      id         INTEGER PRIMARY KEY,
+      media_type TEXT NOT NULL DEFAULT 'image' CHECK (media_type IN ('image', 'video')),
+      media_url  TEXT NOT NULL,
+      caption    TEXT NOT NULL DEFAULT '',
+      available  INTEGER NOT NULL DEFAULT 1,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Promote signature items into the featured slider and attach matching imagery where absent.
+  const markFeatured = db.prepare(`
+    UPDATE menu_items
+    SET featured = 1,
+        offer_badge = CASE WHEN offer_badge = '' THEN ? ELSE offer_badge END,
+        compare_price_cents = CASE WHEN compare_price_cents = 0 THEN ? ELSE compare_price_cents END,
+        image = COALESCE(image, ?)
+    WHERE name = ?
+  `);
+  markFeatured.run("Chef's Pick", 0, '/img/onboarding-kunafa.jpg', 'Pistachio Kunafa Chocolate Bar');
+  markFeatured.run('Best Seller', 800, null, 'Molten Chocolate Lava Crown');
+  markFeatured.run('House Favorite', 0, '/img/onboarding-crepe.jpg', 'Triple Belgian Chocolate Crepe');
+  markFeatured.run('Chilled Signature', 0, '/img/onboarding-flurry.jpg', 'Savory Oreo & Brownie Flurry');
+
+  if (db.prepare('SELECT COUNT(*) AS n FROM offers').get().n === 0) {
+    const kunafa = db.prepare('SELECT id FROM menu_items WHERE name = ?').get('Pistachio Kunafa Chocolate Bar');
+    const addOffer = db.prepare(`
+      INSERT INTO offers (title, subtitle, badge, image, cta_text, target_type, target_value, available, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
+    `);
+    addOffer.run(
+      'Pistachio Kunafa Collection',
+      'Hand-tempered Belgian chocolate shells filled with roasted kataifi pastry and vibrant Lebanese pistachio cream.',
+      'SIGNATURE OFFER',
+      '/img/onboarding-kunafa.jpg',
+      'Order Bar',
+      kunafa ? 'product' : 'category',
+      kunafa ? String(kunafa.id) : 'Chocolates & Bark',
+      0,
+    );
+    addOffer.run(
+      'Bespoke Satin Truffle Gift Boxes',
+      'Curate 9, 16, or 25 artisan pralines and kunafa truffles presented with a hand-tied ribbon.',
+      'LUXURY GIFTING',
+      '/img/onboarding-box.jpg',
+      'Curate a Box',
+      'box',
+      '16',
+      1,
+    );
+    addOffer.run(
+      'Warm Belgian Chocolate Crepes',
+      'Griddled to order and folded with triple Belgian dark, milk, and white chocolate plus roasted hazelnuts.',
+      'FRESH FROM GRIDDLE',
+      '/img/onboarding-crepe.jpg',
+      'Browse Crepes',
+      'category',
+      'Crepes & Waffles',
+      2,
+    );
+  }
+
+  if (db.prepare('SELECT COUNT(*) AS n FROM onboarding_slides').get().n === 0) {
+    const addSlide = db.prepare(`
+      INSERT INTO onboarding_slides (media_type, media_url, caption, available, sort_order)
+      VALUES (?, ?, ?, 1, ?)
+    `);
+    addSlide.run('video', '/img/onboarding-reel.mp4', 'Handcrafted in Aramoun & Aley', 0);
+    addSlide.run('image', '/img/onboarding-box.jpg', 'Luxury Satin Truffle Boxes', 1);
+    addSlide.run('image', '/img/onboarding-kunafa.jpg', 'Pistachio Kunafa Chocolate Bars', 2);
+    addSlide.run('image', '/img/onboarding-crepe.jpg', 'Warm Belgian Chocolate Crepes', 3);
+    addSlide.run('image', '/img/onboarding-flurry.jpg', 'Signature Savory Flurry', 4);
   }
 }
 

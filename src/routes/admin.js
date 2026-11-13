@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { db, getSettings, DEFAULT_SETTINGS } from '../db.js';
-import { withImage, removeImage } from '../uploads.js';
+import { withImage, withMedia, removeImage, removeMedia } from '../uploads.js';
 import {
   hashPassword, verifyPassword, adminCount, createSession, destroySession, currentAdmin, requireAdmin,
   loginBlocked, recordLoginFailure, clearLoginFailures,
 } from '../auth.js';
 import { CAKE_GROUPS } from '../cake-groups.js';
 import { normalizeOptions, parseOptions } from '../menu-options.js';
-import { HttpError, bad, text, int, money, bool, hexColor, url, email, whatsappNumber } from '../validate.js';
+import { HttpError, bad, text, int, money, bool, hexColor, url, email, whatsappNumber, mediaPathOrUrl } from '../validate.js';
 
 export const router = Router();
 
@@ -117,11 +117,16 @@ const sortOrder = (value) => (value === undefined || value === '' ? 0 : int(valu
 // ---------- Menu items ----------
 
 function menuItemFields(body) {
+  const compareRaw = body.compare_price;
   const f = {
     name: text(body.name, 'Name', { required: true, max: 100 }),
     description: text(body.description, 'Description', { max: 500 }),
     category: text(body.category, 'Category', { max: 60 }) || 'Other',
     price_cents: money(body.price, 'Price'),
+    compare_price_cents: compareRaw === undefined || String(compareRaw).trim() === '' ? 0 : money(compareRaw, 'Original price'),
+    featured: bool(body.featured) ? 1 : 0,
+    offer_badge: text(body.offer_badge, 'Offer badge', { max: 40 }),
+    image_url: body.image_url !== undefined ? mediaPathOrUrl(body.image_url, 'Photo URL') : undefined,
     available: bool(body.available) ? 1 : 0,
     sort_order: sortOrder(body.sort_order),
     options: JSON.stringify(normalizeOptions(body.options ?? '[]')),
@@ -140,10 +145,11 @@ router.get('/menu-items', (req, res) => {
 
 router.post('/menu-items', ...withImage((req, res) => {
   const f = menuItemFields(req.body ?? {});
+  const image = req.file?.filename ?? (f.image_url || null);
   const { lastInsertRowid } = db.prepare(`
-    INSERT INTO menu_items (name, description, category, price_cents, available, sort_order, options, image)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(f.name, f.description, f.category, f.price_cents, f.available, f.sort_order, f.options, req.file?.filename ?? null);
+    INSERT INTO menu_items (name, description, category, price_cents, compare_price_cents, featured, offer_badge, available, sort_order, options, image)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(f.name, f.description, f.category, f.price_cents, f.compare_price_cents, f.featured, f.offer_badge, f.available, f.sort_order, f.options, image);
   res.status(201).json(withParsedOptions(db.prepare('SELECT * FROM menu_items WHERE id = ?').get(lastInsertRowid)));
 }));
 
@@ -154,16 +160,23 @@ router.put('/menu-items/:id', ...withImage((req, res) => {
   const f = menuItemFields(req.body ?? {});
 
   let image = existing.image;
-  if (req.file || bool(req.body?.remove_image)) {
+  if (req.file) {
     removeImage(existing.image);
-    image = req.file?.filename ?? null;
+    image = req.file.filename;
+  } else if (bool(req.body?.remove_image)) {
+    removeImage(existing.image);
+    image = null;
+  } else if (f.image_url !== undefined && f.image_url !== '') {
+    removeImage(existing.image);
+    image = f.image_url;
   }
 
   db.prepare(`
-    UPDATE menu_items SET name = ?, description = ?, category = ?, price_cents = ?, available = ?, sort_order = ?,
-                          options = ?, image = ?
+    UPDATE menu_items SET name = ?, description = ?, category = ?, price_cents = ?, compare_price_cents = ?,
+                          featured = ?, offer_badge = ?, available = ?, sort_order = ?, options = ?, image = ?
     WHERE id = ?
-  `).run(f.name, f.description, f.category, f.price_cents, f.available, f.sort_order, f.options, image, id);
+  `).run(f.name, f.description, f.category, f.price_cents, f.compare_price_cents,
+    f.featured, f.offer_badge, f.available, f.sort_order, f.options, image, id);
   res.json(withParsedOptions(db.prepare('SELECT * FROM menu_items WHERE id = ?').get(id)));
 }));
 
@@ -173,6 +186,141 @@ router.delete('/menu-items/:id', (req, res) => {
   if (!existing) throw new HttpError(404, 'Menu item not found.');
   db.prepare('DELETE FROM menu_items WHERE id = ?').run(id);
   removeImage(existing.image);
+  res.json({ ok: true });
+});
+
+// ---------- Featured Offers Slider ----------
+
+const TARGET_TYPES = ['product', 'category', 'box', 'none'];
+
+function offerFields(body) {
+  const target_type = TARGET_TYPES.includes(String(body.target_type)) ? String(body.target_type) : 'category';
+  return {
+    title: text(body.title, 'Offer title', { required: true, max: 100 }),
+    subtitle: text(body.subtitle, 'Subtitle', { max: 300 }),
+    badge: text(body.badge, 'Badge label', { max: 40 }),
+    cta_text: text(body.cta_text, 'Button label', { max: 40 }) || 'Explore',
+    target_type,
+    target_value: target_type === 'none' ? '' : text(body.target_value, 'Target value', { max: 120 }),
+    image_url: mediaPathOrUrl(body.image_url, 'Offer image URL'),
+    available: bool(body.available) ? 1 : 0,
+    sort_order: sortOrder(body.sort_order),
+  };
+}
+
+router.get('/offers', (req, res) => {
+  res.json(db.prepare('SELECT * FROM offers ORDER BY sort_order, id').all());
+});
+
+router.post('/offers', ...withImage((req, res) => {
+  const f = offerFields(req.body ?? {});
+  const image = req.file?.filename ?? f.image_url;
+  const { lastInsertRowid } = db.prepare(`
+    INSERT INTO offers (title, subtitle, badge, image, cta_text, target_type, target_value, available, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(f.title, f.subtitle, f.badge, image, f.cta_text, f.target_type, f.target_value, f.available, f.sort_order);
+  res.status(201).json(db.prepare('SELECT * FROM offers WHERE id = ?').get(lastInsertRowid));
+}));
+
+router.put('/offers/:id', ...withImage((req, res) => {
+  const id = int(req.params.id, 'Offer');
+  const existing = db.prepare('SELECT image FROM offers WHERE id = ?').get(id);
+  if (!existing) throw new HttpError(404, 'Offer not found.');
+  const f = offerFields(req.body ?? {});
+
+  let image = existing.image;
+  if (req.file) {
+    removeImage(existing.image);
+    image = req.file.filename;
+  } else if (bool(req.body?.remove_image)) {
+    removeImage(existing.image);
+    image = '';
+  } else if (f.image_url) {
+    if (f.image_url !== existing.image) removeImage(existing.image);
+    image = f.image_url;
+  }
+
+  db.prepare(`
+    UPDATE offers SET title = ?, subtitle = ?, badge = ?, image = ?, cta_text = ?,
+                      target_type = ?, target_value = ?, available = ?, sort_order = ?
+    WHERE id = ?
+  `).run(f.title, f.subtitle, f.badge, image, f.cta_text, f.target_type, f.target_value, f.available, f.sort_order, id);
+  res.json(db.prepare('SELECT * FROM offers WHERE id = ?').get(id));
+}));
+
+router.delete('/offers/:id', (req, res) => {
+  const id = int(req.params.id, 'Offer');
+  const existing = db.prepare('SELECT image FROM offers WHERE id = ?').get(id);
+  if (!existing) throw new HttpError(404, 'Offer not found.');
+  db.prepare('DELETE FROM offers WHERE id = ?').run(id);
+  removeImage(existing.image);
+  res.json({ ok: true });
+});
+
+// ---------- Onboarding Background Media (Videos & Images) ----------
+
+function inferMediaType(explicitType, file, mediaUrl) {
+  if (file?.mimetype?.startsWith('video/')) return 'video';
+  if (file) return 'image';
+  if (explicitType === 'video' || explicitType === 'image') return explicitType;
+  if (/\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl || '')) return 'video';
+  return 'image';
+}
+
+router.get('/onboarding', (req, res) => {
+  res.json(db.prepare('SELECT * FROM onboarding_slides ORDER BY sort_order, id').all());
+});
+
+router.post('/onboarding', ...withMedia((req, res) => {
+  const body = req.body ?? {};
+  const mediaUrl = req.file?.filename ?? mediaPathOrUrl(body.media_url, 'Media URL or preset');
+  if (!mediaUrl) throw bad('Upload an image/video file or choose a preset background path.');
+  const mediaType = inferMediaType(String(body.media_type || ''), req.file, mediaUrl);
+  const caption = text(body.caption, 'Caption', { max: 140 });
+  const available = body.available === undefined ? 1 : (bool(body.available) ? 1 : 0);
+  const sort = sortOrder(body.sort_order);
+
+  const { lastInsertRowid } = db.prepare(`
+    INSERT INTO onboarding_slides (media_type, media_url, caption, available, sort_order)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(mediaType, mediaUrl, caption, available, sort);
+  res.status(201).json(db.prepare('SELECT * FROM onboarding_slides WHERE id = ?').get(lastInsertRowid));
+}));
+
+router.put('/onboarding/:id', ...withMedia((req, res) => {
+  const id = int(req.params.id, 'Slide');
+  const existing = db.prepare('SELECT * FROM onboarding_slides WHERE id = ?').get(id);
+  if (!existing) throw new HttpError(404, 'Onboarding slide not found.');
+
+  const body = req.body ?? {};
+  let mediaUrl = existing.media_url;
+  if (req.file) {
+    removeMedia(existing.media_url);
+    mediaUrl = req.file.filename;
+  } else if (body.media_url !== undefined && String(body.media_url).trim() !== '') {
+    const nextUrl = mediaPathOrUrl(body.media_url, 'Media URL or preset');
+    if (nextUrl && nextUrl !== existing.media_url) removeMedia(existing.media_url);
+    mediaUrl = nextUrl || existing.media_url;
+  }
+
+  const mediaType = inferMediaType(String(body.media_type || ''), req.file, mediaUrl);
+  const caption = body.caption !== undefined ? text(body.caption, 'Caption', { max: 140 }) : existing.caption;
+  const available = body.available !== undefined ? (bool(body.available) ? 1 : 0) : existing.available;
+  const sort = body.sort_order !== undefined ? sortOrder(body.sort_order) : existing.sort_order;
+
+  db.prepare(`
+    UPDATE onboarding_slides SET media_type = ?, media_url = ?, caption = ?, available = ?, sort_order = ?
+    WHERE id = ?
+  `).run(mediaType, mediaUrl, caption, available, sort, id);
+  res.json(db.prepare('SELECT * FROM onboarding_slides WHERE id = ?').get(id));
+}));
+
+router.delete('/onboarding/:id', (req, res) => {
+  const id = int(req.params.id, 'Slide');
+  const existing = db.prepare('SELECT media_url FROM onboarding_slides WHERE id = ?').get(id);
+  if (!existing) throw new HttpError(404, 'Onboarding slide not found.');
+  db.prepare('DELETE FROM onboarding_slides WHERE id = ?').run(id);
+  removeMedia(existing.media_url);
   res.json({ ok: true });
 });
 

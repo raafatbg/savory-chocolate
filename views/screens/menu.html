@@ -1,198 +1,154 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <title>{{shop_name}} · Menu, Chocolates &amp; Cafe</title>
-  <meta name="description" content="Order fine chocolates, luxury gift boxes, crepes, Savory Flurry, ice cream, shakes and bakes ahead for pickup or delivery.">
+  <title>{{shop_name}} · Chocolate, Crepes &amp; Atelier Menu</title>
+  <meta name="description" content="Order fine Belgian chocolates, luxury gift boxes, warm crepes, Savory Flurry, shakes and bakes ahead for pickup or delivery.">
   {{> head}}
 </head>
-<body class="has-hero">
+<body class="is-onboarding">
   {{> header-menu}}
 
   <main id="main">
-    <section class="hero luxury-hero luxury-menu-hero">
-      <div class="container hero-grid">
-        <div class="hero-copy" data-reveal>
-          <div class="hero-kicker">
-            <span class="kicker-line"></span>
-            <span>SAVORY · HAUTE PATISSERIE &amp; CHOCOLATIER</span>
-            <span class="kicker-line"></span>
-          </div>
-          <h1 class="hero-heading">Handcrafted <span class="gold-text">Belgian Chocolates</span> &amp; Daily Bakes</h1>
-          <p class="hero-lead">Artisanal pralines, golden pistachio kunafa truffles, warm made-to-order crepes, and signature Savory Flurry — prepared fresh daily in Aramoun &amp; Aley.</p>
-
-          <div class="hero-actions">
-            <a class="btn btn-gold btn-lg hero-cta" href="#box-banner">
-              <span>Curate a Gift Box</span>
-              <span class="btn-arrow" aria-hidden="true">→</span>
-            </a>
-            <a class="btn btn-outline btn-lg hero-cta-sec" href="#menu">Browse Menu ↓</a>
-          </div>
-
-          <div class="hero-trust-ribbon">
-            <span class="ribbon-pill">✦ 100% Belgian Cacao</span>
-            <span class="ribbon-pill">✦ Pistachio &amp; Kunafa</span>
-            <span class="ribbon-pill">✦ Aramoun &amp; Aley Delivery</span>
-          </div>
+    <!-- ================================================================
+         SCREEN 0: CINEMATIC ONBOARDING LANDING SCREEN (#welcome / /)
+         ================================================================ -->
+    <section class="onboarding-stage" id="view-onboarding" aria-label="Welcome to SAVORY">
+      <div class="onboarding-bg" id="onboarding-bg" aria-hidden="true">
+        <div class="onboarding-slide is-active">
+          <img src="/img/onboarding-box.jpg" alt="" decoding="async">
         </div>
+      </div>
+      <div class="onboarding-scrim" aria-hidden="true"></div>
 
-        <div class="hero-stage-column" data-reveal style="--delay: 0.12s">
-          <div class="hero-flight-card">
-            <div class="flight-top-badge">
-              <span class="flight-badge-dot" aria-hidden="true"></span>
-              <span>CHEF'S CONFECTIONERY ATELIER</span>
-            </div>
+      <div class="onboarding-topbar container">
+        <div class="onboard-location-pill">
+          <span class="onboard-status-dot" aria-hidden="true"></span>
+          <span>Aramoun &amp; Aley</span>
+        </div>
+        <div class="onboard-util-actions">
+          <a class="onboard-util-btn onboard-cart-pill" href="#cart" id="onboard-cart-btn" hidden>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <span data-i18n="nav_cart">Cart</span>
+            <span class="onboard-cart-badge" id="onboard-cart-count">0</span>
+          </a>
+          <a class="onboard-util-btn" href="/track?site=menu" data-i18n="nav_track">Track Order</a>
+          <button type="button" class="onboard-util-btn" id="onboard-lang-btn" aria-label="Switch language / تغيير اللغة">عربي</button>
+        </div>
+      </div>
 
-            <!-- 4-Quadrant Gourmet Tasting Flight -->
-            <div class="flight-grid" aria-label="Signature chocolate specialties">
-              <div class="flight-item">
-                <div class="flight-art-wrap">
-                  <svg viewBox="0 0 80 80" width="68" height="68" fill="none" aria-hidden="true">
-                    <defs>
-                      <radialGradient id="domeshade1" cx="35%" cy="30%" r="65%">
-                        <stop offset="0%" stop-color="#7B3A16"/>
-                        <stop offset="60%" stop-color="#3B1704"/>
-                        <stop offset="100%" stop-color="#1A0A02"/>
-                      </radialGradient>
-                    </defs>
-                    <circle cx="40" cy="44" r="28" fill="url(#domeshade1)"/>
-                    <circle cx="34" cy="36" r="2.5" fill="#96BC61"/>
-                    <circle cx="44" cy="34" r="2.2" fill="#B4DC7F"/>
-                    <circle cx="48" cy="42" r="2.8" fill="#96BC61"/>
-                    <circle cx="38" cy="46" r="2" fill="#D9B066"/>
-                    <path d="M30 40Q35 34 42 36" stroke="#D9B066" stroke-width="1.2" stroke-linecap="round"/>
-                    <path d="M36 48Q42 44 48 48" stroke="#D9B066" stroke-width="1" stroke-linecap="round"/>
-                  </svg>
-                </div>
-                <strong>Pistachio Kunafa</strong>
-                <span>Belgian dark shell</span>
-              </div>
+      <div class="onboarding-center container">
+        <div class="onboarding-logo-lockup" dir="ltr" aria-label="{{shop_name}} Chocolate">
+          {{> brand-logo}}
+          <span class="brand-chocolate-sub">CHOCOLATE</span>
+        </div>
+        <p class="onboarding-slogan" id="onboarding-slogan">{{slogan}}</p>
+        <div class="onboarding-cta-row">
+          <a class="btn onboarding-order-btn" href="#menu" id="order-now-btn">
+            <span data-i18n="cta_order_now">Order Now</span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
 
-              <div class="flight-item">
-                <div class="flight-art-wrap">
-                  <svg viewBox="0 0 80 80" width="68" height="68" fill="none" aria-hidden="true">
-                    <defs>
-                      <radialGradient id="domeshade2" cx="32%" cy="28%" r="68%">
-                        <stop offset="0%" stop-color="#552207"/>
-                        <stop offset="50%" stop-color="#2E1102"/>
-                        <stop offset="100%" stop-color="#120601"/>
-                      </radialGradient>
-                    </defs>
-                    <circle cx="40" cy="44" r="28" fill="url(#domeshade2)"/>
-                    <path d="M34 34L39 31L43 36L40 40L33 37Z" fill="#E6C374" stroke="#FFF5D6" stroke-width="0.5"/>
-                    <circle cx="42" cy="33" r="1.5" fill="#FFEAA7"/>
-                  </svg>
-                </div>
-                <strong>Royal Ganache 70%</strong>
-                <span>Edible 24k gold leaf</span>
-              </div>
+      <div class="onboarding-foot container">
+        <div class="onboarding-slide-meta">
+          <span class="onboarding-caption" id="onboarding-caption"></span>
+          <div class="onboarding-dots" id="onboarding-dots" aria-label="Background slides"></div>
+        </div>
+        <a class="onboard-cake-link" href="{{cakes_site_url}}" target="_blank" rel="noopener">
+          <span>3D Custom Cake Studio ↗</span>
+        </a>
+      </div>
+    </section>
 
-              <div class="flight-item">
-                <div class="flight-art-wrap">
-                  <svg viewBox="0 0 80 80" width="68" height="68" fill="none" aria-hidden="true">
-                    <defs>
-                      <radialGradient id="domeshade3" cx="35%" cy="30%" r="65%">
-                        <stop offset="0%" stop-color="#DE8C3B"/>
-                        <stop offset="60%" stop-color="#8F4815"/>
-                        <stop offset="100%" stop-color="#3D1804"/>
-                      </radialGradient>
-                    </defs>
-                    <circle cx="40" cy="44" r="28" fill="url(#domeshade3)"/>
-                    <path d="M30 40C30 32 48 30 48 42C48 50 35 50 36 42" stroke="#FFD899" stroke-width="2.2" stroke-linecap="round"/>
-                  </svg>
-                </div>
-                <strong>Salted Caramel</strong>
-                <span>Amber caramel swirl</span>
-              </div>
+    <!-- ================================================================
+         INSIDE STOREFRONT APP SHELL (#menu, #category/*, #product/*, #cart)
+         ================================================================ -->
+    <div id="storefront-shell" hidden>
+      <div class="container storefront-container" id="page">
+        <div id="closed-notice" class="alert alert-info" hidden>We're not taking online orders right now. Please give us a call instead.</div>
 
-              <div class="flight-item">
-                <div class="flight-art-wrap">
-                  <svg viewBox="0 0 80 80" width="68" height="68" fill="none" aria-hidden="true">
-                    <defs>
-                      <linearGradient id="barShade" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stop-color="#824622"/>
-                        <stop offset="50%" stop-color="#582910"/>
-                        <stop offset="100%" stop-color="#331404"/>
-                      </linearGradient>
-                    </defs>
-                    <rect x="18" y="24" width="44" height="40" rx="6" fill="url(#barShade)"/>
-                    <path d="M24 34H56M24 44H56M24 54H56" stroke="#9A562C" stroke-width="1.8" stroke-linecap="round"/>
-                    <circle cx="48" cy="30" r="3" fill="#D9B066"/>
-                  </svg>
-                </div>
-                <strong>Hazelnut Praline</strong>
-                <span>Piedmont wafer crunch</span>
-              </div>
-            </div>
+        <!-- Stage Breadcrumb -->
+        <nav class="menu-breadcrumb" id="menu-breadcrumb" aria-label="Menu navigation" hidden>
+          <a href="#menu" class="bc-link" id="bc-home">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span data-i18n="bc_menu">Menu</span>
+          </a>
+          <span class="bc-sep" id="bc-sep-cat" aria-hidden="true">/</span>
+          <a href="#menu" class="bc-link" id="bc-cat"></a>
+          <span class="bc-sep" id="bc-sep-prod" aria-hidden="true" hidden>/</span>
+          <span class="bc-current" id="bc-prod" hidden></span>
+        </nav>
 
-            <div class="flight-foot">
+        <!-- ============================================================
+             SCREEN 1: INSIDE MENU HOME (Slider Up Top + Categories Below)
+             ============================================================ -->
+        <div class="menu-view" id="view-menu">
+          <!-- Featured Items & Admin Offers Slider -->
+          <section class="featured-slider-section" id="featured-slider" hidden>
+            <div class="slider-header-bar">
               <div>
-                <strong class="flight-foot-title">CHEF'S TASTING SELECTION</strong>
-                <span class="flight-foot-desc">9, 16 &amp; 25-piece luxury gift boxes</span>
+                <span class="eyebrow left" style="margin-bottom:2px;">Chef's Selection &amp; Offers</span>
+                <h2 class="slider-section-title" data-i18n="featured_title">Featured &amp; Offers</h2>
               </div>
-              <button type="button" class="btn btn-gold btn-sm" data-open-box>Curate Box →</button>
+              <div class="slider-controls-group">
+                <button type="button" class="slider-nav-btn" id="slider-prev" aria-label="Previous offer">‹</button>
+                <button type="button" class="slider-nav-btn" id="slider-next" aria-label="Next offer">›</button>
+              </div>
+            </div>
+            <div class="slider-viewport" id="slider-viewport">
+              <div class="slider-track" id="slider-track"></div>
+            </div>
+            <div class="slider-dots" id="slider-dots" role="tablist" aria-label="Featured slides"></div>
+          </section>
+
+          <!-- Search & Quick Filter Toolbar -->
+          <div class="menu-toolbar" id="menu-toolbar">
+            <div class="menu-search-wrap">
+              <svg class="menu-search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" id="menu-search" placeholder="Search chocolates, kunafa, crepes, flurry, shakes…" aria-label="Search menu items" autocomplete="off">
+              <button type="button" class="menu-search-clear" id="menu-search-clear" hidden aria-label="Clear search">✕</button>
+            </div>
+            <div class="menu-filter-pills" id="menu-filter-pills" role="group" aria-label="Quick dietary and flavor filters">
+              <button type="button" class="menu-filter-pill active" data-qfilter="all">All Creations</button>
+              <button type="button" class="menu-filter-pill" data-qfilter="popular">★ Chef's Picks</button>
+              <button type="button" class="menu-filter-pill" data-qfilter="pistachio">Pistachio &amp; Kunafa</button>
+              <button type="button" class="menu-filter-pill" data-qfilter="dark">Belgian Dark</button>
+              <button type="button" class="menu-filter-pill" data-qfilter="under10">Under $10</button>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
 
-    <div class="marquee luxury-marquee" aria-hidden="true" style="margin-bottom: 44px;">
-      <div class="marquee-track">
-        <span>Fine Chocolates</span><span class="marquee-sep">✦</span><span>Luxury Gift Boxes</span><span class="marquee-sep">✦</span><span>Ice Cream</span><span class="marquee-sep">✦</span><span>Savory Flurry</span><span class="marquee-sep">✦</span><span>Warm Crepes</span><span class="marquee-sep">✦</span><span>Thick Shakes</span><span class="marquee-sep">✦</span><span>Éclairs &amp; Pastries</span><span class="marquee-sep">✦</span><span>Smoked &amp; Roasted Nuts</span><span class="marquee-sep">✦</span>
-        <span>Fine Chocolates</span><span class="marquee-sep">✦</span><span>Luxury Gift Boxes</span><span class="marquee-sep">✦</span><span>Ice Cream</span><span class="marquee-sep">✦</span><span>Savory Flurry</span><span class="marquee-sep">✦</span><span>Warm Crepes</span><span class="marquee-sep">✦</span><span>Thick Shakes</span><span class="marquee-sep">✦</span><span>Éclairs &amp; Pastries</span><span class="marquee-sep">✦</span><span>Smoked &amp; Roasted Nuts</span><span class="marquee-sep">✦</span>
-      </div>
-    </div>
-
-    <!-- Chef's Counter Spotlight Showcase -->
-    <section class="section luxury-duo-section" id="spotlight-section">
-      <div class="container">
-        <div class="section-head luxury-section-head" data-reveal>
-          <span class="eyebrow">CHEF'S COUNTER SPOTLIGHT</span>
-          <h2>Signature <em class="gold-text">Patisserie Delights</em></h2>
-        </div>
-        <div class="choco-duo-wrap" data-reveal>
-          <button type="button" class="choco-edge-arrow prev" id="duo-prev" aria-label="Previous featured pair">‹</button>
-          <div class="choco-duo-grid" id="choco-duo-grid"></div>
-          <button type="button" class="choco-edge-arrow next" id="duo-next" aria-label="Next featured pair">›</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="section section-cocoa-luxury" id="what-we-make">
-      <div class="container">
-        <div class="section-head" data-reveal>
-          <span class="eyebrow">HANDCRAFTED DAILY</span>
-          <h2>FEATURED SPECIALTIES</h2>
-          <p>From Belgian pralines and pistachio kunafa bars to warm crepes, shakes and Savory Flurry.</p>
-        </div>
-        <div class="product-lines luxury-featured-tri" id="product-lines"></div>
-        <div class="luxury-wide-banner" data-reveal style="margin-top: 36px;">
-          <div class="luxury-wide-left">
-            <span class="luxury-wide-tag">LUXURY GIFTING</span>
-            <div class="luxury-wide-title">SAVORY Signature Chocolate Gift Box</div>
-            <p class="luxury-wide-desc">Curated assorted truffles, pralines, and pistachio kunafa cubes in a gold-embossed presentation box.</p>
+          <!-- Search / Quick Filter Results (keeps #menu-toolbar mounted & focused) -->
+          <div id="view-search" hidden>
+            <div class="search-results-head">
+              <div>
+                <span class="eyebrow left">Menu Search</span>
+                <h2 id="search-title" style="font-size:1.9rem;margin:0;">Showing results</h2>
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" id="clear-search-btn">← Back to Categories</button>
+            </div>
+            <div class="menu-rows-list" id="search-rows-list"></div>
           </div>
-          <div class="luxury-wide-right">
-            <div class="luxury-wide-price">FROM $18.00</div>
-            <button type="button" class="btn btn-gold btn-lg" data-open-box>Curate Box →</button>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <div class="container" id="page">
-      <div id="closed-notice" class="alert alert-info" hidden>We're not taking online orders right now. Please give us a call instead.</div>
+          <!-- Categories Selection Grid -->
+          <section id="categories-section">
+            <div class="folders-intro">
+              <span class="eyebrow left">Atelier Collections</span>
+              <h2 class="folders-heading" data-i18n="categories_heading">Choose a Category</h2>
+              <p class="muted small">Tap any category below to browse handcrafted items and customize your order.</p>
+            </div>
+            <div class="menu-folders-grid" id="folders-grid"></div>
+          </section>
 
-      <div class="order-layout">
-        <div>
-          <section class="card spotlight box-banner luxury-box-banner" id="box-banner" data-reveal>
+          <!-- Bespoke Gift Box Studio Banner -->
+          <section class="card spotlight box-banner luxury-box-banner" id="box-banner">
             <div class="box-banner-copy">
               <span class="eyebrow left">Signature Gifting</span>
               <h2>Build Your Own <em class="gold-text">SAVORY</em> Chocolate Box</h2>
               <p class="muted">Curate a 9, 16, or 25-piece luxury gift box filled with handmade pralines, pistachio kunafa truffles, and dark ganaches, tied with a satin ribbon.</p>
               <button type="button" class="btn btn-gold btn-lg" id="open-box-builder">
                 <span>Curate a Gift Box</span>
-                <span class="btn-arrow" aria-hidden="true">→</span>
+                <span class="arrow" aria-hidden="true">→</span>
               </button>
             </div>
             <div class="box-banner-art" aria-hidden="true">
@@ -209,180 +165,129 @@
               </div>
             </div>
           </section>
-
-          <div class="menu-toolbar" id="menu-toolbar" data-reveal>
-            <div class="menu-search-wrap">
-              <svg class="menu-search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="search" id="menu-search" placeholder="Search chocolates, kunafa, crepes, flurry, shakes…" aria-label="Search menu items" autocomplete="off">
-              <button type="button" class="menu-search-clear" id="menu-search-clear" hidden aria-label="Clear search">✕</button>
-            </div>
-            <div class="menu-filter-pills" id="menu-filter-pills" role="group" aria-label="Quick dietary and flavor filters">
-              <button type="button" class="menu-filter-pill active" data-qfilter="all">All Creations</button>
-              <button type="button" class="menu-filter-pill" data-qfilter="popular">★ Chef's Picks</button>
-              <button type="button" class="menu-filter-pill" data-qfilter="pistachio">Pistachio &amp; Kunafa</button>
-              <button type="button" class="menu-filter-pill" data-qfilter="dark">Belgian Dark</button>
-              <button type="button" class="menu-filter-pill" data-qfilter="under10">Under $10</button>
-            </div>
-          </div>
-
-          <!-- Breadcrumb Navigation -->
-          <nav class="menu-breadcrumb" id="menu-breadcrumb" aria-label="Menu navigation" hidden>
-            <a href="#folders" class="bc-link" id="bc-home">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              <span>All Categories</span>
-            </a>
-            <span class="bc-sep" id="bc-sep-cat" aria-hidden="true">/</span>
-            <a href="#category" class="bc-link" id="bc-cat"></a>
-            <span class="bc-sep" id="bc-sep-prod" aria-hidden="true" hidden>/</span>
-            <span class="bc-current" id="bc-prod" hidden></span>
-          </nav>
-
-          <div id="menu-stage-wrapper">
-            <span id="menu" style="display:block; position:relative; top:-80px; visibility:hidden;"></span>
-            <!-- View 1: Category Folders Grid (Root / Default) -->
-            <div class="menu-view" id="view-folders">
-              <div class="folders-intro">
-                <span class="eyebrow left">Atelier Collections</span>
-                <h2 class="folders-heading">Browse by Category</h2>
-                <p class="muted small">Select an atelier category to view all hand-crafted creations, signature recipes, and tasting portions.</p>
-              </div>
-              <div class="menu-folders-grid" id="folders-grid"></div>
-            </div>
-
-            <!-- View 2: Category Products Drill-Down (Inside the Folder) -->
-            <div class="menu-view" id="view-category" hidden>
-              <div class="category-banner-card card" id="cat-banner">
-                <div class="cat-banner-body">
-                  <button type="button" class="btn btn-outline btn-xs cat-back-btn" id="cat-back-btn">
-                    <span>← All Categories</span>
-                  </button>
-                  <h2 id="cat-banner-title"></h2>
-                  <p class="muted" id="cat-banner-desc"></p>
-                </div>
-                <div class="cat-banner-icon-wrap" id="cat-banner-icon" aria-hidden="true"></div>
-              </div>
-
-              <div class="cat-products-meta">
-                <span class="cat-products-count" id="cat-products-count"></span>
-                <button type="button" class="btn btn-ghost btn-xs" id="cat-switch-btn">Browse other categories →</button>
-              </div>
-
-              <div class="menu-rows-list" id="category-rows-list"></div>
-            </div>
-
-            <!-- View 3: Dedicated Product Page -->
-            <div class="menu-view" id="view-product" hidden>
-              <div class="product-page-back-bar">
-                <button type="button" class="btn btn-outline btn-sm" id="prod-back-btn">
-                  <span>← Back to <strong id="prod-back-cat-name">Category</strong></span>
-                </button>
-                <div class="product-page-badge" id="prod-header-badge">✦ SAVORY Signature</div>
-              </div>
-
-              <div class="product-page-card card" id="product-page-card"></div>
-            </div>
-
-            <!-- View 4: Filter / Search Results List -->
-            <div class="menu-view" id="view-search" hidden>
-              <div class="search-results-head">
-                <div>
-                  <span class="eyebrow left">Search Filter</span>
-                  <h3 id="search-title">Showing results</h3>
-                </div>
-                <button type="button" class="btn btn-outline btn-sm" id="clear-search-btn">Back to Categories</button>
-              </div>
-              <div class="menu-rows-list" id="search-rows-list"></div>
-            </div>
-          </div>
         </div>
 
-        <aside class="sticky-panel" id="cart">
-          <div class="card panel">
-            <h2>Your order</h2>
-            <div id="cart-empty" class="empty-state">
-              <div class="icon" aria-hidden="true">
-                <svg viewBox="0 0 36 36" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="6" y="10" width="24" height="20" rx="3"/>
-                  <path d="M13 10V8a5 5 0 0 1 10 0v2"/>
-                  <path d="M12 17h12M12 23h8"/>
-                </svg>
-              </div>
-              <p>Your order is empty.<br>Add something delicious from the menu.</p>
+        <!-- ============================================================
+             SCREEN 2: CATEGORY PRODUCTS LIST (#category/{name})
+             ============================================================ -->
+        <div class="menu-view" id="view-category" hidden>
+          <div class="category-banner-card card" id="cat-banner">
+            <div class="cat-banner-body">
+              <button type="button" class="btn btn-outline btn-xs cat-back-btn" id="cat-back-btn">
+                <span>← All Categories</span>
+              </button>
+              <h1 id="cat-banner-title" class="cat-title-heading"></h1>
+              <p class="muted" id="cat-banner-desc"></p>
             </div>
-            <form id="checkout-form" autocomplete="on" hidden>
+            <div class="cat-banner-icon-wrap" id="cat-banner-icon" aria-hidden="true"></div>
+          </div>
+
+          <nav class="cat-pills-nav" id="cat-pills-nav" aria-label="Switch category"></nav>
+
+          <div class="cat-products-meta">
+            <span class="cat-products-count" id="cat-products-count"></span>
+          </div>
+
+          <div class="menu-rows-list" id="category-rows-list"></div>
+        </div>
+
+        <!-- ============================================================
+             SCREEN 3: DEDICATED PRODUCT PAGE (#product/{id})
+             ============================================================ -->
+        <div class="menu-view" id="view-product" hidden>
+          <div class="product-page-back-bar">
+            <button type="button" class="btn btn-outline btn-sm" id="prod-back-btn">
+              <span>← Back to <strong id="prod-back-cat-name">Category</strong></span>
+            </button>
+            <div class="product-page-badge" id="prod-header-badge">✦ SAVORY Signature</div>
+          </div>
+
+          <div class="product-page-card card" id="product-page-card"></div>
+        </div>
+
+        <!-- ============================================================
+             SCREEN 4: DEDICATED CART & CHECKOUT PAGE (#cart)
+             ============================================================ -->
+        <div class="menu-view" id="view-cart" hidden>
+          <div class="cart-page-head">
+            <div class="cart-head-left">
+              <a class="btn btn-outline btn-sm" href="#menu" id="cart-continue-btn">← Continue Shopping</a>
+              <h1 class="cart-page-title" data-i18n="cart_title">Your Cart</h1>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="clear-cart-btn" hidden>Clear cart</button>
+          </div>
+
+          <div id="cart-confirmation" hidden></div>
+
+          <div id="cart-empty" class="card empty-state cart-empty-card">
+            <div class="icon" aria-hidden="true">
+              <svg viewBox="0 0 36 36" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 10h24l-2 17a3 3 0 0 1-3 3H11a3 3 0 0 1-3-3L6 10z"/>
+                <path d="M13 10V7a5 5 0 0 1 10 0v3"/>
+              </svg>
+            </div>
+            <h2 style="font-size:1.7rem;margin:6px 0 6px;">Your cart is empty</h2>
+            <p class="muted" style="margin-bottom:20px;">Explore featured offers, handcrafted chocolates, crepes, and flurries to start your order.</p>
+            <a class="btn btn-gold" href="#menu">Browse Categories →</a>
+          </div>
+
+          <div class="cart-page-grid" id="cart-content" hidden>
+            <div class="card cart-items-card">
+              <div class="cart-col-head">
+                <h2>Selected Creations <span class="muted small" id="cart-items-count-label"></span></h2>
+              </div>
               <ul class="cart-lines" id="cart-lines"></ul>
               <div class="cart-upsell" id="cart-upsell" hidden></div>
-              <div class="sum-rows" id="sum-rows"></div>
-              <div class="total-row"><span>Total</span><span class="amount" id="cart-total"></span></div>
+            </div>
 
-              {{> fulfillment}}
-              {{> customer}}
-              <div class="field">
-                <label for="notes">Notes <span class="optional">(optional)</span></label>
-                <textarea id="notes" name="notes" maxlength="1000" rows="2" placeholder="Allergies, special requests…"></textarea>
-              </div>
-              <div id="form-error" class="alert alert-error" role="alert" hidden></div>
-              <button type="submit" class="btn btn-gold btn-lg btn-block" id="submit-btn">Place order</button>
-              <p class="pay-note">Nothing to pay now. Pay on pickup or delivery.</p>
-            </form>
-          </div>
-        </aside>
-      </div>
-    </div>
+            <aside class="card panel cart-checkout-card">
+              <form id="checkout-form" autocomplete="on">
+                <h2>Checkout Details</h2>
+                <div class="sum-rows" id="sum-rows"></div>
+                <div class="total-row"><span>Total</span><span class="amount" id="cart-total"></span></div>
 
-    <section class="section" id="visit-section">
-      <div class="container">
-        <div class="visit">
-          <div class="card" data-reveal>
-            <span class="eyebrow left">Chocolatier &amp; Cafe</span>
-            <h2>Made fresh every day</h2>
-            <p class="muted pre-line">{{about}}</p>
-          </div>
-          <div class="card" data-reveal style="--delay: 0.1s">
-            <span class="eyebrow left">Visit our branches</span>
-            <dl class="info-list">
-              <div><dt>Opening hours</dt><dd>{{hours}}</dd></div>
-              {{{visit_rows}}}
-              {{#email}}<div><dt>Email</dt><dd><a href="mailto:{{email}}">{{email}}</a></dd></div>{{/email}}
-            </dl>
+                {{> fulfillment}}
+                {{> customer}}
+                <div class="field">
+                  <label for="notes">Order notes <span class="optional">(optional)</span></label>
+                  <textarea id="notes" name="notes" maxlength="1000" rows="2" placeholder="Allergies, gift wrapping or delivery instructions…"></textarea>
+                </div>
+                <div id="form-error" class="alert alert-error" role="alert" hidden></div>
+                <button type="submit" class="btn btn-gold btn-lg btn-block" id="submit-btn">Place order</button>
+                <p class="pay-note">Nothing to pay now. Pay on pickup or delivery.</p>
+              </form>
+            </aside>
           </div>
         </div>
       </div>
-    </section>
+
+      <!-- Branch Information (visible on inside Menu home) -->
+      <section class="section" id="visit-section">
+        <div class="container">
+          <div class="visit">
+            <div class="card" data-reveal>
+              <span class="eyebrow left">Chocolatier &amp; Cafe</span>
+              <h2>Made fresh every day</h2>
+              <p class="muted pre-line">{{about}}</p>
+            </div>
+            <div class="card" data-reveal style="--delay: 0.1s">
+              <span class="eyebrow left">Visit our branches</span>
+              <dl class="info-list">
+                <div><dt>Opening hours</dt><dd>{{hours}}</dd></div>
+                {{{visit_rows}}}
+                {{#email}}<div><dt>Email</dt><dd><a href="mailto:{{email}}">{{email}}</a></dd></div>{{/email}}
+              </dl>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
-  <a href="#cart" class="btn btn-gold bottom-bar" id="cart-bar">
+  <a href="#cart" class="btn btn-gold bottom-bar" id="cart-bar" aria-label="View shopping cart">
     <span id="cart-bar-count"></span>
     <span id="cart-bar-total"></span>
   </a>
-
-  <dialog id="item-dialog" class="quickview-dialog" aria-labelledby="d-name">
-    <form class="dialog-body" id="item-form">
-      <div class="quickview-hero">
-        <div class="quickview-art" id="d-art" aria-hidden="true"></div>
-        <button type="button" class="dialog-close quickview-close" data-close aria-label="Close">✕</button>
-      </div>
-      <div class="dialog-head" style="margin-top: 14px;">
-        <div>
-          <span class="eyebrow left" id="d-cat" style="margin-bottom: 4px;">SAVORY Patisserie</span>
-          <h2 id="d-name"></h2>
-          <div class="menu-badges" id="d-badges" style="margin: 6px 0 8px;"></div>
-          <p class="muted" id="d-desc" style="margin: 0;"></p>
-        </div>
-      </div>
-      <div class="quickview-pairing" id="d-pairing"></div>
-      <div id="d-groups"></div>
-      <div id="d-error" class="alert alert-error" role="alert" hidden style="margin-top: 16px;"></div>
-      <div class="dialog-actions">
-        <span class="qty">
-          <button type="button" id="d-dec" aria-label="One fewer">−</button>
-          <span id="d-qty" aria-live="polite">1</span>
-          <button type="button" id="d-inc" aria-label="One more">+</button>
-        </span>
-        <button type="submit" class="btn btn-gold" id="d-add">Add to order</button>
-      </div>
-    </form>
-  </dialog>
 
   <dialog id="box-dialog" class="box-dialog" aria-labelledby="box-title">
     <form class="dialog-body" id="box-form">
